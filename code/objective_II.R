@@ -4,14 +4,13 @@
 #Last edited: November 26, 2018
 
 # load ---
-library(ggplot2)
 library(extrafont)
 library(tidyverse)
 library(PropCIs)
 library(MASS)
 
 # load data--- 
-data <- read.csv("data/data_11_26_2018.csv", sep=",", header = TRUE, check.names = FALSE) 
+data <- read.csv("data/data_11_26_2018.csv", check.names = FALSE) 
 
 #confidence intervals for a difference in proportions (package PropCIs) (see package for refs)
 #diffscoreci(x1, n1, x2, n2, conf.level)
