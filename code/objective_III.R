@@ -19,7 +19,7 @@ load_or_install(c("extrafont",
                   "devtools",
                   "FNGr",
                   "cowplot",
-                  "date"))
+                  "psych"))
 library(extrafont)
 library(tidyverse)
 library(dgof)
@@ -27,7 +27,7 @@ library(Matching)
 library(devtools)
 library(FNGr)
 library(cowplot)
-library(date)
+library(psych)
 
 tickr <- function(
   data, # dataframe
@@ -97,14 +97,10 @@ p<-ggplot(table1)+ geom_point(aes(x = age, y = maturation_status_histology, size
                                                                                 range = c(0, 10))
 ggsave(filename = 'figs/bubbleplot.png', dpi =200, width=6, height=8, units = "in")
 
+#cohen kappa evaluation
+data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7"))) %>%
+dplyr::select(maturation_status_histology = maturation_status_histology,
+              maturity_state_field = maturity_state_field) -> data_clean
 
 
-#confidence intervals for a difference in proportions (package PropCIs) (see package for refs)
-#diffscoreci(x1, n1, x2, n2, conf.level)
-#wald2ci(x1, n1, x2, n2, conf.level, adjust)
-#prop.test (MASS package)
-prop.test(x=c(122,99), n=c(600,400), correct=F)
-
-diffscoreci(7, 21, 13, 17, conf.level=0.95)
-
-wald2ci(7, 21, 13, 17, conf.level=0.95, adjust = "Wald")
+cohen.kappa(data_clean)
