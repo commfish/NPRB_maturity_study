@@ -73,7 +73,8 @@ data %>% filter(!(sex_histology %in% c("", NA, "no slide")))  -> data_clean
 data_clean %>%
   group_by(maturity_state_GSI, sex_histology) %>%
   summarise(count = n(), 
-            mean = mean (GSI)) -> table4 
+            mean = mean (GSI, na.rm=T),
+            stdev = sd(GSI, na.rm=T)) -> table4 
 
 #figures 
 loadfonts(device="win")
@@ -89,7 +90,7 @@ axisf <- tickr(tickr_length, length_millimeters, 100)
 bb <- c(201,100,50,20,10,5) # define breaks.
 ll <- c("200+","100","50","20","10", "5") # labels.
 p<-ggplot(table1)+ geom_point(aes(x = age, y = maturation_status_histology, size = count),shape=16, alpha=0.80) +
-  labs(x="Age", y = "Maturation Status (histology)") +  scale_size_continuous(name = "",
+  labs(x="Age", y = "Maturation Stage (histology)") +  scale_size_continuous(name = "",
                                                                                 breaks = bb,
                                                                                 limits = c(0, 250),
                                                                                 labels = ll,
