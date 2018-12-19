@@ -70,11 +70,7 @@ data_clean %>%
 
 data %>% filter(!(sex_histology %in% c("", NA, "no slide")))  -> data_clean
 
-data_clean %>%
-  group_by(maturity_state_GSI, sex_histology) %>%
-  summarise(count = n(), 
-            mean = mean (GSI, na.rm=T),
-            stdev = sd(GSI, na.rm=T)) -> table4 
+maturity_state_field
 
 #figures 
 loadfonts(device="win")
@@ -102,5 +98,28 @@ data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no sco
 dplyr::select(maturation_status_histology = maturation_status_histology,
               maturity_state_field = maturity_state_field) -> data_clean
 
-
 cohen.kappa(data_clean)
+
+#Two proportions z-test with continuity correction
+#The function returns:
+  #the value of Pearson’s chi-squared test statistic.
+  #a p-value
+  #a 95% confidence intervals
+  #an estimated probability of success 
+
+data_clean %>% mutate(maturation_status_histology = as.numeric(maturation_status_histology),
+                      maturity_state_field = as.numeric(maturity_state_field)) %>%
+  mutate(status_h = ifelse(maturation_status_histology>1, 'mature','immature'),
+         status_m = ifelse(maturity_state_field>1, 'mature','immature')) -> data_clean
+
+data_clean %>%
+  dplyr::select(status_h) %>%
+  group_by(status_h) %>%
+  summarise(count = n()) -> tablex  
+
+data_clean %>%
+  dplyr::select(status_m) %>%
+  group_by(status_m) %>%
+  summarise(count = n()) -> tabley
+
+res <- prop.test(x = c(264, 141), n = c(727, 727),  correct = FALSE)
