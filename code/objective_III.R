@@ -94,7 +94,7 @@ p<-ggplot(table1)+ geom_point(aes(x = age, y = maturation_status_histology, size
 ggsave(filename = 'figs/bubbleplot.png', dpi =200, width=6, height=8, units = "in")
 
 #cohen kappa evaluation
-data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7"))) %>%
+data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
 dplyr::select(maturation_status_histology = maturation_status_histology,
               maturity_state_field = maturity_state_field) -> data_clean
 
