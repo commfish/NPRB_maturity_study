@@ -1,4 +1,4 @@
-Slide,Specimen,Age,Weight,Length,Sex,Zone,image,date,UserID,Comment,Focus_An1,An1_An2,An2_An3,An3_An4,An4_An5,An5_An6,An6_An7,An7_An8,An8_An9,total
+slide,specimen,age,weight,length,sex,zone,image,date,user,comment,Focus_An1,An1_An2,An2_An3,An3_An4,An4_An5,An5_An6,An6_An7,An7_An8,An8_An9,total
 1,1,4,109.8,213,MALE,A1,SS1804M082,Nov 29 2018 09:39,jwcarter,,2.35,1.72,0.89,0.36,,,,,,5.32
 1,2,4,109.8,213,MALE,A1,SS1804M083,Nov 29 2018 09:38,jwcarter,,2.35,1.77,0.91,0.31,,,,,,5.34
 1,3,4,109.8,213,MALE,A1,SS1804M084,Nov 29 2018 09:37,jwcarter,Wide band,2.56,1.45,0.95,0.35,,,,,,5.31
@@ -857,7 +857,7 @@ Slide,Specimen,Age,Weight,Length,Sex,Zone,image,date,UserID,Comment,Focus_An1,An
 58,1,4,82.7,189,MALE,A1,SS1804M202,Nov 29 2018 15:26,jwcarter,Unsure of 2nd,2.44,1.71,0.77,0.3,,,,,,5.22
 58,2,4,82.7,189,MALE,A1,SS1804M203,Nov 29 2018 15:25,jwcarter,,2.25,1.72,0.75,0.3,,,,,,5.02
 58,3,4,82.7,189,MALE,A1,SS1804M204,Nov 29 2018 15:24,jwcarter,Wide band,2.31,1.62,0.83,0.21,,,,,,4.97
-58,4,4,82.7,189,MALE,A2,SS1804M205,Nov 29 2018 15:23,jwcarter,Unsure of 2nd,2.25,1.49,0.86,0.23,,,,,,0
+58,4,4,82.7,189,MALE,A2,SS1804M205,Nov 29 2018 15:23,jwcarter,Unsure of 2nd,2.25,1.49,0.86,0.23,,,,,,4.83
 58,5,4,82.7,189,MALE,A2,SS1804M206,Nov 29 2018 14:56,jwcarter,,2.11,1.38,0.8,0.24,,,,,,4.53
 58,6,4,82.7,189,MALE,A2,SS1804M207,Nov 29 2018 14:55,jwcarter,,2.31,1.44,0.84,0.27,,,,,,4.86
 58,7,4,82.7,189,MALE,A3,SS1804M208,Nov 29 2018 14:54,jwcarter,Unsure about 2nd,2.42,1.65,0.8,0.29,,,,,,5.16
@@ -1329,7 +1329,7 @@ Slide,Specimen,Age,Weight,Length,Sex,Zone,image,date,UserID,Comment,Focus_An1,An
 89,8,6,120.1,211,MALE,A3,SS1806M705,Dec 04 2018 15:37,jwcarter,,2.36,1.7,0.6,0.35,0.29,0.34,,,,5.64
 89,9,6,120.1,211,MALE,A3,SS1806M706,Dec 17 2018 11:06,jwcarter,,1.93,1.49,0.32,0.42,0.24,0.25,,,,4.65
 89,10,6,120.1,211,MALE,A4,SS1806M707,Dec 04 2018 15:34,jwcarter,,2.02,1.45,0.55,0.41,0.21,0.22,,,,4.86
-89,11,6,120.1,211,MALE,A4,SS1806M708,Dec 04 2018 15:33,jwcarter,,1.52,1.46,0.45,0.29,0.27,0.2,,,,0
+89,11,6,120.1,211,MALE,A4,SS1806M708,Dec 04 2018 15:33,jwcarter,,1.52,1.46,0.45,0.29,0.27,0.2,,,,4.19
 89,12,6,120.1,211,MALE,A4,SS1806M709,Dec 04 2018 15:32,jwcarter,,1.85,1.36,0.52,0.3,0.27,0.24,,,,4.54
 89,13,6,120.1,211,MALE,A6,SS1806M710,Dec 04 2018 15:31,jwcarter,,2.31,1.49,0.47,0.44,0.16,0.3,,,,5.17
 89,14,6,120.1,211,MALE,A6,SS1806M711,Dec 04 2018 15:30,jwcarter,,2.08,1.28,0.47,0.3,0.17,0.22,,,,4.52
