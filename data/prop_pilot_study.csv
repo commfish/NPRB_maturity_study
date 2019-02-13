@@ -1,4 +1,4 @@
-slide,specimen,age,weight,length,sex,zone,image,date,user,comment,Focus_An1,An1_An2,An2_An3,An3_An4,An4_An5,An5_An6,An6_An7,An7_An8,An8_An9,total
+fish,specimen,agecap,weight,lencap,sex,zone,image,date,user,comment,anu1,anu2,anu3,anu4,anu5,anu6,anu7,anu8,anu9,radcap
 1,1,4,109.8,213,MALE,A1,SS1804M082,Nov 29 2018 09:39,jwcarter,,2.35,1.72,0.89,0.36,,,,,,5.32
 1,2,4,109.8,213,MALE,A1,SS1804M083,Nov 29 2018 09:38,jwcarter,,2.35,1.77,0.91,0.31,,,,,,5.34
 1,3,4,109.8,213,MALE,A1,SS1804M084,Nov 29 2018 09:37,jwcarter,Wide band,2.56,1.45,0.95,0.35,,,,,,5.31
