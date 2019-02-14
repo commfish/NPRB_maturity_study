@@ -37,6 +37,7 @@ library(FSA)
 library(RFishBC)
 library(magrittr)
 library(stringr)
+
 windowsFonts(Times=windowsFont("TT Times New Roman"))
 theme_set(theme_bw(base_size=12, base_family='Times New Roman') +
             theme(panel.grid.major = element_blank(), 
@@ -69,7 +70,7 @@ data %>% #calculate proportions
          aprop7=asintrans(prop7),
          aprop8=asintrans(prop8),
          aprop9=asintrans(prop9)) %>%
-mutate(rad1=(anu1),#calculate annul (ie. focue to each annulus)
+mutate(rad1=(anu1),#calculate radial units (ie. focus to each annulus)
        rad2=(anu1+anu2),
        rad3=(anu1+anu2+anu3),
        rad4=(anu1+anu2+anu3+anu4),
@@ -83,7 +84,7 @@ mutate(rad1=(anu1),#calculate annul (ie. focue to each annulus)
 #analysis----
 #summarize by region and individual fish
 data %>% 
-    group_by(slide, zone) %>% 
+    group_by(fish, zone) %>% 
     summarise(lencap=mean(lencap),
               mean1=mean(prop1),
               mean2=mean(prop2),
@@ -173,32 +174,109 @@ ggplot(data = data, aes(x = lencap, y = aprop1, colour = zone)) +
 lm_simple_i <- lmer(aprop1 ~ lencap, data = data)
 lm_simple_s <- lmer(aprop1 ~ lencap, data = data)
 
-lm_fish_i <- lmer(aprop1 ~ lencap + (1 | slide), data = data) #Model with a random intercept and slope for each fish 
-lm_fish_s <- lmer(aprop1 ~ lencap + (1 + lencap | slide), data = data)
+lm_fish_i <- lmer(aprop1 ~ lencap + (1 | fish), data = data) #Model with a random intercept and slope for each fish 
+lm_fish_s <- lmer(aprop1 ~ lencap + (1 + lencap | fish), data = data)
 
 lm_zone_i <- lmer(aprop1 ~ lencap + (1 | zone), data = data) #Model with a random intercept and slope for each zone
 lm_zone_s <- lmer(aprop1 ~ lencap + (1 + lencap | zone), data = data)
 
 # ranef(lm_diver_s)
-AIC(lm_simple_i);AIC(lm_simple_i);AIC(lm_fish_i);AIC(lm_fish_s);AIC(lm_zone_i);AIC(lm_zone_s)
+AIC(lm_fish_i);AIC(lm_fish_s);AIC(lm_zone_i);AIC(lm_zone_s)
 #The model that explained the most variation and had the lowest AIC was the one with a random intercept and slope for fish.
 
-#Test #2: back calculation of lencap comparison
-#measurements in radial units
-#data %>% #calculate proportions
-#  dplyr::select(fish, agecap, lencap, anu1, anu2, anu3, anu4, anu5, anu6, anu7, anu8, anu9, radcap)->dataR 
-#dataR <- gConvert(dataR,in.pre="anu",out.type="rad")
-
+#Test #2: Back Calculation of Length by BSH and SPH Methods
+#http://derekogle.com/IFAR/supplements/backcalculation/
 data %>% 
-  dplyr::select(fish, agecap, lencap, anu1, anu2, anu3, anu4, anu5, anu6, anu7, anu8, anu9,rad1, rad2, rad3, rad4, rad5, rad6, rad7, rad8, rad9, radcap)->dataR 
+  dplyr::select(fish, agecap, lencap, anu1, anu2, anu3, anu4, anu5, anu6, anu7, anu8, anu9,rad1, rad2, rad3, rad4, rad5, rad6, rad7, rad8, rad9, radcap, zone)->dataR 
+
 dataR <- gather(dataR,agei,radi,anu1:anu9) %>%
   arrange(fish,agei)%>%
-  dplyr::select(fish, agecap, lencap, radcap, agei, radi)-> dataR 
+  dplyr::select(fish, agecap, lencap, radcap, agei, radi, zone)-> dataR 
 
 stringr::str_sub(dataR$agei,1,3)<-""
+
 dataR %<>% mutate(agei=as.numeric(agei)) %>%
   filterD(!is.na(radi)) %>%
-  filterD(agei<=agecap)
+  filterD(agei<=agecap) 
 
+#calculate starting values
+lm.sl <- lm(radcap~lencap,data=dataR)
+a <- coef(lm.sl)[[1]] 
+b <- coef(lm.sl)[[2]] 
+lm.ls <- lm(lencap~radcap,data=dataR)
+c <- coef(lm.sl)[[1]] 
+d <- coef(lm.sl)[[2]] 
 
-MONA_SPH <- backCalc(data,lencap, BCM=1,inFormat="wide")
+#Francis 1990 pg. 897 recommends the SPH and BPH methods; the difference btw the back-calculated lengths be taken as a 
+#minimum meaure of imprecision of back-calculation
+dataR %<>% mutate(#DL.len=(radi/radcap)*lencap, #Dahl Lee
+                  #FL.len=(radi/radcap)*(lencap-c)+c, #Fraser-Lee
+                    SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
+                    BPH.len=lencap*(c+d*radi)/(c+d*radcap)) #Body Proportional Hypothesis (Whitney and Carlander 1956) 
+
+#summary of data by fish, zone, and age (three samples/zone and age for each fish)
+dataR %>%
+  group_by(fish, zone, agei) %>%
+  summarize(n.SPH=validn(SPH.len),
+            n.BPH=validn(BPH.len),
+            mean.SPH=round(mean(SPH.len),0),
+            mean.BPH=round(mean(BPH.len),0),
+            sd.SPH=round(sd(SPH.len),1),
+            sd.BPH=round(sd(BPH.len),1)) %>%
+  as.data.frame() -> data_long
+
+#reshape data so can calculate the difference in zones
+data_long %>% dplyr::select(fish, agei, zone, mean.SPH) %>%
+              spread(key = zone, value = mean.SPH) -> data_wide_SPH
+
+data_long %>% dplyr::select(fish, agei, zone, n.SPH) %>%
+  spread(key = zone, value = n.SPH) -> data_wide_nSPH
+
+data_long %>% dplyr::select(fish, agei, zone, mean.BPH) %>%
+  spread(key = zone, value = mean.BPH) -> data_wide_BPH
+
+data_long %>% dplyr::select(fish, agei, zone, n.BPH) %>%
+  spread(key = zone, value = n.BPH) -> data_wide_nBPH
+
+#calcualte difference in back-calcualted zones
+#http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
+data_wide_SPH %>% 
+  mutate(A1_A2= ((A1-A2)/(0.5*(A1+A2))*100),
+         A2_A3= ((A2-A3)/(0.5*(A2+A3))*100),
+         A3_A4= ((A3-A4)/(0.5*(A3+A4))*100),
+         A4_A6= ((A4-A6)/(0.5*(A4+A6))*100),
+         A1_A3= ((A1-A3)/(0.5*(A1+A3))*100),
+         A1_A4= ((A1-A4)/(0.5*(A1+A4))*100),
+         A1_A6= ((A1-A6)/(0.5*(A1+A6))*100),
+         A2_A4= ((A2-A4)/(0.5*(A2+A4))*100),
+         A2_A6= ((A2-A6)/(0.5*(A2+A6))*100),
+         A3_A6= ((A3-A6)/(0.5*(A3+A6))*100))-> data_wide_SPH
+
+data_wide_BPH %>% 
+  mutate(A1_A2= ((A1-A2)/(0.5*(A1+A2))*100),
+         A2_A3= ((A2-A3)/(0.5*(A2+A3))*100),
+         A3_A4= ((A3-A4)/(0.5*(A3+A4))*100),
+         A4_A6= ((A4-A6)/(0.5*(A4+A6))*100),
+         A1_A3= ((A1-A3)/(0.5*(A1+A3))*100),
+         A1_A4= ((A1-A4)/(0.5*(A1+A4))*100),
+         A1_A6= ((A1-A6)/(0.5*(A1+A6))*100),
+         A2_A4= ((A2-A4)/(0.5*(A2+A4))*100),
+         A2_A6= ((A2-A6)/(0.5*(A2+A6))*100),
+         A3_A6= ((A3-A6)/(0.5*(A3+A6))*100))-> data_wide_BPH
+
+data_wide_SPH %>% dplyr::select(fish, agei,A1_A2, A2_A3, A3_A4,
+                                A4_A6, A1_A3, A1_A4, A1_A6, A2_A4, A2_A6,
+                                A3_A6) -> data_wide_SPH
+data_wide_SPH %>% gather(variable, value, -agei, -fish) -> data_wide_SPH
+  
+data_wide_BPH %>% dplyr::select(fish, agei,A1_A2, A2_A3, A3_A4,
+                                A4_A6, A1_A3, A1_A4, A1_A6, A2_A4, A2_A6,
+                                A3_A6) -> data_wide_BPH
+data_wide_BPH %>% gather(variable, value, -agei, -fish) -> data_wide_BPH
+
+ggplot(data = data_wide_SPH, aes(x = agei, y = aprop1, colour = zone)) +
+  geom_bar() +
+  # geom_smooth(method = "lm") +
+  facet_grid(~ zone) +
+  labs(x = "lencap", y = 
+         "Transformed prop (focus to first annulus)")-> y
