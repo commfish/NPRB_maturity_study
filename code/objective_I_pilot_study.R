@@ -42,6 +42,7 @@ windowsFonts(Times=windowsFont("TT Times New Roman"))
 theme_set(theme_bw(base_size=12, base_family='Times New Roman') +
             theme(panel.grid.major = element_blank(), 
                   panel.grid.minor = element_blank(),
+                  legend.title=element_blank(),
                   plot.title = element_text(family='Times New Roman', hjust = 0.5, size=12)))
 
 asintrans <- function(p) {asin(sqrt(p))} # arctransformation function
@@ -253,16 +254,16 @@ write.csv(data_wide_SPH, "data/test3.csv")
 #calcualte difference in back-calculated zones in percents
 #http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
 data_wide_SPH %>% 
-  mutate(A1_A2= ((A1-A2)/(0.5*(A1+A2))*100),
-         A2_A3= ((A2-A3)/(0.5*(A2+A3))*100),
-         A3_A4= ((A3-A4)/(0.5*(A3+A4))*100),
-         A4_A6= ((A4-A6)/(0.5*(A4+A6))*100),
-         A1_A3= ((A1-A3)/(0.5*(A1+A3))*100),
-         A1_A4= ((A1-A4)/(0.5*(A1+A4))*100),
-         A1_A6= ((A1-A6)/(0.5*(A1+A6))*100),
-         A2_A4= ((A2-A4)/(0.5*(A2+A4))*100),
-         A2_A6= ((A2-A6)/(0.5*(A2+A6))*100),
-         A3_A6= ((A3-A6)/(0.5*(A3+A6))*100)) %>% 
+  mutate(A1_A2= (abs(A1-A2)/(0.5*(A1+A2))*100),
+         A2_A3= (abs(A2-A3)/(0.5*(A2+A3))*100),
+         A3_A4= (abs(A3-A4)/(0.5*(A3+A4))*100),
+         A4_A6= (abs(A4-A6)/(0.5*(A4+A6))*100),
+         A1_A3= (abs(A1-A3)/(0.5*(A1+A3))*100),
+         A1_A4= (abs(A1-A4)/(0.5*(A1+A4))*100),
+         A1_A6= (abs(A1-A6)/(0.5*(A1+A6))*100),
+         A2_A4= (abs(A2-A4)/(0.5*(A2+A4))*100),
+         A2_A6= (abs(A2-A6)/(0.5*(A2+A6))*100),
+         A3_A6= (abs(A3-A6)/(0.5*(A3+A6))*100)) %>% 
   dplyr::select(fish, agei,A1_A2, A2_A3, A3_A4,
                                 A4_A6, A1_A3, A1_A4, A1_A6, A2_A4, A2_A6,
                                 A3_A6) -> data_wide_SPH
@@ -274,11 +275,14 @@ data_wide_SPH %>%
   summarise(mean.SPH=mean(value, na.rm=T),
             sd.SPH=sd(value, na.rm=T),
             n.SPH=n(),
-            se.SPH=sd(value, na.rm=T)/sqrt(n()))-> data_wide_SPH 
+            se.SPH=sd(value, na.rm=T)/sqrt(n()))%>%
+  mutate(age = as.factor(agei)) -> data_wide_SPH 
 
-ggplot(data = data_wide_SPH, aes(x = agei, y = aprop1, colour = zone)) +
-  geom_bar() +
-  # geom_smooth(method = "lm") +
-  facet_grid(~ zone) +
-  labs(x = "lencap", y = 
-         "Transformed prop (focus to first annulus)")-> y
+tickr_length <- data.frame(mean.SPH = 0:8)
+axisb <- tickr(tickr_length, mean.SPH, 0.5)
+ggplot(data = data_wide_SPH, aes(x = age, y = mean.SPH)) +
+  geom_bar(aes(fill=variable), stat="identity", position="dodge",alpha=0.9) +
+  scale_fill_grey(start = 0, end = .8)+
+  geom_text(aes(x = 2, y=8, label="A) Scale Proportional Hypothesis"), family="Times New Roman")+
+  scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
+  labs(x = "Age", y =  "Percent Difference")-> y
