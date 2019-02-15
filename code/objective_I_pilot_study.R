@@ -299,6 +299,8 @@ summary(posthoc)
 
 library(psych)
 describeBy(data$aprop1, group = data$zone)
+# y= proportions, x = prop1, propr 2, and bars are A1 through A6
+
 #figure for proportions by zone for all increments
 qplot(zone, value, data = data, fill=animals)+ 
   geom_boxplot() + facet_grid(~region) + scale_fill_brewer()
