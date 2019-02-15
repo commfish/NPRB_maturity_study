@@ -187,12 +187,15 @@ AIC(lm_fish_i);AIC(lm_fish_s);AIC(lm_zone_i);AIC(lm_zone_s)
 #Test #2: Back Calculation of Length by BSH and SPH Methods
 #http://derekogle.com/IFAR/supplements/backcalculation/
 data %>% 
-  dplyr::select(fish, agecap, lencap, anu1, anu2, anu3, anu4, anu5, anu6, anu7, anu8, anu9,rad1, rad2, rad3, rad4, rad5, rad6, rad7, rad8, rad9, radcap, zone)->dataR 
+  dplyr::select(id, agecap, lencap, anu1, anu2, anu3, anu4, anu5, anu6, anu7, anu8, anu9,rad1, rad2, rad3, rad4, rad5, rad6, rad7, rad8, rad9, radcap, zone)->dataR 
 
-dataR <- gather(dataR,agei,radi,anu1:anu9) %>%
-  arrange(fish,agei)%>%
-  dplyr::select(fish, agecap, lencap, radcap, agei, radi, zone)-> dataR 
+#dataR <- gather(dataR,agei,radi, anu1:anu9)%>%
+#  arrange(id,agei)%>%
+#  dplyr::select(id, agecap, lencap, radcap, agei, radi, zone)-> dataR 
 
+dataR <- gather(dataR,agei,radi, rad1:rad9)%>%
+  arrange(id,agei)%>%
+  dplyr::select(id, agecap, lencap, radcap, agei, radi, zone)-> dataR 
 stringr::str_sub(dataR$agei,1,3)<-""
 
 dataR %<>% mutate(agei=as.numeric(agei)) %>%
@@ -216,7 +219,7 @@ dataR %<>% mutate(#DL.len=(radi/radcap)*lencap, #Dahl Lee
 
 #summary of data by fish, zone, and age (three samples/zone and age for each fish)
 dataR %>%
-  group_by(fish, zone, agei) %>%
+  group_by(id, zone, agei) %>%
   summarize(n.SPH=validn(SPH.len),
             n.BPH=validn(BPH.len),
             mean.SPH=round(mean(SPH.len),0),
