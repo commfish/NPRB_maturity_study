@@ -26,7 +26,10 @@ load_or_install(c("extrafont",
                   "FSA",
                   "RFishBC",
                   "stringr",
-                  "magrittr"))
+                  "magrittr", 
+                  "arm",
+                  "nlme", 
+                  "multcomp"))
 library(extrafont)
 library(tidyverse)
 library(devtools)
@@ -37,12 +40,15 @@ library(FSA)
 library(RFishBC)
 library(magrittr)
 library(stringr)
+library(arm)
+library(nlme)
+library(multcomp)
 
 windowsFonts(Times=windowsFont("TT Times New Roman"))
 theme_set(theme_bw(base_size=12, base_family='Times New Roman') +
             theme(panel.grid.major = element_blank(), 
                   panel.grid.minor = element_blank(),
-                  legend.title=element_blank(),
+                  #legend.title=element_blank(),
                   plot.title = element_text(family='Times New Roman', hjust = 0.5, size=12)))
 
 asintrans <- function(p) {asin(sqrt(p))} # arctransformation function
@@ -171,31 +177,17 @@ ggplot(data = data, aes(x = lencap, y = aprop1, colour = zone)) +
   labs(x = "lencap", y = 
          "Transformed prop (focus to first annulus)")-> y
 
-#Test #1: mixed effects models
-lm_simple_i <- lmer(aprop1 ~ lencap, data = data)
-lm_simple_s <- lmer(aprop1 ~ lencap, data = data)
 
-lm_fish_i <- lmer(aprop1 ~ lencap + (1 | fish), data = data) #Model with a random intercept and slope for each fish 
-lm_fish_s <- lmer(aprop1 ~ lencap + (1 + lencap | fish), data = data)
-
-lm_zone_i <- lmer(aprop1 ~ lencap + (1 | zone), data = data) #Model with a random intercept and slope for each zone
-lm_zone_s <- lmer(aprop1 ~ lencap + (1 + lencap | zone), data = data)
-
-# ranef(lm_diver_s)
-AIC(lm_fish_i);AIC(lm_fish_s);AIC(lm_zone_i);AIC(lm_zone_s)
-#The model that explained the most variation and had the lowest AIC was the one with a random intercept and slope for fish.
-
-#Test #2: Back Calculation of Length by BSH and SPH Methods
+#Test #1: Back Calculation of Length by BSH and SPH Methods Compared to Preferred Area
 #http://derekogle.com/IFAR/supplements/backcalculation/
 data %>% 
   dplyr::select(id, fish, agecap, lencap, anu1, anu2, anu3, anu4, anu5, anu6, anu7, anu8, anu9,rad1, rad2, rad3, rad4, rad5, rad6, rad7, rad8, rad9, radcap, zone) -> dataR 
 
 # sample one from each fish and zone combo since have three samples from each fish/zone combo
-set.seed(234)
+set.seed(167) #set seed keeps random sample
 dataR %>% 
   group_by(fish, zone) %>% 
   sample_n(1) -> sample1
-write.csv(sample1, "data/test.csv")
 
 #create long dataframe from wide
 sample1 <-gather(sample1,agei,radi, rad1:rad9) %>%
@@ -208,7 +200,9 @@ sample1 %<>% mutate(agei=as.numeric(agei)) %>%
   filterD(!is.na(radi)) %>%
   filterD(agei<=agecap) 
 
-#calculate starting values for back-calculation methods
+#calculate starting values for back-calculation methods based on just zone A1 "preferred area"
+dataR %>%
+  filter(zone == "A1")-> dataR
 lm.sl <- lm(radcap~lencap,data=dataR)
 a <- coef(lm.sl)[[1]] 
 b <- coef(lm.sl)[[2]] 
@@ -219,70 +213,92 @@ d <- coef(lm.sl)[[2]]
 #back-calculation methods with ratios
 #Francis 1990 pg. 897 recommends the SPH and BPH methods; the difference btw the back-calculated lengths be taken as a 
 #minimum meaure of imprecision of back-calculation
-sample1 %<>% mutate(#DL.len=(radi/radcap)*lencap, #Dahl Lee
-                  #FL.len=(radi/radcap)*(lencap-c)+c, #Fraser-Lee
-                    SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
+sample1 %<>% mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
                     BPH.len=lencap*(c+d*radi)/(c+d*radcap)) #Body Proportional Hypothesis (Whitney and Carlander 1956) 
-write.csv(sample1, "data/test2.csv")
-#summary of data by fish, zone, and age (three samples/zone and age for each fish)
-#dataR %>%
-#  group_by(id, zone, agei) %>%
-#  summarize(n.SPH=validn(SPH.len),
-#            n.BPH=validn(BPH.len),
-#            mean.SPH=round(mean(SPH.len),0),
-#            mean.BPH=round(mean(BPH.len),0),
-#            sd.SPH=round(sd(SPH.len),1),
-#            sd.BPH=round(sd(BPH.len),1)) %>%
-#  as.data.frame() -> data_long
-
-#reshape data so can calculate the difference in zones
-#data_long %>% dplyr::select(fish, agei, zone, mean.SPH) %>%
-#              spread(key = zone, value = mean.SPH) -> data_wide_SPH
-
-#data_long %>% dplyr::select(fish, agei, zone, n.SPH) %>%
-#  spread(key = zone, value = n.SPH) -> data_wide_nSPH
-
-#data_long %>% dplyr::select(fish, agei, zone, mean.BPH) %>%
-#  spread(key = zone, value = mean.BPH) -> data_wide_BPH
-
-#data_long %>% dplyr::select(fish, agei, zone, n.BPH) %>%
-#  spread(key = zone, value = n.BPH) -> data_wide_nBPH
 
 sample1 %>% dplyr::select(fish, agei, zone, SPH.len) %>%
              spread(key = zone, value = SPH.len) -> data_wide_SPH
-write.csv(data_wide_SPH, "data/test3.csv")
-#calcualte difference in back-calculated zones in percents
-#http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
-data_wide_SPH %>% 
-  mutate(A1_A2= (abs(A1-A2)/(0.5*(A1+A2))*100),
-         A2_A3= (abs(A2-A3)/(0.5*(A2+A3))*100),
-         A3_A4= (abs(A3-A4)/(0.5*(A3+A4))*100),
-         A4_A6= (abs(A4-A6)/(0.5*(A4+A6))*100),
-         A1_A3= (abs(A1-A3)/(0.5*(A1+A3))*100),
-         A1_A4= (abs(A1-A4)/(0.5*(A1+A4))*100),
-         A1_A6= (abs(A1-A6)/(0.5*(A1+A6))*100),
-         A2_A4= (abs(A2-A4)/(0.5*(A2+A4))*100),
-         A2_A6= (abs(A2-A6)/(0.5*(A2+A6))*100),
-         A3_A6= (abs(A3-A6)/(0.5*(A3+A6))*100)) %>% 
-  dplyr::select(fish, agei,A1_A2, A2_A3, A3_A4,
-                                A4_A6, A1_A3, A1_A4, A1_A6, A2_A4, A2_A6,
-                                A3_A6) -> data_wide_SPH
-write.csv(data_wide_SPH, "data/test4.csv")
 
-data_wide_SPH %>% gather(variable, value, -agei, -fish) -> data_wide_SPH
-data_wide_SPH %>% 
+sample1 %>% dplyr::select(fish, agei, zone, BPH.len) %>%
+  spread(key = zone, value = BPH.len) -> data_wide_BPH
+
+#calculate difference in back-calculated zones in percents from zone A1
+#http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
+#SCALE PROPOTIONAL HYPOTHESIS
+data_wide_SPH %<>% 
+  mutate(A2= abs((A1-A2)/A1)*100,
+         A3= abs((A1-A3)/A1)*100,
+         A4= abs((A1-A4)/A1)*100,
+         A6= abs((A1-A6)/A1)*100) %>% 
+  dplyr::select(fish, agei,A2, A3, A4, A6) 
+
+data_wide_SPH %<>% gather(variable, value, -agei, -fish) %>% 
   group_by(agei, variable) %>% 
   summarise(mean.SPH=mean(value, na.rm=T),
             sd.SPH=sd(value, na.rm=T),
             n.SPH=n(),
             se.SPH=sd(value, na.rm=T)/sqrt(n()))%>%
-  mutate(age = as.factor(agei)) -> data_wide_SPH 
+  mutate(age = as.factor(agei),
+         zone=variable)
 
+#BODY PROPOTIONAL HYPOTHESIS
+data_wide_BPH %<>%
+  mutate(A2= abs((A1-A2)/A1)*100,
+         A3= abs((A1-A3)/A1)*100,
+         A4= abs((A1-A4)/A1)*100,
+         A6= abs((A1-A6)/A1)*100) %>% 
+  dplyr::select(fish, agei,A2, A3, A4, A6)
+
+data_wide_BPH %<>% gather(variable, value, -agei, -fish) %>% 
+  group_by(agei, variable) %>% 
+  summarise(mean.BPH=mean(value, na.rm=T),
+            sd.BPH=sd(value, na.rm=T),
+            n.BPH=n(),
+            se.BPH=sd(value, na.rm=T)/sqrt(n())) %>% 
+  mutate(age = as.factor(agei),
+         zone=variable) -> data_wide_BPH 
+
+#plots by BPH and SPH
 tickr_length <- data.frame(mean.SPH = 0:8)
 axisb <- tickr(tickr_length, mean.SPH, 0.5)
 ggplot(data = data_wide_SPH, aes(x = age, y = mean.SPH)) +
-  geom_bar(aes(fill=variable), stat="identity", position="dodge",alpha=0.9) +
-  scale_fill_grey(start = 0, end = .8)+
-  geom_text(aes(x = 2, y=8, label="A) Scale Proportional Hypothesis"), family="Times New Roman")+
+  geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
+  scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75))+
+  geom_text(aes(x = 3, y=8, label="A) Scale Proportional Hypothesis"), family="Times New Roman")+
   scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
-  labs(x = "Age", y =  "Percent Difference")-> y
+  labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> SPH
+
+tickr_length <- data.frame(mean = 0:3)
+axisb <- tickr(tickr_length, mean, 0.5)
+ggplot(data = data_wide_BPH, aes(x = age, y = mean.BPH)) +
+  geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
+  scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75))+
+  geom_text(aes(x = 3, y=3, label="B) Body Proportional Hypothesis"), family="Times New Roman")+
+  scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
+  labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> BPH
+
+cowplot::plot_grid(SPH, BPH,   align = "h", nrow = 1, ncol=2) 
+ggsave("figs/SPH_BPH2.png", dpi = 300, height = 6, width = 10, units = "in")
+
+#Test #2: ANOVA with repeated treatments (between and within group variability) with multilevels 
+          #(a regression that allows for the errors to be dependent on eachother (as our conditions of Valence were repeated within each participant). 
+#https://sapa-project.org/blog/2013/06/28/repeated-measures-anova-in-r/
+model.fixed = gls(aprop1 ~ zone, data=data, method="ML") #fixed effects only
+lm_simple <- lm(aprop1 ~ zone, data = data) #fixed effects only
+
+baseline = lme(aprop1 ~ 1, random = ~1|fish/zone, data=data, method="ML")
+zone_model = lme(aprop1 ~ zone, random = ~1|fish/zone, data=data, method="ML")
+
+anova(baseline, zone_model) #zone had a significant impact on the measured aprop1 of the fish
+posthoc <- glht(zone_model, linfct = mcp(zone = "Tukey"))
+
+summary(lm_simple)
+summary(baseline)
+summary(zone_model)
+summary(posthoc)
+
+library(psych)
+describeBy(data$aprop1, group = data$zone)
+#figure for proportions by zone for all increments
+qplot(zone, value, data = data, fill=animals)+ 
+  geom_boxplot() + facet_grid(~region) + scale_fill_brewer()
