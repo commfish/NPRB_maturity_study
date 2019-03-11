@@ -3,33 +3,13 @@
 #contact: sara.miller@alaska.gov; 907-465-4245
 #Last edited: February, 2019
 
-# load ----
-#devtools::install_github("ben-williams/FNGr")
-#devtools::install_github('droglenc/RFishBC')
+# load libraries----
+devtools::install_github("ben-williams/FNGr")
+devtools::install_github('droglenc/RFishBC')
+
 #font_import() #only do this one time - it takes a while
 loadfonts(device="win")
 
-is_installed <- function(mypkg){ is.element(mypkg, installed.packages()[,1])}
-
-load_or_install <- function(package_names){
-  for(package_name in package_names){
-    if(!is_installed(package_name)){install.packages(package_name,repos="http://lib.stat.cmu.edu/R/CRAN")}
-    library(package_name,character.only=TRUE,quietly=TRUE,verbose=FALSE)
-  }}
-
-load_or_install(c("extrafont",
-                  "tidyverse",
-                  "devtools",
-                  "FNGr",
-                  "cowplot",
-                  "lme4",
-                  "FSA",
-                  "RFishBC",
-                  "stringr",
-                  "magrittr", 
-                  "arm",
-                  "nlme", 
-                  "multcomp"))
 library(extrafont)
 library(tidyverse)
 library(devtools)
@@ -44,21 +24,36 @@ library(arm)
 library(nlme)
 library(multcomp)
 
-windowsFonts(Times=windowsFont("TT Times New Roman"))
-theme_set(theme_bw(base_size=12, base_family='Times New Roman') +
-            theme(panel.grid.major = element_blank(), 
-                  panel.grid.minor = element_blank(),
-                  #legend.title=element_blank(),
-                  plot.title = element_text(family='Times New Roman', hjust = 0.5, size=12)))
+windowsFonts(Times=windowsFont("Times New Roman"))
+theme_sleek <- function(base_size = 12, base_family = "Times") {
+  half_line <- base_size/2
+  theme_light(base_size = 12, base_family = "Times") +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.ticks.length = unit(half_line / 2.2, "pt"),
+      strip.background = element_rect(fill = NA, colour = NA),
+      strip.text.x = element_text(colour = "black"),
+      strip.text.y = element_text(colour = "black"),
+      panel.border = element_rect(fill = NA),
+      legend.text=element_text(size=12),
+      legend.key.size = unit(0.9, "lines"),
+      legend.key = element_rect(colour = NA, fill = NA),
+      legend.background = element_rect(colour = NA, fill = NA)
+    )
+}
+
+theme_set(theme_sleek())
 
 asintrans <- function(p) {asin(sqrt(p))} # arctransformation function
+
 # load data ---- 
 data <- read.csv("data/prop_pilot_study.csv", check.names = FALSE) 
 
 #clean data ----
 data %>%
-  filter(radcap >0)-> data  #delete samples without measurements 
-data %>% #calculate proportions
+  filter(radcap >0) %>% #delete samples without measurements 
+#calculate proportions
   mutate(prop1=(anu1)/radcap,
          prop2=(anu1+anu2)/radcap,
          prop3=(anu1+anu2+anu3)/radcap,
@@ -163,16 +158,14 @@ data %>%
             se8 = stdev8/sqrt(n()),
             se9 = stdev9/sqrt(n())) -> data_region
 
-ggplot(data = data, aes(x = lencap, y = aprop1, colour = slide)) +
+ggplot(data = data, aes(x = lencap, y = aprop1, colour = specimen)) +
   geom_point() +
-  # geom_smooth(method = "lm") +
   facet_grid(~zone) +
   labs(x = "lencap", y = 
          "Transformed prop (focus to first annulus)")-> x
 
 ggplot(data = data, aes(x = lencap, y = aprop1, colour = zone)) +
   geom_point() +
-  # geom_smooth(method = "lm") +
   facet_grid(~ zone) +
   labs(x = "lencap", y = 
          "Transformed prop (focus to first annulus)")-> y
@@ -184,7 +177,7 @@ data %>%
   dplyr::select(id, fish, agecap, lencap, anu1, anu2, anu3, anu4, anu5, anu6, anu7, anu8, anu9,rad1, rad2, rad3, rad4, rad5, rad6, rad7, rad8, rad9, radcap, zone) -> dataR 
 
 # sample one from each fish and zone combo since have three samples from each fish/zone combo
-set.seed(167) #set seed keeps random sample
+set.seed(167) #set seed keeps random sample the same
 dataR %>% 
   group_by(fish, zone) %>% 
   sample_n(1) -> sample1
@@ -231,6 +224,7 @@ data_wide_SPH %<>%
          A4= abs((A1-A4)/A1)*100,
          A6= abs((A1-A6)/A1)*100) %>% 
   dplyr::select(fish, agei,A2, A3, A4, A6) 
+#write.csv(data_wide_SPH, "data/test.csv") 
 
 data_wide_SPH %<>% gather(variable, value, -agei, -fish) %>% 
   group_by(agei, variable) %>% 
@@ -240,6 +234,7 @@ data_wide_SPH %<>% gather(variable, value, -agei, -fish) %>%
             se.SPH=sd(value, na.rm=T)/sqrt(n()))%>%
   mutate(age = as.factor(agei),
          zone=variable)
+#write.csv(data_wide_SPH, "data/test2.csv") 
 
 #BODY PROPOTIONAL HYPOTHESIS
 data_wide_BPH %<>%
@@ -258,22 +253,51 @@ data_wide_BPH %<>% gather(variable, value, -agei, -fish) %>%
   mutate(age = as.factor(agei),
          zone=variable) -> data_wide_BPH 
 
-#plots by BPH and SPH
+#plots by SPH
 tickr_length <- data.frame(mean.SPH = 0:8)
 axisb <- tickr(tickr_length, mean.SPH, 0.5)
 ggplot(data = data_wide_SPH, aes(x = age, y = mean.SPH)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75))+
-  geom_text(aes(x = 3, y=8, label="A) Scale Proportional Hypothesis"), family="Times New Roman")+
+  annotate("text", x = 1.9, y=8, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
   labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> SPH
 
+sample1 %>% 
+   do(taggingr = lm(lencap ~ radcap + zone, data = .)) -> lm_out
+
+
+lm_out %>% 
+  augment(taggingr) %>% 
+  mutate(fit = .fitted) %>% 
+ ggplot(aes(radcap, lencap)) + 
+ geom_point() + 
+ geom_line(aes(radcap, fit)) + 
+ facet_wrap(~zone)
+
+ggplot(data = sample1, aes(x = radcap, y = lencap, group=zone)) +
+  geom_point()+facet_wrap(~zone)+
+  annotate("text", x = 1.9, y=8, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
+  scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
+  labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> SPH
+
+
+tickr_length <- data.frame(mean.SPH = 0:8)
+axisb <- tickr(tickr_length, mean.SPH, 0.5)
+ggplot(data = data_wide_SPH, aes(x = age, y = mean.SPH)) +
+  geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
+  scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75))+
+  annotate("text", x = 1.9, y=8, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
+  scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
+  labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> SPH
+
+#plots by BPH
 tickr_length <- data.frame(mean = 0:3)
 axisb <- tickr(tickr_length, mean, 0.5)
 ggplot(data = data_wide_BPH, aes(x = age, y = mean.BPH)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75))+
-  geom_text(aes(x = 3, y=3, label="B) Body Proportional Hypothesis"), family="Times New Roman")+
+  annotate("text", x = 1.9, y=3, label="B) Body Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
   labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> BPH
 
