@@ -194,25 +194,96 @@ sample1 %<>% mutate(agei=as.numeric(agei)) %>%
   filterD(agei<=agecap) 
 
 #calculate starting values for back-calculation methods based on just zone A1 "preferred area"
-dataR %>%
-  filter(zone == "A1")-> dataR
-lm.sl <- lm(radcap~lencap,data=dataR)
-a <- coef(lm.sl)[[1]] 
-b <- coef(lm.sl)[[2]] 
-lm.ls <- lm(lencap~radcap,data=dataR)
-c <- coef(lm.sl)[[1]] 
-d <- coef(lm.sl)[[2]] 
-
 #back-calculation methods with ratios
 #Francis 1990 pg. 897 recommends the SPH and BPH methods; the difference btw the back-calculated lengths be taken as a 
 #minimum meaure of imprecision of back-calculation
-sample1 %<>% mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
-                    BPH.len=lencap*(c+d*radi)/(c+d*radcap)) #Body Proportional Hypothesis (Whitney and Carlander 1956) 
+sample1 %>%
+  filter(zone == "A1" & agei == 1)-> lm_data
+lm.sl <- lm(radcap~lencap,data=lm_data)
+a <- coef(lm.sl)[[1]] 
+b <- coef(lm.sl)[[2]] 
+lm.ls <- lm(lencap~radcap,data=lm_data)
+c <- coef(lm.ls)[[1]] 
+d <- coef(lm.ls)[[2]] 
 
-sample1 %>% dplyr::select(fish, agei, zone, SPH.len) %>%
+sample1 %>%
+    filter(zone == "A1") %>%
+    mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
+                    BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A1 #Body Proportional Hypothesis (Whitney and Carlander 1956) 
+
+sample1 %>%
+  filter(zone == "A2" & agei == 1)-> lm_data
+lm.sl <- lm(radcap~lencap,data=lm_data)
+a <- coef(lm.sl)[[1]] 
+b <- coef(lm.sl)[[2]] 
+lm.ls <- lm(lencap~radcap,data=lm_data)
+c <- coef(lm.ls)[[1]] 
+d <- coef(lm.ls)[[2]] 
+
+sample1 %>%
+  filter(zone == "A2") %>%
+  mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), 
+         BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A2
+
+sample1 %>%
+  filter(zone == "A3" & agei == 1)-> lm_data
+lm.sl <- lm(radcap~lencap,data=lm_data)
+a <- coef(lm.sl)[[1]] 
+b <- coef(lm.sl)[[2]] 
+lm.ls <- lm(lencap~radcap,data=lm_data)
+c <- coef(lm.ls)[[1]] 
+d <- coef(lm.ls)[[2]] 
+
+sample1 %>%
+  filter(zone == "A3") %>%
+  mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), 
+         BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A3
+
+sample1 %>%
+  filter(zone == "A4" & agei == 1)-> lm_data
+lm.sl <- lm(radcap~lencap,data=lm_data)
+a <- coef(lm.sl)[[1]] 
+b <- coef(lm.sl)[[2]] 
+lm.ls <- lm(lencap~radcap,data=lm_data)
+c <- coef(lm.ls)[[1]] 
+d <- coef(lm.ls)[[2]] 
+
+sample1 %>%
+  filter(zone == "A4") %>%
+  mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), 
+         BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A4
+
+sample1 %>%
+  filter(zone == "A6" & agei == 1)-> lm_data
+lm.sl <- lm(radcap~lencap,data=lm_data)
+a <- coef(lm.sl)[[1]] 
+b <- coef(lm.sl)[[2]] 
+lm.ls <- lm(lencap~radcap,data=lm_data)
+c <- coef(lm.ls)[[1]] 
+d <- coef(lm.ls)[[2]] 
+
+sample1 %>%
+  filter(zone == "A6") %>%
+  mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), 
+         BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A6
+
+x<- rbind(sample_A1, sample_A2)
+x<- rbind(x, sample_A3)
+x<- rbind(x, sample_A4)
+x<- rbind(x, sample_A6)
+
+x %>%
+  group_by(agei, zone) %>%
+  summarize(n.SPH=validn(SPH.len),mn.SPH.len=mean(SPH.len),sd.SPH.len=sd(SPH.len),
+            n.BPH=validn(BPH.len),mn.BPH.len=mean(BPH.len),sd.BPH.len=sd(BPH.len),
+            mn.radcap=mean(radcap)) %>%
+  as.data.frame() -> sample2
+
+x %>% dplyr::select(fish, agei, zone, SPH.len) %>%
              spread(key = zone, value = SPH.len) -> data_wide_SPH
 
-sample1 %>% dplyr::select(fish, agei, zone, BPH.len) %>%
+  
+x %>% dplyr::select(fish, agei, zone, BPH.len) %>%
   spread(key = zone, value = BPH.len) -> data_wide_BPH
 
 #calculate difference in back-calculated zones in percents from zone A1
@@ -233,7 +304,7 @@ data_wide_SPH %<>% gather(variable, value, -agei, -fish) %>%
             n.SPH=n(),
             se.SPH=sd(value, na.rm=T)/sqrt(n()))%>%
   mutate(age = as.factor(agei),
-         zone=variable)
+         zone=as.factor(variable))
 #write.csv(data_wide_SPH, "data/test2.csv") 
 
 #BODY PROPOTIONAL HYPOTHESIS
@@ -251,58 +322,64 @@ data_wide_BPH %<>% gather(variable, value, -agei, -fish) %>%
             n.BPH=n(),
             se.BPH=sd(value, na.rm=T)/sqrt(n())) %>% 
   mutate(age = as.factor(agei),
-         zone=variable) -> data_wide_BPH 
+         zone=as.factor(variable)) -> data_wide_BPH 
 
 #plots by SPH
-tickr_length <- data.frame(mean.SPH = 0:8)
-axisb <- tickr(tickr_length, mean.SPH, 0.5)
+tickr_length <- data.frame(mean.SPH = 0:18)
+axisb <- tickr(tickr_length, mean.SPH, 2)
 ggplot(data = data_wide_SPH, aes(x = age, y = mean.SPH)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
-  scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75))+
-  annotate("text", x = 1.9, y=8, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
+  scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75), legend.title=element_blank())+
+  annotate("text", x = 1.9, y=18, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
-  labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> SPH
+  labs(x = "Age (Annulus)", y =  "Mean % Difference")-> SPH
 
-sample1 %>% 
-   do(taggingr = lm(lencap ~ radcap + zone, data = .)) -> lm_out
-
-
-lm_out %>% 
-  augment(taggingr) %>% 
-  mutate(fit = .fitted) %>% 
- ggplot(aes(radcap, lencap)) + 
- geom_point() + 
- geom_line(aes(radcap, fit)) + 
- facet_wrap(~zone)
-
-ggplot(data = sample1, aes(x = radcap, y = lencap, group=zone)) +
-  geom_point()+facet_wrap(~zone)+
-  annotate("text", x = 1.9, y=8, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
-  scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
-  labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> SPH
-
-
-tickr_length <- data.frame(mean.SPH = 0:8)
-axisb <- tickr(tickr_length, mean.SPH, 0.5)
-ggplot(data = data_wide_SPH, aes(x = age, y = mean.SPH)) +
+tickr_length <- data.frame(mean.SPH = 0:300)
+axisb <- tickr(tickr_length, mean.SPH, 50)
+ggplot(data = sample2, aes(x = as.factor(agei), y = mn.SPH.len)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
-  scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75))+
-  annotate("text", x = 1.9, y=8, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
-  scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
-  labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> SPH
+  scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.05,.7), legend.title=element_blank())+
+  annotate("text", x = 2, y=250, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
+  scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250), limits = c(0,250))+
+  labs(x = "Age (Annulus)", y =  "Back-Calculated Length (mm)")-> SPH2
+
+#lm models
+#lm_data_zone %>% 
+#   do(taggingr = lm(lencap ~ radcap + zone, data = .)) -> lm_out
+
+#lm_out %>% 
+# tidy(taggingr) %>% 
+# write_csv("data/regression.csv")
+
+#ggplot(data = sample1, aes(x = radcap, y = lencap, group=zone)) +
+#  geom_point()+facet_wrap(~zone)+
+#  annotate("text", x = 1.9, y=8, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
+#  scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
+#  labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> SPH
+
 
 #plots by BPH
-tickr_length <- data.frame(mean = 0:3)
-axisb <- tickr(tickr_length, mean, 0.5)
+tickr_length <- data.frame(mean.SPH = 0:35)
+axisb <- tickr(tickr_length, mean.SPH, 5)
 ggplot(data = data_wide_BPH, aes(x = age, y = mean.BPH)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
-  scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75))+
-  annotate("text", x = 1.9, y=3, label="B) Body Proportional Hypothesis", family="Times New Roman")+
+  scale_fill_grey(start = 0, end = .8)+theme(legend.position="none")+
+  annotate("text", x = 1.9, y=35, label="B) Body Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
-  labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> BPH
+  labs(x = "Age (Annulus)", y =  "Mean % Difference")-> BPH
+cowplot::plot_grid(SPH, BPH,   align = "hv", nrow = 2, ncol=1) 
+ggsave("figs/length_diff.png", dpi = 500, height = 6, width = 8, units = "in")
 
-cowplot::plot_grid(SPH, BPH,   align = "h", nrow = 1, ncol=2) 
-ggsave("figs/SPH_BPH2.png", dpi = 300, height = 6, width = 10, units = "in")
+tickr_length <- data.frame(mean.BPH = 0:350)
+axisb <- tickr(tickr_length, mean.BPH, 50)
+ggplot(data = sample2, aes(x = as.factor(agei), y = mn.BPH.len)) +
+  geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
+  scale_fill_grey(start = 0, end = .8)+theme(legend.position="none")+
+  annotate("text", x = 2, y=350, label="B) Body Proportional Hypothesis", family="Times New Roman")+
+  scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250, 300, 350), limits = c(0,350))+
+  labs(x = "Age (Annulus)", y =  "Back-Calculated Length (mm)")-> BPH2
+cowplot::plot_grid(SPH2, BPH2,   align = "hv", nrow = 2, ncol=1) 
+ggsave("figs/length.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #Test #2: ANOVA with repeated treatments (between and within group variability) with multilevels 
           #(a regression that allows for the errors to be dependent on eachother (as our conditions of Valence were repeated within each participant). 
