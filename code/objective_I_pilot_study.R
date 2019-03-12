@@ -26,6 +26,8 @@ library(multcomp)
 library(FinCal)
 library(msmtools)
 library(broom)
+library(psych)
+library(WRS2)
 
 windowsFonts(Times=windowsFont("Times New Roman"))
 theme_sleek <- function(base_size = 12, base_family = "Times") {
@@ -417,11 +419,23 @@ ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width = 8, units = "in"
 #Test #2: ANOVA with repeated treatments (between and within group variability) with multilevels 
           #(a regression that allows for the errors to be dependent on eachother (as our conditions of Valence were repeated within each participant). 
 #https://sapa-project.org/blog/2013/06/28/repeated-measures-anova-in-r/
-model.fixed = gls(aprop1 ~ zone, data=data, method="ML") #fixed effects only
-lm_simple <- lm(aprop1 ~ zone, data = data) #fixed effects only
+data %>% 
+  dplyr::select(id, fish, agecap, lencap, radcap, aprop1, aprop2, aprop3, aprop4, aprop5, aprop6, aprop7, aprop8, aprop9, zone) -> dataR 
 
-baseline = lme(aprop1 ~ 1, random = ~1|fish/zone, data=data, method="ML")
-zone_model = lme(aprop1 ~ zone, random = ~1|fish/zone, data=data, method="ML")
+# sample one from each fish and zone combo since have three samples from each fish/zone combo
+set.seed(167) #set seed keeps random sample the same
+dataR %>% 
+  group_by(fish, zone) %>% 
+  sample_n(1) %>%
+  filterD(!is.na(aprop1))%>% 
+  as.data.frame() -> sample1
+
+
+model.fixed = gls(aprop1 ~ zone, data=sample1, method="ML") #fixed effects only
+lm_simple <- lm(aprop1 ~ zone, data = sample1) #fixed effects only
+
+baseline = lme(aprop3 ~ 1, random = ~1|fish/zone, data=sample1, method="ML") #Model with a random intercept and slope for each fish nested within zone:
+zone_model = lme(aprop3 ~ zone, random = ~1|fish/zone, data=sample1, method="ML")
 
 anova(baseline, zone_model) #zone had a significant impact on the measured aprop1 of the fish
 posthoc <- glht(zone_model, linfct = mcp(zone = "Tukey"))
@@ -436,5 +450,16 @@ describeBy(data$aprop1, group = data$zone)
 # y= proportions, x = prop1, propr 2, and bars are A1 through A6
 
 #figure for proportions by zone for all increments
-qplot(zone, value, data = data, fill=animals)+ 
-  geom_boxplot() + facet_grid(~region) + scale_fill_brewer()
+qplot(zone, aprop2, data = sample1)+ 
+  geom_boxplot()  + scale_fill_brewer()
+
+
+#Test #3: One-way repeated measures ANOVA for trimmed means
+rmanova(y=sample1$aprop1, groups=sample1$zone, sample1$fish)
+rmmcp(sample1$aprop1, sample1$zone, sample1$fish)
+
+rmanova(sample1$aprop2, sample1$zone, sample1$fish)
+rmmcp(sample1$aprop2, sample1$zone, sample1$fish)
+
+rmanova(sample1$aprop1, sample1$zone, sample1$fish)
+rmmcp(sample1$aprop1, sample1$zone, sample1$fish)
