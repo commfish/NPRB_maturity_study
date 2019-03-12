@@ -24,6 +24,8 @@ library(arm)
 library(nlme)
 library(multcomp)
 library(FinCal)
+library(msmtools)
+library(broom)
 
 windowsFonts(Times=windowsFont("Times New Roman"))
 theme_sleek <- function(base_size = 12, base_family = "Times") {
@@ -200,6 +202,10 @@ sample1 %<>% mutate(agei=as.numeric(agei)) %>%
 #minimum meaure of imprecision of back-calculation
 sample1 %>%
   filter(zone == "A1" & agei == 1)-> lm_data
+sample1 %>%
+  filter(agei == 1) %>% 
+  as.data.frame() -> lm_data_zone
+
 lm.sl <- lm(radcap~lencap,data=lm_data)
 a <- coef(lm.sl)[[1]] 
 b <- coef(lm.sl)[[2]] 
@@ -349,19 +355,22 @@ ggplot(data = sample2, aes(x = as.factor(agei), y = mn.SPH.len)) +
   labs(x = "Age (Annulus)", y =  "Back-Calculated Length (mm)")-> SPH2
 
 #lm models
-#lm_data_zone %>% 
-#   do(taggingr = lm(lencap ~ radcap + zone, data = .)) -> lm_out
+lm_data_zone %>% 
+   do(taggingr = lm(radcap ~ lencap + zone, data = .)) -> lm_out
 
-#lm_out %>% 
-# tidy(taggingr) %>% 
-# write_csv("data/regression.csv")
+lm_out %>% 
+ tidy(taggingr) %>% 
+ write_csv("data/SPH_regression.csv")
 
-#ggplot(data = sample1, aes(x = radcap, y = lencap, group=zone)) +
-#  geom_point()+facet_wrap(~zone)+
-#  annotate("text", x = 1.9, y=8, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
-#  scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
-#  labs(x = "Age (Annulus)", y =  "Mean Percent Difference from Length Calculated at Zone A1")-> SPH
-
+lm_out %>% 
+  augment(taggingr) %>% 
+    mutate(fit = (.fitted)) %>% 
+ggplot(aes(x = lencap, y = radcap)) +
+  geom_point()+facet_wrap(~zone)+geom_line(aes(lencap, fit), color ="grey50") + 
+  annotate("text", x = 175, y=7, label="Scale Proportional Hypothesis", family="Times New Roman")+
+  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(y = "Radius", x =  "Back-Calculated Length (mm)")-> SPH3
+ggsave("figs/SPH_regression.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #plots by BPH
 tickr_length <- data.frame(mean.SPH = 0:35)
@@ -385,6 +394,25 @@ ggplot(data = sample2, aes(x = as.factor(agei), y = mn.BPH.len)) +
   labs(x = "Age (Annulus)", y =  "Back-Calculated Length (mm)")-> BPH2
 cowplot::plot_grid(SPH2, BPH2,   align = "hv", nrow = 2, ncol=1) 
 ggsave("figs/length.png", dpi = 500, height = 6, width = 8, units = "in")
+
+
+#lm models
+lm_data_zone %>% 
+  do(taggingr = lm(lencap ~ radcap + zone, data = .)) -> lm_out
+
+lm_out %>% 
+  tidy(taggingr) %>% 
+  write_csv("data/BPH_regression.csv")
+
+lm_out %>% 
+  augment(taggingr) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point()+facet_wrap(~zone)+geom_line(aes(radcap, fit), color ="grey50") + 
+  annotate("text", x = 4, y=250, label="Body Proportional Hypothesis", family="Times New Roman")+
+  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(x = "Radius", y =  "Back-Calculated Length (mm)")-> BPH3
+ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #Test #2: ANOVA with repeated treatments (between and within group variability) with multilevels 
           #(a regression that allows for the errors to be dependent on eachother (as our conditions of Valence were repeated within each participant). 
