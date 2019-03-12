@@ -288,7 +288,7 @@ x %>%
             n.BPH=validn(BPH.len),mn.BPH.len=mean(BPH.len),sd.BPH.len=sd(BPH.len), ss.BPH.len = sum(BPH.len^2),
             cv.BPH = coefficient.variation(sd.BPH.len, mn.BPH.len)) %>%
   as.data.frame() -> sample2
-write.csv(sample2, "data/test.csv") 
+write.csv(sample2, "output/table_summary_obj1.csv") 
 
 x %>% dplyr::select(fish, agei, zone, SPH.len) %>%
              spread(key = zone, value = SPH.len) -> data_wide_SPH
@@ -360,7 +360,7 @@ lm_data_zone %>%
 
 lm_out %>% 
  tidy(taggingr) %>% 
- write_csv("data/SPH_regression.csv")
+ write_csv("output/SPH_regression.csv")
 
 lm_out %>% 
   augment(taggingr) %>% 
@@ -369,7 +369,7 @@ ggplot(aes(x = lencap, y = radcap)) +
   geom_point()+facet_wrap(~zone)+geom_line(aes(lencap, fit), color ="grey50") + 
   annotate("text", x = 175, y=7, label="Scale Proportional Hypothesis", family="Times New Roman")+
   scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(y = "Radius", x =  "Back-Calculated Length (mm)")-> SPH3
+  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> SPH3
 ggsave("figs/SPH_regression.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #plots by BPH
@@ -402,7 +402,7 @@ lm_data_zone %>%
 
 lm_out %>% 
   tidy(taggingr) %>% 
-  write_csv("data/BPH_regression.csv")
+  write_csv("output/BPH_regression.csv")
 
 lm_out %>% 
   augment(taggingr) %>% 
@@ -411,7 +411,7 @@ lm_out %>%
   geom_point()+facet_wrap(~zone)+geom_line(aes(radcap, fit), color ="grey50") + 
   annotate("text", x = 4, y=250, label="Body Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(x = "Radius", y =  "Back-Calculated Length (mm)")-> BPH3
+  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> BPH3
 ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #Test #2: ANOVA with repeated treatments (between and within group variability) with multilevels 
