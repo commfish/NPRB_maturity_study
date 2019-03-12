@@ -23,6 +23,7 @@ library(stringr)
 library(arm)
 library(nlme)
 library(multcomp)
+library(FinCal)
 
 windowsFonts(Times=windowsFont("Times New Roman"))
 theme_sleek <- function(base_size = 12, base_family = "Times") {
@@ -274,10 +275,14 @@ x<- rbind(x, sample_A6)
 
 x %>%
   group_by(agei, zone) %>%
-  summarize(n.SPH=validn(SPH.len),mn.SPH.len=mean(SPH.len),sd.SPH.len=sd(SPH.len),
-            n.BPH=validn(BPH.len),mn.BPH.len=mean(BPH.len),sd.BPH.len=sd(BPH.len),
-            mn.radcap=mean(radcap)) %>%
+  summarize(n.radcap=validn(radcap), mn.radcap=mean(radcap),sd.radcap=sd(radcap),
+            ss.radcap = sum(radcap^2),cv.radcap = coefficient.variation(sd.radcap, mn.radcap),
+            n.SPH=validn(SPH.len),mn.SPH.len=mean(SPH.len),sd.SPH.len=sd(SPH.len),ss.SPH.len = sum(SPH.len^2),
+            cv.SPH = coefficient.variation(sd.SPH.len, mn.SPH.len),
+            n.BPH=validn(BPH.len),mn.BPH.len=mean(BPH.len),sd.BPH.len=sd(BPH.len), ss.BPH.len = sum(BPH.len^2),
+            cv.BPH = coefficient.variation(sd.BPH.len, mn.BPH.len)) %>%
   as.data.frame() -> sample2
+write.csv(sample2, "data/test.csv") 
 
 x %>% dplyr::select(fish, agei, zone, SPH.len) %>%
              spread(key = zone, value = SPH.len) -> data_wide_SPH
