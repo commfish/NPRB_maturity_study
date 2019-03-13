@@ -453,8 +453,29 @@ describeBy(data$aprop1, group = data$zone)
 qplot(zone, aprop2, data = sample1)+ 
   geom_boxplot()  + scale_fill_brewer()
 
-
+#test for normality
+eda.norm <- function(x, ...)
+{
+  par(mfrow=c(2,2))
+  if(sum(is.na(x)) > 0)
+    warning("NA's were removed before plotting")
+  x <- x[!is.na(x)]
+  hist(x, main = "Histogram and non-\nparametric density estimate", prob = T)
+  iqd <- summary(x)[5] - summary(x)[2]
+  lines(density(x, width = 2 * iqd))
+  boxplot(x, main = "Boxplot", ...)
+  qqnorm(x)
+  qqline(x)
+  plot.ecdf(x, main="Empirical and normal cdf")
+  LIM <- par("usr")
+  y <- seq(LIM[1],LIM[2],length=100)
+  lines(y, pnorm(y, mean(x), sqrt(var(x))))
+  shapiro.test(x)
+}
 #Test #3: One-way repeated measures ANOVA for trimmed means
+#https://cran.r-project.org/web/packages/WRS2/WRS2.pdf
+eda.norm(sample1$aprop1)
+
 rmanova(y=sample1$aprop1, groups=sample1$zone, sample1$fish)
 rmmcp(sample1$aprop1, sample1$zone, sample1$fish)
 
