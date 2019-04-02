@@ -306,9 +306,9 @@ data_wide_SPH %<>%
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
          A4= abs((A1-A4)/A1)*100,
-         A6= abs((A1-A6)/A1)*100) %>% 
+         A6= abs((A1-A6)/A1)*100)%>% 
   dplyr::select(fish, agei,A2, A3, A4, A6) 
-#write.csv(data_wide_SPH, "data/test.csv") 
+write.csv(data_wide_SPH, "data/test.csv") 
 
 data_wide_SPH %<>% gather(variable, value, -agei, -fish) %>% 
   group_by(agei, variable) %>% 
