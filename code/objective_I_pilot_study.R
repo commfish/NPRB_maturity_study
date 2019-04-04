@@ -6,6 +6,7 @@
 # load libraries----
 devtools::install_github("ben-williams/FNGr")
 devtools::install_github('droglenc/RFishBC')
+devtools::install_github('droglenc/FSA')
 
 #font_import() #only do this one time - it takes a while
 loadfonts(device="win")
@@ -28,6 +29,7 @@ library(msmtools)
 library(broom)
 library(psych)
 library(WRS2)
+library(cowplot)
 
 windowsFonts(Times=windowsFont("Times New Roman"))
 theme_sleek <- function(base_size = 12, base_family = "Times") {
@@ -176,7 +178,7 @@ ggplot(data = data, aes(x = lencap, y = aprop1, colour = zone)) +
          "Transformed prop (focus to first annulus)")-> y
 
 
-#Test #1: Back Calculation of Length by BSH and SPH Methods Compared to Preferred Area
+#Test #1: Back Calculation of Length by BPH and SPH Methods Compared to Preferred Area
 #http://derekogle.com/IFAR/supplements/backcalculation/
 data %>% 
   dplyr::select(id, fish, agecap, lencap, anu1, anu2, anu3, anu4, anu5, anu6, anu7, anu8, anu9,rad1, rad2, rad3, rad4, rad5, rad6, rad7, rad8, rad9, radcap, zone) -> dataR 
@@ -185,7 +187,7 @@ data %>%
 set.seed(167) #set seed keeps random sample the same
 dataR %>% 
   group_by(fish, zone) %>% 
-  sample_n(1) -> sample1
+  sample_n(1) -> sample1 #sample one scale from each fish zone (5 scales sampled from each fish)
 
 #create long dataframe from wide
 sample1 <-gather(sample1,agei,radi, rad1:rad9) %>%
@@ -202,6 +204,7 @@ sample1 %<>% mutate(agei=as.numeric(agei)) %>%
 #back-calculation methods with ratios
 #Francis 1990 pg. 897 recommends the SPH and BPH methods; the difference btw the back-calculated lengths be taken as a 
 #minimum meaure of imprecision of back-calculation
+#calculate a, b, c, d for each zone
 sample1 %>%
   filter(zone == "A1" & agei == 1)-> lm_data
 sample1 %>%
@@ -235,7 +238,7 @@ sample1 %>%
          BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A2
 
 sample1 %>%
-  filter(zone == "A3" & agei == 1)-> lm_data
+  filter(zone == "A3" & agei == 1)-> lm_data #filter by agei so only one sample/region/fish
 lm.sl <- lm(radcap~lencap,data=lm_data)
 a <- coef(lm.sl)[[1]] 
 b <- coef(lm.sl)[[2]] 
@@ -276,7 +279,7 @@ sample1 %>%
   mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), 
          BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A6
 
-x<- rbind(sample_A1, sample_A2)
+x<- rbind(sample_A1, sample_A2) #combine data for all zones
 x<- rbind(x, sample_A3)
 x<- rbind(x, sample_A4)
 x<- rbind(x, sample_A6)
@@ -308,7 +311,6 @@ data_wide_SPH %<>%
          A4= abs((A1-A4)/A1)*100,
          A6= abs((A1-A6)/A1)*100)%>% 
   dplyr::select(fish, agei,A2, A3, A4, A6) 
-write.csv(data_wide_SPH, "data/test.csv") 
 
 data_wide_SPH %<>% gather(variable, value, -agei, -fish) %>% 
   group_by(agei, variable) %>% 
@@ -318,7 +320,6 @@ data_wide_SPH %<>% gather(variable, value, -agei, -fish) %>%
             se.SPH=sd(value, na.rm=T)/sqrt(n()))%>%
   mutate(age = as.factor(agei),
          zone=as.factor(variable))
-#write.csv(data_wide_SPH, "data/test2.csv") 
 
 #BODY PROPOTIONAL HYPOTHESIS
 data_wide_BPH %<>%
@@ -356,22 +357,125 @@ ggplot(data = sample2, aes(x = as.factor(agei), y = mn.SPH.len)) +
   scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250), limits = c(0,250))+
   labs(x = "Age (Annulus)", y =  "Back-Calculated Length (mm)")-> SPH2
 
-#lm models
+#ANCOVA Models (SPH)
 lm_data_zone %>% 
-   do(taggingr = lm(radcap ~ lencap + zone, data = .)) -> lm_out
+  do(taggingr = lm(radcap~lencap + zone, data = sample1)) -> lm_out
 
 lm_out %>% 
- tidy(taggingr) %>% 
- write_csv("output/SPH_regression.csv")
+  tidy(taggingr) %>% 
+  write_csv("output/SPH_ancova.csv")
+
+lm_out %>% 
+  glance(taggingr) %>% 
+  write_csv("output/SPH_ancova_R2.csv")
 
 lm_out %>% 
   augment(taggingr) %>% 
-    mutate(fit = (.fitted)) %>% 
-ggplot(aes(x = lencap, y = radcap)) +
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
   geom_point()+facet_wrap(~zone)+geom_line(aes(lencap, fit), color ="grey50") + 
   annotate("text", x = 175, y=7, label="Scale Proportional Hypothesis", family="Times New Roman")+
   scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
   labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> SPH3
+ggsave("figs/SPH_ANCOVA.png", dpi = 500, height = 6, width = 8, units = "in")
+
+#Linear models by zone (SPH)
+lm_data_zone %>% 
+   do(A1 = lm(radcap ~ lencap, data = sample1[sample1$zone=="A1",]),
+      A2 = lm(radcap ~ lencap, data = sample1[sample1$zone=="A2",]),
+      A3 = lm(radcap ~ lencap, data = sample1[sample1$zone=="A3",]),
+      A4 = lm(radcap ~ lencap, data = sample1[sample1$zone=="A4",]),
+      A6 = lm(radcap ~ lencap, data = sample1[sample1$zone=="A6",])) -> lm_out
+
+lm_out %>% 
+  tidy(A1) %>% 
+  mutate(zone = "A1") -> A1
+lm_out %>% 
+  tidy(A2) %>% 
+mutate(zone = "A2") -> A2
+lm_out %>% 
+  tidy(A3) %>% 
+mutate(zone = "A3") -> A3
+lm_out %>% 
+  tidy(A4) %>% 
+mutate(zone = "A4") -> A4
+lm_out %>% 
+  tidy(A6) %>% 
+  mutate(zone = "A6") -> A6
+
+x<- rbind(A1, A2) #combine data for all zones
+x<- rbind(x, A3)
+x<- rbind(x, A4)
+x<- rbind(x, A6)
+write_csv(x, "output/SPH_lm.csv")
+
+lm_out %>% 
+  glance(A1) %>% 
+  mutate(zone = "A1") -> A1
+lm_out %>% 
+  glance(A2) %>% 
+  mutate(zone = "A2") -> A2
+lm_out %>% 
+  glance(A3) %>% 
+  mutate(zone = "A3") -> A3
+lm_out %>% 
+  glance(A4) %>% 
+  mutate(zone = "A4") -> A4
+lm_out %>% 
+  glance(A6) %>% 
+  mutate(zone = "A6") -> A6
+
+x<- rbind(A1, A2) #combine data for all zones
+x<- rbind(x, A3)
+x<- rbind(x, A4)
+x<- rbind(x, A6)
+write_csv(x, "output/SPH_lm_R2.csv")
+
+lm_out %>% 
+  augment(A1) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
+  geom_point()+geom_line(aes(lencap, fit), color ="grey50") + 
+  annotate("text", x = 175, y=7, label="SPH (A1)", family="Times New Roman")+
+  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> A1
+
+lm_out %>% 
+  augment(A2) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
+  geom_point()+geom_line(aes(lencap, fit), color ="grey50") + 
+  annotate("text", x = 175, y=7, label="SPH (A2)", family="Times New Roman")+
+  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> A2
+
+lm_out %>% 
+  augment(A3) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
+  geom_point()+geom_line(aes(lencap, fit), color ="grey50") + 
+  annotate("text", x = 175, y=7, label="SPH (A3)", family="Times New Roman")+
+  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> A3
+
+lm_out %>% 
+  augment(A4) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
+  geom_point()+geom_line(aes(lencap, fit), color ="grey50") + 
+  annotate("text", x = 175, y=7, label="SPH (A4)", family="Times New Roman")+
+  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> A4
+
+lm_out %>% 
+  augment(A6) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
+  geom_point()+geom_line(aes(lencap, fit), color ="grey50") + 
+  annotate("text", x = 175, y=7, label="SPH (A6))", family="Times New Roman")+
+  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> A6
+cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
 ggsave("figs/SPH_regression.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #plots by BPH
@@ -398,13 +502,17 @@ cowplot::plot_grid(SPH2, BPH2,   align = "hv", nrow = 2, ncol=1)
 ggsave("figs/length.png", dpi = 500, height = 6, width = 8, units = "in")
 
 
-#lm models
+#ANCOVA Models (BPH)
 lm_data_zone %>% 
   do(taggingr = lm(lencap ~ radcap + zone, data = .)) -> lm_out
 
 lm_out %>% 
   tidy(taggingr) %>% 
-  write_csv("output/BPH_regression.csv")
+  write_csv("output/BPH_ancova.csv")
+
+lm_out %>% 
+  tidy(taggingr) %>% 
+  write_csv("output/BPH_ancova_R2.csv")
 
 lm_out %>% 
   augment(taggingr) %>% 
@@ -414,7 +522,122 @@ lm_out %>%
   annotate("text", x = 4, y=250, label="Body Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
   labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> BPH3
-ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width = 8, units = "in")
+ggsave("figs/BPH_ANCOVA.png", dpi = 500, height = 6, width = 8, units = "in")
+
+#Linear models by zone (BPH)
+lm_data_zone %>% 
+  do(A1 = lm(lencap ~ radcap, data = sample1[sample1$zone=="A1",]),
+     A2 = lm(lencap ~ radcap, data = sample1[sample1$zone=="A2",]),
+     A3 = lm(lencap ~ radcap, data = sample1[sample1$zone=="A3",]),
+     A4 = lm(lencap ~ radcap, data = sample1[sample1$zone=="A4",]),
+     A6 = lm(lencap ~ radcap, data = sample1[sample1$zone=="A6",])) -> lm_out
+
+lm_out %>% 
+  tidy(A1) %>% 
+  mutate(zone = "A1") -> A1
+lm_out %>% 
+  tidy(A2) %>% 
+  mutate(zone = "A2") -> A2
+lm_out %>% 
+  tidy(A3) %>% 
+  mutate(zone = "A3") -> A3
+lm_out %>% 
+  tidy(A4) %>% 
+  mutate(zone = "A4") -> A4
+lm_out %>% 
+  tidy(A6) %>% 
+  mutate(zone = "A6") -> A6
+
+x<- rbind(A1, A2) #combine data for all zones
+x<- rbind(x, A3)
+x<- rbind(x, A4)
+x<- rbind(x, A6)
+write_csv(x, "output/BPH_lm.csv")
+
+lm_out %>% 
+  glance(A1) %>% 
+  mutate(zone = "A1") -> A1
+lm_out %>% 
+  glance(A2) %>% 
+  mutate(zone = "A2") -> A2
+lm_out %>% 
+  glance(A3) %>% 
+  mutate(zone = "A3") -> A3
+lm_out %>% 
+  glance(A4) %>% 
+  mutate(zone = "A4") -> A4
+lm_out %>% 
+  glance(A6) %>% 
+  mutate(zone = "A6") -> A6
+
+x<- rbind(A1, A2) #combine data for all zones
+x<- rbind(x, A3)
+x<- rbind(x, A4)
+x<- rbind(x, A6)
+write_csv(x, "output/BPH_lm_R2.csv")
+
+lm_out %>% 
+  augment(A1) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point()+geom_line(aes(radcap, fit), color ="grey50") + 
+  annotate("text", x = 4.5, y=250, label="BPH (A1)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> A1
+
+lm_out %>% 
+  augment(A2) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point()+geom_line(aes(radcap, fit), color ="grey50") + 
+  annotate("text", x = 4.5, y=250, label="BPH (A2)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> A2
+
+lm_out %>% 
+  augment(A3) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point()+geom_line(aes(radcap, fit), color ="grey50") + 
+  annotate("text", x = 5, y=250, label="BPH (A3)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> A3
+
+lm_out %>% 
+  augment(A4) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point()+geom_line(aes(radcap, fit), color ="grey50") + 
+  annotate("text", x = 4, y=250, label="BPH (A4)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> A4
+
+lm_out %>% 
+  augment(A6) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point()+geom_line(aes(radcap, fit), color ="grey50") + 
+  annotate("text", x = 4, y=250, label="BPH (A6)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> A6
+cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
+ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width =8, units = "in")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #Test #2: ANOVA with repeated treatments (between and within group variability) with multilevels 
           #(a regression that allows for the errors to be dependent on eachother (as our conditions of Valence were repeated within each participant). 
