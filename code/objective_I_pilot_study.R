@@ -304,6 +304,7 @@ x %>% dplyr::select(fish, agei, zone, BPH.len) %>%
 
 #calculate difference in back-calculated zones in percents from zone A1
 #http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
+
 #SCALE PROPOTIONAL HYPOTHESIS
 data_wide_SPH %<>% 
   mutate(A2= abs((A1-A2)/A1)*100,
@@ -312,14 +313,15 @@ data_wide_SPH %<>%
          A6= abs((A1-A6)/A1)*100)%>% 
   dplyr::select(fish, agei,A2, A3, A4, A6) 
 
-data_wide_SPH %<>% gather(variable, value, -agei, -fish) %>% 
+data_wide_SPH %>% 
+  gather(variable, value, -agei, -fish) %>% 
   group_by(agei, variable) %>% 
   summarise(mean.SPH=mean(value, na.rm=T),
             sd.SPH=sd(value, na.rm=T),
             n.SPH=n(),
             se.SPH=sd(value, na.rm=T)/sqrt(n()))%>%
   mutate(age = as.factor(agei),
-         zone=as.factor(variable))
+         zone=as.factor(variable)) -> data_wide_SPH 
 
 #BODY PROPOTIONAL HYPOTHESIS
 data_wide_BPH %<>%
@@ -329,7 +331,8 @@ data_wide_BPH %<>%
          A6= abs((A1-A6)/A1)*100) %>% 
   dplyr::select(fish, agei,A2, A3, A4, A6)
 
-data_wide_BPH %<>% gather(variable, value, -agei, -fish) %>% 
+data_wide_BPH  %>%  
+  gather(variable, value, -agei, -fish) %>% 
   group_by(agei, variable) %>% 
   summarise(mean.BPH=mean(value, na.rm=T),
             sd.BPH=sd(value, na.rm=T),
