@@ -349,7 +349,7 @@ ggplot(data = data_wide_SPH, aes(x = age, y = mean.SPH)) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75), legend.title=element_blank())+
   annotate("text", x = 1.9, y=18, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
-  labs(x = "Age (Annulus)", y =  "Mean % Difference")-> SPH
+  labs(x = "Age", y =  "Mean % Difference")-> SPH
 
 tickr_length <- data.frame(mean.SPH = 0:300)
 axisb <- tickr(tickr_length, mean.SPH, 50)
@@ -358,7 +358,7 @@ ggplot(data = sample2, aes(x = as.factor(agei), y = mn.SPH.len)) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.05,.7), legend.title=element_blank())+
   annotate("text", x = 2, y=250, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250), limits = c(0,250))+
-  labs(x = "Age (Annulus)", y =  "Back-Calculated Length (mm)")-> SPH2
+  labs(x = "Age", y =  "Back-Calculated Length (mm)")-> SPH2
 
 #ANCOVA Models (SPH)
 lm_data_zone %>% 
@@ -376,10 +376,10 @@ lm_out %>%
   augment(taggingr) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = lencap, y = radcap)) +
-  geom_point()+facet_wrap(~zone)+geom_line(aes(lencap, fit), color ="grey50") + 
+  geom_point(color="grey50")+facet_wrap(~zone)+geom_line(aes(lencap, fit), color = "black") + 
   annotate("text", x = 175, y=7, label="Scale Proportional Hypothesis", family="Times New Roman")+
   scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> SPH3
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> SPH3
 ggsave("figs/SPH_ANCOVA.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #Linear models by zone (SPH)
@@ -438,46 +438,46 @@ lm_out %>%
   augment(A1) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = lencap, y = radcap)) +
-  geom_point()+geom_line(aes(lencap, fit), color ="grey50") + 
-  annotate("text", x = 175, y=7, label="SPH (A1)", family="Times New Roman")+
-  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> A1
+  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
+  annotate("text", x = 200, y=7, label="SPH (A1)", family="Times New Roman")+
+  scale_x_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A1
 
 lm_out %>% 
   augment(A2) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = lencap, y = radcap)) +
-  geom_point()+geom_line(aes(lencap, fit), color ="grey50") + 
-  annotate("text", x = 175, y=7, label="SPH (A2)", family="Times New Roman")+
-  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> A2
+  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
+  annotate("text", x = 200, y=7, label="SPH (A2)", family="Times New Roman")+
+  scale_x_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A2
 
 lm_out %>% 
   augment(A3) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = lencap, y = radcap)) +
-  geom_point()+geom_line(aes(lencap, fit), color ="grey50") + 
-  annotate("text", x = 175, y=7, label="SPH (A3)", family="Times New Roman")+
-  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> A3
+  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
+  annotate("text", x = 200, y=7, label="SPH (A3)", family="Times New Roman")+
+  scale_x_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A3
 
 lm_out %>% 
   augment(A4) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = lencap, y = radcap)) +
-  geom_point()+geom_line(aes(lencap, fit), color ="grey50") + 
-  annotate("text", x = 175, y=7, label="SPH (A4)", family="Times New Roman")+
-  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> A4
+  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
+  annotate("text", x = 200, y=7, label="SPH (A4)", family="Times New Roman")+
+  scale_x_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A4
 
 lm_out %>% 
   augment(A6) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = lencap, y = radcap)) +
-  geom_point()+geom_line(aes(lencap, fit), color ="grey50") + 
-  annotate("text", x = 175, y=7, label="SPH (A6))", family="Times New Roman")+
-  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(y = "Scale Radius (mm)", x =  "Length at Capture (mm)")-> A6
+  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
+  annotate("text", x = 200, y=7, label="SPH (A6)", family="Times New Roman")+
+  scale_x_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A6
 cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
 ggsave("figs/SPH_regression.png", dpi = 500, height = 6, width = 8, units = "in")
 
@@ -489,7 +489,7 @@ ggplot(data = data_wide_BPH, aes(x = age, y = mean.BPH)) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position="none")+
   annotate("text", x = 1.9, y=35, label="B) Body Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
-  labs(x = "Age (Annulus)", y =  "Mean % Difference")-> BPH
+  labs(x = "Age", y =  "Mean % Difference")-> BPH
 cowplot::plot_grid(SPH, BPH,   align = "hv", nrow = 2, ncol=1) 
 ggsave("figs/length_diff.png", dpi = 500, height = 6, width = 8, units = "in")
 
@@ -500,7 +500,7 @@ ggplot(data = sample2, aes(x = as.factor(agei), y = mn.BPH.len)) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position="none")+
   annotate("text", x = 2, y=350, label="B) Body Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250, 300, 350), limits = c(0,350))+
-  labs(x = "Age (Annulus)", y =  "Back-Calculated Length (mm)")-> BPH2
+  labs(x = "Age", y =  "Back-Calculated Length (mm)")-> BPH2
 cowplot::plot_grid(SPH2, BPH2,   align = "hv", nrow = 2, ncol=1) 
 ggsave("figs/length.png", dpi = 500, height = 6, width = 8, units = "in")
 
@@ -524,7 +524,7 @@ lm_out %>%
   geom_point()+facet_wrap(~zone)+geom_line(aes(radcap, fit), color ="grey50") + 
   annotate("text", x = 4, y=250, label="Body Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> BPH3
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> BPH3
 ggsave("figs/BPH_ANCOVA.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #Linear models by zone (BPH)
@@ -583,46 +583,46 @@ lm_out %>%
   augment(A1) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
-  geom_point()+geom_line(aes(radcap, fit), color ="grey50") + 
+  geom_point(color ="grey50")+geom_line(aes(radcap, fit), color = "black") + 
   annotate("text", x = 4.5, y=250, label="BPH (A1)", family="Times New Roman")+
-  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> A1
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A1
 
 lm_out %>% 
   augment(A2) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
-  geom_point()+geom_line(aes(radcap, fit), color ="grey50") + 
+  geom_point(color ="grey50")+geom_line(aes(radcap, fit), color = "black") + 
   annotate("text", x = 4.5, y=250, label="BPH (A2)", family="Times New Roman")+
-  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> A2
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A2
 
 lm_out %>% 
   augment(A3) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
-  geom_point()+geom_line(aes(radcap, fit), color ="grey50") + 
-  annotate("text", x = 5, y=250, label="BPH (A3)", family="Times New Roman")+
-  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> A3
+  geom_point(color ="grey50")+geom_line(aes(radcap, fit), color = "black") + 
+  annotate("text", x = 4.75, y=250, label="BPH (A3)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A3
 
 lm_out %>% 
   augment(A4) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
-  geom_point()+geom_line(aes(radcap, fit), color ="grey50") + 
-  annotate("text", x = 4, y=250, label="BPH (A4)", family="Times New Roman")+
-  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> A4
+  geom_point(color ="grey50")+geom_line(aes(radcap, fit), color = "black") + 
+  annotate("text", x = 3.5, y=250, label="BPH (A4)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A4
 
 lm_out %>% 
   augment(A6) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
-  geom_point()+geom_line(aes(radcap, fit), color ="grey50") + 
-  annotate("text", x = 4, y=250, label="BPH (A6)", family="Times New Roman")+
-  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(x = "Scale Radius (mm)", y =  "Length at Capture (mm)")-> A6
+  geom_point(color ="grey50")+geom_line(aes(radcap, fit), color = "black") + 
+  annotate("text", x = 3.5, y=250, label="BPH (A6)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A6
 cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
 ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width =8, units = "in")
 
