@@ -30,6 +30,9 @@ library(broom)
 library(psych)
 library(WRS2)
 library(cowplot)
+library(ggbiplot)
+library(vqv)
+library(nlme)
 
 windowsFonts(Times=windowsFont("Times New Roman"))
 theme_sleek <- function(base_size = 12, base_family = "Times") {
@@ -626,59 +629,7 @@ lm_out %>%
 cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
 ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width =8, units = "in")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#Test #2: ANOVA with repeated treatments (between and within group variability) with multilevels 
-          #(a regression that allows for the errors to be dependent on eachother (as our conditions of Valence were repeated within each participant). 
-#https://sapa-project.org/blog/2013/06/28/repeated-measures-anova-in-r/
-data %>% 
-  dplyr::select(id, fish, agecap, lencap, radcap, aprop1, aprop2, aprop3, aprop4, aprop5, aprop6, aprop7, aprop8, aprop9, zone) -> dataR 
-
-# sample one from each fish and zone combo since have three samples from each fish/zone combo
-set.seed(167) #set seed keeps random sample the same
-dataR %>% 
-  group_by(fish, zone) %>% 
-  sample_n(1) %>%
-  filterD(!is.na(aprop1))%>% 
-  as.data.frame() -> sample1
-
-
-model.fixed = gls(aprop1 ~ zone, data=sample1, method="ML") #fixed effects only
-lm_simple <- lm(aprop1 ~ zone, data = sample1) #fixed effects only
-
-baseline = lme(aprop3 ~ 1, random = ~1|fish/zone, data=sample1, method="ML") #Model with a random intercept and slope for each fish nested within zone:
-zone_model = lme(aprop3 ~ zone, random = ~1|fish/zone, data=sample1, method="ML")
-
-anova(baseline, zone_model) #zone had a significant impact on the measured aprop1 of the fish
-posthoc <- glht(zone_model, linfct = mcp(zone = "Tukey"))
-
-summary(lm_simple)
-summary(baseline)
-summary(zone_model)
-summary(posthoc)
-
-library(psych)
-describeBy(data$aprop1, group = data$zone)
-# y= proportions, x = prop1, propr 2, and bars are A1 through A6
-
-#figure for proportions by zone for all increments
-qplot(zone, aprop2, data = sample1)+ 
-  geom_boxplot()  + scale_fill_brewer()
-
+#Test #2: PCA 
 #test for normality
 eda.norm <- function(x, ...)
 {
@@ -698,11 +649,97 @@ eda.norm <- function(x, ...)
   lines(y, pnorm(y, mean(x), sqrt(var(x))))
   shapiro.test(x)
 }
-#Test #3: One-way repeated measures ANOVA for trimmed means
+data %>% 
+  dplyr::select(id, fish, agecap, lencap, radcap, aprop1, aprop2, aprop3, aprop4, aprop5, aprop6, aprop7, aprop8, aprop9, zone) -> dataR 
+
+# sample one from each fish and zone combo since have three samples from each fish/zone combo
+set.seed(167) #set seed keeps random sample the same
+dataR %>% 
+  group_by(fish, zone) %>% 
+  sample_n(1) %>%
+  filterD(!is.na(aprop1)) %>% 
+  as.data.frame() -> sample1
+
+#correlation matrix of data
+sample1 %>% dplyr::select(fish, aprop1, zone) %>%
+  spread(key = zone, value = aprop1) -> data_wide
+data <- data_wide[,2:length(data_wide)]
+round((cor(data, use = "complete.obs")),2)
+
+
+#Test #3: ANOVA with repeated treatments (between and within group variability) with multilevels 
+#(a regression that allows for the errors to be dependent on eachother (as our conditions of Valence were repeated within each participant). 
+#https://sapa-project.org/blog/2013/06/28/repeated-measures-anova-in-r/
+data %>% 
+  dplyr::select(id, fish, agecap, lencap, radcap, aprop1, aprop2, aprop3, aprop4, aprop5, aprop6, aprop7, aprop8, aprop9, zone) -> dataR 
+
+# sample one from each fish and zone combo since have three samples from each fish/zone combo
+set.seed(167) #set seed keeps random sample the same
+dataR %>% 
+  group_by(fish, zone) %>% 
+  sample_n(1) %>%
+  as.data.frame() -> sample1
+
+#analysis of variance
+a1 <- aov(sample1$aprop1 ~ sample1$zone)
+summary(a1)
+posthoc <- TukeyHSD(x=a1, 'sample1$zone', conf.level=0.95)
+posthoc
+
+#analysis of variance
+a2 <- aov(sample1$aprop2 ~ sample1$zone)
+summary(a2)
+posthoc <- TukeyHSD(x=a2, 'sample1$zone', conf.level=0.95)
+posthoc
+
+#analysis of variance
+a3 <- aov(sample1$aprop3 ~ sample1$zone)
+summary(a3)
+posthoc <- TukeyHSD(x=a3, 'sample1$zone', conf.level=0.95)
+posthoc
+
+#analysis of variance
+a4 <- aov(sample1$aprop4 ~ sample1$zone)
+summary(a4)
+posthoc <- TukeyHSD(x=a4, 'sample1$zone', conf.level=0.95)
+posthoc
+
+#analysis of variance
+a5 <- aov(sample1$aprop5 ~ sample1$zone)
+summary(a5)
+posthoc <- TukeyHSD(x=a5, 'sample1$zone', conf.level=0.95)
+posthoc
+
+#analysis of variance
+a6 <- aov(sample1$aprop2 ~ sample1$zone)
+summary(a8)
+posthoc <- TukeyHSD(x=a8, 'sample1$zone', conf.level=0.95)
+posthoc
+
+
+#random effects model in r
+fish <-as.factor(fish)
+model <- lme(aprop1 ~ zone, random=~1|fish, data=sample1, method="REML") #model with random effects of fish
+model.fixed <-  aov(aprop1 ~ zone, data=sample1)
+
+anova(model.fixed) #compare models
+posthoc <- glht(model.fixed, linfct = mcp(zone = "Tukey"))
+summary(posthoc)
+ref <- lsmeans(model,specs = c("zone"))
+
+
+
+
+
+
+#Test #4: One-way repeated measures ANOVA for trimmed means
 #https://cran.r-project.org/web/packages/WRS2/WRS2.pdf
 eda.norm(sample1$aprop1)
+sample1 %>% dplyr::select(fish, aprop1, zone) -> sample1
+  spread(key = zone, value = aprop1) -> data_wide
 
-rmanova(y=sample1$aprop1, groups=sample1$zone, sample1$fish)
+x <- sample1[complete.cases(sample1), ]
+rmanova(y=x$aprop1, groups=x$zone, x$fish)
 rmmcp(sample1$aprop1, sample1$zone, sample1$fish)
 
 rmanova(sample1$aprop2, sample1$zone, sample1$fish)
@@ -710,3 +747,4 @@ rmmcp(sample1$aprop2, sample1$zone, sample1$fish)
 
 rmanova(sample1$aprop1, sample1$zone, sample1$fish)
 rmmcp(sample1$aprop1, sample1$zone, sample1$fish)
+
