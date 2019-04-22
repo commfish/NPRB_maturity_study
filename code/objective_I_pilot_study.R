@@ -4,9 +4,9 @@
 #Last edited: February, 2019
 
 # load libraries----
-devtools::install_github("ben-williams/FNGr")
-devtools::install_github('droglenc/RFishBC')
-devtools::install_github('droglenc/FSA')
+#devtools::install_github("ben-williams/FNGr")
+#devtools::install_github('droglenc/RFishBC')
+#devtools::install_github('droglenc/FSA')
 
 #font_import() #only do this one time - it takes a while
 loadfonts(device="win")
@@ -33,6 +33,7 @@ library(cowplot)
 library(ggbiplot)
 library(vqv)
 library(nlme)
+library(ggplot2)
 
 windowsFonts(Times=windowsFont("Times New Roman"))
 theme_sleek <- function(base_size = 12, base_family = "Times") {
@@ -292,9 +293,13 @@ x %>%
   summarize(n.radcap=validn(radcap), mn.radcap=mean(radcap),sd.radcap=sd(radcap),
             ss.radcap = sum(radcap^2),cv.radcap = coefficient.variation(sd.radcap, mn.radcap),
             n.SPH=validn(SPH.len),mn.SPH.len=mean(SPH.len),sd.SPH.len=sd(SPH.len),ss.SPH.len = sum(SPH.len^2),
-            cv.SPH = coefficient.variation(sd.SPH.len, mn.SPH.len),
+            cv.SPH = coefficient.variation(sd.SPH.len, mn.SPH.len),error.SPH=qt(0.975,df=n.SPH-1)*sd.SPH.len/sqrt(n.SPH),
+            upper.SPH=mn.SPH.len+error.SPH,
+            lower.SPH=mn.SPH.len-error.SPH,
             n.BPH=validn(BPH.len),mn.BPH.len=mean(BPH.len),sd.BPH.len=sd(BPH.len), ss.BPH.len = sum(BPH.len^2),
-            cv.BPH = coefficient.variation(sd.BPH.len, mn.BPH.len)) %>%
+            cv.BPH = coefficient.variation(sd.BPH.len, mn.BPH.len),error.BPH=qt(0.975,df=n.BPH-1)*sd.BPH.len/sqrt(n.BPH),
+            upper.BPH=mn.BPH.len+error.BPH,
+            lower.BPH=mn.BPH.len-error.BPH) %>%
   as.data.frame() -> sample2
 write.csv(sample2, "output/table_summary_obj1.csv") 
 
@@ -303,7 +308,10 @@ x %>% dplyr::select(fish, agei, zone, SPH.len) %>%
 
   
 x %>% dplyr::select(fish, agei, zone, BPH.len) %>%
-  spread(key = zone, value = BPH.len) -> data_wide_BPH
+  spread(key = zone, value = BPH.len) %>%
+  as.data.frame() -> data_wide_BPH
+#write_csv(data_wide_BPH, "output/test3.csv")
+
 
 #calculate difference in back-calculated zones in percents from zone A1
 #http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
@@ -352,6 +360,7 @@ ggplot(data = data_wide_SPH, aes(x = age, y = mean.SPH)) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75), legend.title=element_blank())+
   annotate("text", x = 1.9, y=18, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
+  geom_text(size=2.5, aes(y=mean.SPH+0.2, label=round (n.SPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
   labs(x = "Age", y =  "Mean % Difference")-> SPH
 
 tickr_length <- data.frame(mean.SPH = 0:300)
@@ -361,6 +370,12 @@ ggplot(data = sample2, aes(x = as.factor(agei), y = mn.SPH.len)) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.05,.7), legend.title=element_blank())+
   annotate("text", x = 2, y=250, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250), limits = c(0,250))+
+  #geom_text(size=2.5, aes(y=upper.SPH+4, label=round (n.SPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
+  geom_errorbar(aes(ymin = lower.SPH, ymax = upper.SPH, group=zone),
+                width = 0.2,
+                linetype = "solid",
+                position = position_dodge(width = 1),
+                color="black", size=1)+
   labs(x = "Age", y =  "Back-Calculated Length (mm)")-> SPH2
 
 #ANCOVA Models (SPH)
@@ -492,6 +507,7 @@ ggplot(data = data_wide_BPH, aes(x = age, y = mean.BPH)) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position="none")+
   annotate("text", x = 1.9, y=35, label="B) Body Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
+  geom_text(size=2.5, aes(y=mean.BPH+0.2, label=round(n.BPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
   labs(x = "Age", y =  "Mean % Difference")-> BPH
 cowplot::plot_grid(SPH, BPH,   align = "hv", nrow = 2, ncol=1) 
 ggsave("figs/length_diff.png", dpi = 500, height = 6, width = 8, units = "in")
@@ -503,6 +519,12 @@ ggplot(data = sample2, aes(x = as.factor(agei), y = mn.BPH.len)) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position="none")+
   annotate("text", x = 2, y=350, label="B) Body Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250, 300, 350), limits = c(0,350))+
+  #geom_text(size=2.5, aes(y=upper.BPH+4, label=round (n.BPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
+  geom_errorbar(aes(ymin = lower.BPH, ymax = upper.BPH, group=zone),
+                width = 0.2,
+                linetype = "solid",
+                position = position_dodge(width = 1),
+                color="black", size=1)+
   labs(x = "Age", y =  "Back-Calculated Length (mm)")-> BPH2
 cowplot::plot_grid(SPH2, BPH2,   align = "hv", nrow = 2, ncol=1) 
 ggsave("figs/length.png", dpi = 500, height = 6, width = 8, units = "in")
