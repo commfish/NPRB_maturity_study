@@ -652,8 +652,7 @@ ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width =8, units = "in")
 #BPH and SPH regression fig
 lm_out_SPH %<>% 
   augment(A1) %>% 
-  mutate(fit_SPH = (.fitted)) %>% 
-as.data.frame()
+  mutate(fit_SPH = (.fitted)) 
 
 lm_out_BPH %>% 
   augment(A1) %>% 
@@ -661,22 +660,94 @@ lm_out_BPH %>%
   ggplot(aes(x = radcap, y = lencap)) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 2.6, y=250, label="Region: A1", family="Times New Roman")+
-  geom_segment(aes(x = 5.32, y = 151, xend = 5.32, yend = 213), size=1, colour="grey80") +
-  geom_segment(aes(x = 2.5, y = 213, xend = 5.32, yend = 213), size=1, colour="grey80") +
-  
-  geom_segment(aes(x = 2.35, y = 110, xend = 2.35, yend = 117.96), size=1, colour="grey80") +
-  geom_segment(aes(x = 0, y = 117.96, xend = 1235, yend = 117.96), size=1, colour="grey80") +
-  
-  annotate("text", x = 5.32, y=215, label="P", family="Times New Roman")+
-  annotate("text", x = 2.55, y=215, label="Lc", family="Times New Roman")+
-  annotate("text", x = 5.32, y=150, label="Sc", family="Times New Roman")+
-  scale_y_continuous(breaks = c(100, 125, 150, 175, 200, 225, 250), limits = c(100,250))+
-  scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7), limits = c(0,7))+
+  annotate("text", x = 0.5, y=240, label="Region: A1", family="Times New Roman", size=5)+
+  geom_segment(aes(x = 5.32, y = 41, xend = 5.32, yend = 213), size=1, colour="grey80") + #Sc
+  geom_segment(aes(x = 0, y = 213, xend = 5.32, yend = 213), size=1, colour="grey80") + #Lc
+  geom_segment(aes(x = 0, y = 173.0411, xend = 4.07, yend = 173.0411), size=1, colour="grey80") + #SPH
+  geom_segment(aes(x = 4.07, y = 41, xend = 4.07, yend = 173.0411), size=1, colour="grey80") +     #SPH
+  geom_segment(aes(x = 5.32, y = 213, xend = 0, yend = 42.76), size=2, colour="black", lty=2) +     #SPH
+  geom_segment(aes(x = 0, y = 184.5, xend = 4.07, yend = 184.5), size=1, colour="grey80") +        #BPH
+  geom_segment(aes(x = 4.07, y = 41, xend = 4.07, yend = 184.5), size=1, colour="grey80") +         #BPH
+  geom_segment(aes(x = 5.32, y = 213, xend = 0, yend = 91.866), size=1, colour="black", lty=2)+  #BPH
+  annotate("text", x = 0.3, y=182, label="L1 (BPH)", family="Times New Roman")+
+  annotate("text", x = 0.3, y=170, label="L1 (SPH)", family="Times New Roman")+
+  annotate("text", x = 5.32, y=217, label="P", family="Times New Roman")+
+  annotate("text", x = 0.1, y=217, label="Lc", family="Times New Roman")+
+  annotate("text", x = 5.32, y=40, label="Sc", family="Times New Roman")+
+  annotate("text", x = 4.07, y=40, label="S1", family="Times New Roman")+
+  scale_y_continuous(breaks = c(40, 80, 120, 160, 200, 240), limits = c(40,240))+
+  scale_x_continuous(expand = c(0, 0), limits=c(0,6.5))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A1 
-  
+ggsave("figs/BPH_SPH_regression_fit.png", dpi = 500, height = 6, width =8, units = "in")
 
-  
+lm_out_SPH %<>% 
+  augment(A1) %>% 
+  mutate(fit_SPH = (.fitted)) 
+lm_out_BPH %>% 
+  augment(A1) %>% 
+  mutate(fit_BPH = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
+  geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
+  annotate("text", x = 0.5, y=240, label="Region: A1", family="Times New Roman", size=5)+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  scale_x_continuous(breaks = c(2,3,4,5,6,7), limits = c(2,7))+
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A1 
+
+lm_out_SPH %<>% 
+  augment(A2) %>% 
+  mutate(fit_SPH = (.fitted)) 
+lm_out_BPH %>% 
+  augment(A2) %>% 
+  mutate(fit_BPH = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
+  geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
+  annotate("text", x = 0.5, y=240, label="Region: A3", family="Times New Roman", size=5)+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  scale_x_continuous(breaks = c(2,3,4,5,6,7), limits = c(2,7))+
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A2 
+
+lm_out_SPH %<>% 
+  augment(A3) %>% 
+  mutate(fit_SPH = (.fitted))
+lm_out_BPH %>% 
+  augment(A3) %>% 
+  mutate(fit_BPH = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
+  geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
+  annotate("text", x = 0.5, y=240, label="Region: A3", family="Times New Roman", size=5)+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A3 
+
+lm_out_SPH %<>% 
+  augment(A4) %>% 
+  mutate(fit_SPH = (.fitted)) 
+lm_out_BPH %>% 
+  augment(A4) %>% 
+  mutate(fit_BPH = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
+  geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
+  annotate("text", x = 0.5, y=240, label="Region: A4", family="Times New Roman", size=5)+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A4 
+
+lm_out_SPH %<>% 
+  augment(A6) %>% 
+  mutate(fit_SPH = (.fitted))
+lm_out_BPH %>% 
+  augment(A6) %>% 
+  mutate(fit_BPH = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
+  geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
+  annotate("text", x = 0.5, y=240, label="Region: A6", family="Times New Roman", size=5)+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A6 
+cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
+ggsave("figs/BPH_SPH_regression.png", dpi = 500, height = 6, width =8, units = "in") 
   
 #Test #2: PCA 
 #test for normality
