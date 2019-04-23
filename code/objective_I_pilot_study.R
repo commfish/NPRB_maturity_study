@@ -4,13 +4,11 @@
 #Last edited: February, 2019
 
 # load libraries----
-#devtools::install_github("ben-williams/FNGr")
-#devtools::install_github('droglenc/RFishBC')
-#devtools::install_github('droglenc/FSA')
+devtools::install_github("ben-williams/FNGr")
+devtools::install_github('droglenc/RFishBC')
+devtools::install_github('droglenc/FSA')
 
-#font_import() #only do this one time - it takes a while
-loadfonts(device="win")
-
+windowsFonts(Times=windowsFont("Times New Roman"))
 library(extrafont)
 library(tidyverse)
 library(devtools)
@@ -30,10 +28,9 @@ library(broom)
 library(psych)
 library(WRS2)
 library(cowplot)
-library(ggbiplot)
-library(vqv)
 library(nlme)
 library(ggplot2)
+library(rlang)
 
 windowsFonts(Times=windowsFont("Times New Roman"))
 theme_sleek <- function(base_size = 12, base_family = "Times") {
@@ -679,70 +676,70 @@ lm_out_BPH %>%
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A1 
 ggsave("figs/BPH_SPH_regression_fit.png", dpi = 500, height = 6, width =8, units = "in")
 
-lm_out_SPH %<>% 
+lm_out_SPH %>%
   augment(A1) %>% 
-  mutate(fit_SPH = (.fitted)) 
+  mutate(fit_SPH = (.fitted)) -> lm_out_SPH
 lm_out_BPH %>% 
   augment(A1) %>% 
   mutate(fit_BPH = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 0.5, y=240, label="Region: A1", family="Times New Roman", size=5)+
+  annotate("text", x = 0.5, y=240, label="Region: A1", size=5)+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   scale_x_continuous(breaks = c(2,3,4,5,6,7), limits = c(2,7))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A1 
 
-lm_out_SPH %<>% 
+lm_out_SPH %>% 
   augment(A2) %>% 
-  mutate(fit_SPH = (.fitted)) 
+  mutate(fit_SPH = (.fitted)) -> lm_out_SPH
 lm_out_BPH %>% 
   augment(A2) %>% 
   mutate(fit_BPH = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 0.5, y=240, label="Region: A3", family="Times New Roman", size=5)+
+  annotate("text", x = 0.5, y=240, label="Region: A3", size=5)+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   scale_x_continuous(breaks = c(2,3,4,5,6,7), limits = c(2,7))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A2 
 
-lm_out_SPH %<>% 
+lm_out_SPH %>% 
   augment(A3) %>% 
-  mutate(fit_SPH = (.fitted))
+  mutate(fit_SPH = (.fitted)) -> lm_out_SPH
 lm_out_BPH %>% 
   augment(A3) %>% 
   mutate(fit_BPH = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 0.5, y=240, label="Region: A3", family="Times New Roman", size=5)+
+  annotate("text", x = 0.5, y=240, label="Region: A3", size=5)+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A3 
 
-lm_out_SPH %<>% 
+lm_out_SPH %>%
   augment(A4) %>% 
-  mutate(fit_SPH = (.fitted)) 
+  mutate(fit_SPH = (.fitted))  -> lm_out_SPH
 lm_out_BPH %>% 
   augment(A4) %>% 
   mutate(fit_BPH = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 0.5, y=240, label="Region: A4", family="Times New Roman", size=5)+
+  annotate("text", x = 0.5, y=240, label="Region: A4", size=5)+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A4 
 
-lm_out_SPH %<>% 
+lm_out_SPH %>%  
   augment(A6) %>% 
-  mutate(fit_SPH = (.fitted))
+  mutate(fit_SPH = (.fitted)) -> lm_out_SPH
 lm_out_BPH %>% 
   augment(A6) %>% 
   mutate(fit_BPH = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 0.5, y=240, label="Region: A6", family="Times New Roman", size=5)+
+  annotate("text", x = 0.5, y=240, label="Region: A6", size=5)+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A6 
 cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
