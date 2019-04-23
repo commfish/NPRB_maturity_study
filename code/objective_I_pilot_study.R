@@ -4,14 +4,13 @@
 #Last edited: February, 2019
 
 # load libraries----
-devtools::install_github("ben-williams/FNGr")
-devtools::install_github('droglenc/RFishBC')
-devtools::install_github('droglenc/FSA')
+# devtools::install_github("ben-williams/FNGr")
+# devtools::install_github('droglenc/RFishBC')
+# devtools::install_github('droglenc/FSA')
 
 windowsFonts(Times=windowsFont("Times New Roman"))
 library(extrafont)
 library(tidyverse)
-library(devtools)
 library(FNGr)
 library(cowplot)
 library(lme4)
@@ -29,27 +28,7 @@ library(psych)
 library(WRS2)
 library(cowplot)
 library(nlme)
-library(ggplot2)
-library(rlang)
 
-windowsFonts(Times=windowsFont("Times New Roman"))
-theme_sleek <- function(base_size = 12, base_family = "Times") {
-  half_line <- base_size/2
-  theme_light(base_size = 12, base_family = "Times") +
-    theme(
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      axis.ticks.length = unit(half_line / 2.2, "pt"),
-      strip.background = element_rect(fill = NA, colour = NA),
-      strip.text.x = element_text(colour = "black"),
-      strip.text.y = element_text(colour = "black"),
-      panel.border = element_rect(fill = NA),
-      legend.text=element_text(size=12),
-      legend.key.size = unit(0.9, "lines"),
-      legend.key = element_rect(colour = NA, fill = NA),
-      legend.background = element_rect(colour = NA, fill = NA)
-    )
-}
 
 theme_set(theme_sleek())
 
@@ -647,14 +626,15 @@ cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
 ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width =8, units = "in")
 
 #BPH and SPH regression fig
-lm_out_SPH %<>% 
+lm_out_SPH %>% 
   augment(A1) %>% 
   mutate(fit_SPH = (.fitted)) 
 
-lm_out_BPH %>% 
+lm_out_BPH %<>% 
   augment(A1) %>% 
-  mutate(fit_BPH = (.fitted)) %>% 
-  ggplot(aes(x = radcap, y = lencap)) +
+  mutate(fit_BPH = (.fitted)) 
+
+  ggplot(aes(x = radcap, y = lencap), data=lm_out_BPH) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
   geom_segment(aes(x = 5.32, y = 41, xend = 5.32, yend = 213), size=1, colour="grey80") + #Sc
@@ -676,16 +656,18 @@ lm_out_BPH %>%
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A1 
 ggsave("figs/BPH_SPH_regression_fit.png", dpi = 500, height = 6, width =8, units = "in")
 
-lm_out_SPH %>%
+lm_out_SPH %>% 
   augment(A1) %>% 
-  mutate(fit_SPH = (.fitted)) -> lm_out_SPH
-lm_out_BPH %>% 
+  mutate(fit_SPH = (.fitted)) ->  lm_out_SPH 
+
+lm_out_BPH %>%  
   augment(A1) %>% 
-  mutate(fit_BPH = (.fitted)) %>% 
-  ggplot(aes(x = radcap, y = lencap)) +
+  mutate(fit_BPH = (.fitted)) -> lm_out_BPH 
+
+  ggplot(aes(x = radcap, y = lencap), data = lm_out_BPH) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 0.5, y=240, label="Region: A1", size=5)+
+  #annotate("text", x = 0.5, y=240, label="Region: A1", size=5)+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   scale_x_continuous(breaks = c(2,3,4,5,6,7), limits = c(2,7))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A1 
@@ -699,7 +681,7 @@ lm_out_BPH %>%
   ggplot(aes(x = radcap, y = lencap)) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 0.5, y=240, label="Region: A3", size=5)+
+  #annotate("text", x = 0.5, y=240, label="Region: A3", size=5)+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   scale_x_continuous(breaks = c(2,3,4,5,6,7), limits = c(2,7))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A2 
