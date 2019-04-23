@@ -27,7 +27,6 @@ library(broom)
 library(psych)
 library(WRS2)
 library(cowplot)
-library(nlme)
 
 
 theme_set(theme_sleek())
