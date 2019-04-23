@@ -660,7 +660,6 @@ lm_out_BPH %>%
   ggplot(aes(x = radcap, y = lencap)) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 0.5, y=240, label="Region: A1", family="Times New Roman", size=5)+
   geom_segment(aes(x = 5.32, y = 41, xend = 5.32, yend = 213), size=1, colour="grey80") + #Sc
   geom_segment(aes(x = 0, y = 213, xend = 5.32, yend = 213), size=1, colour="grey80") + #Lc
   geom_segment(aes(x = 0, y = 173.0411, xend = 4.07, yend = 173.0411), size=1, colour="grey80") + #SPH
