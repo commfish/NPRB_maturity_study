@@ -27,7 +27,7 @@ library(broom)
 library(psych)
 library(WRS2)
 library(cowplot)
-
+library(ggmisc)
 
 theme_set(theme_sleek())
 
@@ -202,6 +202,7 @@ sample1 %>%
     mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
                     BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A1 #Body Proportional Hypothesis (Whitney and Carlander 1956) 
 
+
 sample1 %>%
   filter(zone == "A2" & agei == 1)-> lm_data
 lm.sl <- lm(radcap~lencap,data=lm_data)
@@ -375,11 +376,11 @@ ggsave("figs/SPH_ANCOVA.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #Linear models by zone (SPH)
 lm_data_zone %>% 
-   do(A1 = lm(radcap ~ lencap, data = sample1[sample1$zone=="A1",]),
-      A2 = lm(radcap ~ lencap, data = sample1[sample1$zone=="A2",]),
-      A3 = lm(radcap ~ lencap, data = sample1[sample1$zone=="A3",]),
-      A4 = lm(radcap ~ lencap, data = sample1[sample1$zone=="A4",]),
-      A6 = lm(radcap ~ lencap, data = sample1[sample1$zone=="A6",])) -> lm_out_SPH
+   do(A1 = lm(radcap ~ lencap, data = lm_data_zone[lm_data_zone$zone=="A1",]),
+      A2 = lm(radcap ~ lencap, data = lm_data_zone[lm_data_zone$zone=="A2",]),
+      A3 = lm(radcap ~ lencap, data = lm_data_zone[lm_data_zone$zone=="A3",]),
+      A4 = lm(radcap ~ lencap, data = lm_data_zone[lm_data_zone$zone=="A4",]),
+      A6 = lm(radcap ~ lencap, data = lm_data_zone[lm_data_zone$zone=="A6",])) -> lm_out_SPH
 
 lm_out_SPH %>% 
   tidy(A1) %>% 
@@ -527,11 +528,11 @@ ggsave("figs/BPH_ANCOVA.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #Linear models by zone (BPH)
 lm_data_zone %>% 
-  do(A1 = lm(lencap ~ radcap, data = sample1[sample1$zone=="A1",]),
-     A2 = lm(lencap ~ radcap, data = sample1[sample1$zone=="A2",]),
-     A3 = lm(lencap ~ radcap, data = sample1[sample1$zone=="A3",]),
-     A4 = lm(lencap ~ radcap, data = sample1[sample1$zone=="A4",]),
-     A6 = lm(lencap ~ radcap, data = sample1[sample1$zone=="A6",])) -> lm_out_BPH
+  do(A1 = lm(lencap ~ radcap, data = lm_data_zone[lm_data_zone$zone=="A1",]),
+     A2 = lm(lencap ~ radcap, data = lm_data_zone[lm_data_zone$zone=="A2",]),
+     A3 = lm(lencap ~ radcap, data = lm_data_zone[lm_data_zone$zone=="A3",]),
+     A4 = lm(lencap ~ radcap, data = lm_data_zone[lm_data_zone$zone=="A4",]),
+     A6 = lm(lencap ~ radcap, data = lm_data_zone[lm_data_zone$zone=="A6",])) -> lm_out_BPH
 
 lm_out_BPH %>% 
   tidy(A1) %>% 
@@ -655,10 +656,20 @@ lm_out_BPH %>%
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A1 
 ggsave("figs/BPH_SPH_regression_fit.png", dpi = 500, height = 6, width =8, units = "in")
 
+my.formula <- y ~ x
+my.formula1 <- x ~ y
   ggplot(aes(x = radcap, y = lencap), data = lm_out_BPH1) +
+    stat_poly_eq(formula = my.formula,
+                 eq.with.lhs = "italic(hat(y))~`=`~",
+                 aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
+                 parse = TRUE, size = 3, vjust=2) +
+    stat_poly_eq(formula = my.formula1,
+                 eq.with.lhs = "italic(hat(y))~`=`~",
+                 aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
+                 parse = TRUE, vjust=3, size=3) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH1, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 4.5, y=250, label="Region: A1", size=5)+
+  annotate("text", x = 4.5, y=250, label="A1", size=5, family="Times New Roman")+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   scale_x_continuous(breaks = c(2,3,4,5,6,7), limits = c(2,7))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A1 
@@ -670,9 +681,17 @@ lm_out_BPH %>%
   augment(A2) %>% 
   mutate(fit_BPH = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
+  stat_poly_eq(formula = my.formula,
+               eq.with.lhs = "italic(hat(y))~`=`~",
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
+               parse = TRUE, size = 3, vjust=2) +
+  stat_poly_eq(formula = my.formula1,
+               eq.with.lhs = "italic(hat(y))~`=`~",
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
+               parse = TRUE, vjust=3, size=3) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH2, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 4.5, y=250, label="Region: A2", size=5)+
+  annotate("text", x = 4.5, y=250, label="A2", size=5,family="Times New Roman")+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   scale_x_continuous(breaks = c(2,3,4,5,6,7), limits = c(2,7))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A2 
@@ -684,9 +703,17 @@ lm_out_BPH %>%
   augment(A3) %>% 
   mutate(fit_BPH = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
+  stat_poly_eq(formula = my.formula,
+               eq.with.lhs = "italic(hat(y))~`=`~",
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
+               parse = TRUE, size = 3, vjust=2) +
+  stat_poly_eq(formula = my.formula1,
+               eq.with.lhs = "italic(hat(y))~`=`~",
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
+               parse = TRUE, vjust=3, size=3) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH3, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 4.75, y=250, label="Region: A3", size=5)+
+  annotate("text", x = 4.75, y=250, label="A3", size=5, family="Times New Roman")+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A3 
 
@@ -697,9 +724,17 @@ lm_out_BPH %>%
   augment(A4) %>% 
   mutate(fit_BPH = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
+  stat_poly_eq(formula = my.formula,
+               eq.with.lhs = "italic(hat(y))~`=`~",
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
+               parse = TRUE, size = 3, vjust=2) +
+  stat_poly_eq(formula = my.formula1,
+               eq.with.lhs = "italic(hat(y))~`=`~",
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
+               parse = TRUE, vjust=3, size=3) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH4, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 3.75, y=250, label="Region: A4", size=5)+
+  annotate("text", x = 3.75, y=250, label="A4", size=5, family="Times New Roman")+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A4 
 
@@ -710,9 +745,17 @@ lm_out_BPH %>%
   augment(A6) %>% 
   mutate(fit_BPH = (.fitted)) %>% 
   ggplot(aes(x = radcap, y = lencap)) +
+  stat_poly_eq(formula = my.formula,
+               eq.with.lhs = "italic(hat(y))~`=`~",
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
+               parse = TRUE, size = 3, vjust=2) +
+  stat_poly_eq(formula = my.formula1,
+               eq.with.lhs = "italic(hat(y))~`=`~",
+               aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
+               parse = TRUE, vjust=3, size=3) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
   geom_line(data =lm_out_SPH6, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
-  annotate("text", x = 4, y=250, label="Region: A6", size=5)+
+  annotate("text", x = 4, y=250, label="A6", size=5, family="Times New Roman")+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A6 
 cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
@@ -816,11 +859,6 @@ posthoc <- glht(model.fixed, linfct = mcp(zone = "Tukey"))
 summary(posthoc)
 ref <- lsmeans(model,specs = c("zone"))
 
-
-
-
-
-
 #Test #4: One-way repeated measures ANOVA for trimmed means
 #https://cran.r-project.org/web/packages/WRS2/WRS2.pdf
 eda.norm(sample1$aprop1)
@@ -837,3 +875,4 @@ rmmcp(sample1$aprop2, sample1$zone, sample1$fish)
 rmanova(sample1$aprop1, sample1$zone, sample1$fish)
 rmmcp(sample1$aprop1, sample1$zone, sample1$fish)
 
+#Test #5: Maximum difference in BPH and SPH 
