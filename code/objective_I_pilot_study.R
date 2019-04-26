@@ -8,176 +8,107 @@
 # devtools::install_github('droglenc/RFishBC')
 # devtools::install_github('droglenc/FSA')
 
-windowsFonts(Times=windowsFont("Times New Roman"))
 library(extrafont)
+windowsFonts(Times=windowsFont("Times New Roman"))
 library(tidyverse)
 library(FNGr)
+library(broom)
+library(gridExtra)
 library(cowplot)
-library(lme4)
 library(FSA)
 library(RFishBC)
 library(magrittr)
-library(stringr)
-library(arm)
-library(nlme)
-library(multcomp)
-library(FinCal)
-library(msmtools)
-library(broom)
-library(psych)
-library(WRS2)
-library(cowplot)
-library(ggmisc)
+library(ggpmisc)
+# library(stringr)
+# library(arm)
+# library(nlme)
+# library(multcomp)
+# library(FinCal)
+# library(msmtools)
+# library(psych)
+# library(WRS2)
+#library(lme4)
+
 
 theme_set(theme_sleek())
 
 asintrans <- function(p) {asin(sqrt(p))} # arctransformation function
 
 # load data ---- 
-data <- read.csv("data/prop_pilot_study.csv", check.names = FALSE) 
-
-#clean data ----
-data %>%
+data <- read.csv("data/prop_pilot_study.csv", check.names = FALSE) %>%
   filter(radcap >0) %>% #delete samples without measurements 
-#calculate proportions
-  mutate(prop1=(anu1)/radcap,
-         prop2=(anu1+anu2)/radcap,
-         prop3=(anu1+anu2+anu3)/radcap,
-         prop4=(anu1+anu2+anu3+anu4)/radcap,
-         prop5=(anu1+anu2+anu3+anu4+anu5)/radcap,
-         prop6=(anu1+anu2+anu3+anu4+anu5+anu6)/radcap,
-         prop7=(anu1+anu2+anu3+anu4+anu5+anu6+anu7)/radcap,
-         prop8=(anu1+anu2+anu3+anu4+anu5+anu6+anu7+anu8)/radcap,
-         prop9=(anu1+anu2+anu3+anu4+anu5+anu6+anu7+anu8+anu9)/radcap) %>%
-  mutate(aprop1=asintrans(prop1), #transform data by arctransform
-         aprop2=asintrans(prop2),
-         aprop3=asintrans(prop3),
-         aprop4=asintrans(prop4),
-         aprop5=asintrans(prop5),
-         aprop6=asintrans(prop6),
-         aprop7=asintrans(prop7),
-         aprop8=asintrans(prop8),
-         aprop9=asintrans(prop9)) %>%
-mutate(rad1=(anu1),#calculate radial units (ie. focus to each annulus)
-       rad2=(anu1+anu2),
-       rad3=(anu1+anu2+anu3),
-       rad4=(anu1+anu2+anu3+anu4),
-       rad5=(anu1+anu2+anu3+anu4+anu5),
-       rad6=(anu1+anu2+anu3+anu4+anu5+anu6),
-       rad7=(anu1+anu2+anu3+anu4+anu5+anu6+anu7),
-       rad8=(anu1+anu2+anu3+anu4+anu5+anu6+anu7+anu8),
-       rad9=(anu1+anu2+anu3+anu4+anu5+anu6+anu7+anu8+anu9),
-       radcap=radcap)-> data 
-         
+  mutate(rad1 = anu1,#calculate radial units (ie. focus to each annulus)
+         rad2 = anu1 + anu2,
+         rad3 = anu1+anu2+anu3,
+         rad4 = anu1+anu2+anu3+anu4,
+         rad5 = anu1+anu2+anu3+anu4+anu5,
+         rad6 = anu1+anu2+anu3+anu4+anu5+anu6,
+         rad7 = anu1+anu2+anu3+anu4+anu5+anu6+anu7,
+         rad8 = anu1+anu2+anu3+anu4+anu5+anu6+anu7+anu8,
+         rad9 = anu1+anu2+anu3+anu4+anu5+anu6+anu7+anu8+anu9,
+         prop1 = rad1 / radcap,
+         prop2 = rad2 / radcap,
+         prop3 = rad3 / radcap,
+         prop4 = rad4 / radcap,
+         prop5 = rad5 / radcap,
+         prop6 = rad6 / radcap,
+         prop7 = rad7 / radcap,
+         prop8 = rad8 / radcap,
+         prop9 = rad9 / radcap,
+         aprop1 = asintrans(prop1), #transform data by arctransform
+         aprop2 = asintrans(prop2),
+         aprop3 = asintrans(prop3),
+         aprop4 = asintrans(prop4),
+         aprop5 = asintrans(prop5),
+         aprop6 = asintrans(prop6),
+         aprop7 = asintrans(prop7),
+         aprop8 = asintrans(prop8),
+         aprop9 = asintrans(prop9)) -> data 
+
 #analysis----
 #summarize by region and individual fish
-data %>% 
-    group_by(fish, zone) %>% 
-    summarise(lencap=mean(lencap),
-              mean1=mean(prop1),
-              mean2=mean(prop2),
-              mean3=mean(prop3),
-              mean4=mean(prop4),
-              mean5=mean(prop5),
-              mean6=mean(prop6),
-              mean7=mean(prop7),
-              mean8=mean(prop8),
-              mean9=mean(prop9),
-              amean1=mean(aprop1),
-              amean2=mean(aprop2),
-              amean3=mean(aprop3),
-              amean4=mean(aprop4),
-              amean5=mean(aprop5),
-              amean6=mean(aprop6),
-              amean7=mean(aprop7),
-              amean8=mean(aprop8),
-              amean9=mean(aprop9),
-              stdev1=sd(prop1),
-              stdev2=sd(prop2),
-              stdev3=sd(prop3),
-              stdev4=sd(prop4),
-              stdev5=sd(prop5),
-              stdev6=sd(prop6),
-              stdev7=sd(prop7),
-              stdev8=sd(prop8),
-              stdev9=sd(prop9),
-              n = n(),
-              se1 = stdev1/sqrt(n()),
-              se2 = stdev2/sqrt(n()),
-              se3 = stdev3/sqrt(n()),
-              se4 = stdev4/sqrt(n()),
-              se5 = stdev5/sqrt(n()),
-              se6 = stdev6/sqrt(n()),
-              se7 = stdev7/sqrt(n()),
-              se8 = stdev8/sqrt(n()),
-              se9 = stdev9/sqrt(n())) -> data_fish
-
-#data across fish (by region summaries)
 data %>%
   group_by(zone) %>% 
-  summarise(mean1=mean(prop1,na.rm=T),
-            mean2=mean(prop2,na.rm=T),
-            mean3=mean(prop3,na.rm=T),
-            mean4=mean(prop4,na.rm=T),
-            mean5=mean(prop5,na.rm=T),
-            mean6=mean(prop6,na.rm=T),
-            mean7=mean(prop7,na.rm=T),
-            mean8=mean(prop8,na.rm=T),
-            mean9=mean(prop9,na.rm=T),
-            stdev1=sd(prop1,na.rm=T),
-            stdev2=sd(prop2,na.rm=T),
-            stdev3=sd(prop3,na.rm=T),
-            stdev4=sd(prop4,na.rm=T),
-            stdev5=sd(prop5,na.rm=T),
-            stdev6=sd(prop6,na.rm=T),
-            stdev7=sd(prop7,na.rm=T),
-            stdev8=sd(prop8,na.rm=T),
-            stdev9=sd(prop9,na.rm=T),
-            n = n(),
-            se1 = stdev1/sqrt(n()),
-            se2 = stdev2/sqrt(n()),
-            se3 = stdev3/sqrt(n()),
-            se4 = stdev4/sqrt(n()),
-            se5 = stdev5/sqrt(n()),
-            se6 = stdev6/sqrt(n()),
-            se7 = stdev7/sqrt(n()),
-            se8 = stdev8/sqrt(n()),
-            se9 = stdev9/sqrt(n())) -> data_region
+  mutate(n = n()) %>% 
+  group_by(zone, n) %>% 
+  summarise_at(vars(contains('prop')), funs(mean, sd), na.rm = T) %>% 
+  mutate( se1 = prop1_sd / sqrt(n()),
+          se2 = prop2_sd / sqrt(n()),
+          se3 = prop3_sd / sqrt(n()),
+          se4 = prop4_sd / sqrt(n()),
+          se5 = prop5_sd / sqrt(n()),
+          se6 = prop6_sd / sqrt(n()),
+          se7 = prop7_sd / sqrt(n()),
+          se8 = prop8_sd / sqrt(n()),
+          se9 = prop9_sd / sqrt(n())) -> data_region
 
 ggplot(data = data, aes(x = lencap, y = aprop1, colour = specimen)) +
   geom_point() +
   facet_grid(~zone) +
-  labs(x = "lencap", y = 
+  labs(x = "capture length", y = 
          "Transformed prop (focus to first annulus)")-> x
 
 ggplot(data = data, aes(x = lencap, y = aprop1, colour = zone)) +
   geom_point() +
   facet_grid(~ zone) +
-  labs(x = "lencap", y = 
+  labs(x = "capture", y = 
          "Transformed prop (focus to first annulus)")-> y
 
 
 #Test #1: Back Calculation of Length by BPH and SPH Methods Compared to Preferred Area
 #http://derekogle.com/IFAR/supplements/backcalculation/
+set.seed(167) 
+
 data %>% 
-  dplyr::select(id, fish, agecap, lencap, anu1, anu2, anu3, anu4, anu5, anu6, anu7, anu8, anu9,rad1, rad2, rad3, rad4, rad5, rad6, rad7, rad8, rad9, radcap, zone) -> dataR 
-
-# sample one from each fish and zone combo since have three samples from each fish/zone combo
-set.seed(167) #set seed keeps random sample the same
-dataR %>% 
+  dplyr::select(id, fish, agecap, lencap, contains('anu'), 
+                contains('rad'), zone) %>% 
   group_by(fish, zone) %>% 
-  sample_n(1) -> sample1 #sample one scale from each fish zone (5 scales sampled from each fish)
-
-#create long dataframe from wide
-sample1 <-gather(sample1,agei,radi, rad1:rad9) %>%
-  arrange(id,agei)%>% 
-  dplyr::select(id, fish, agecap, lencap, radcap, agei, radi, zone)-> sample1
-stringr::str_sub(sample1$agei,1,3)<-"" #annulus
-
-#delete rows with NA and where agei>agecap (radial measurements with no information)
-sample1 %<>% mutate(agei=as.numeric(agei)) %>%
-  filterD(!is.na(radi)) %>%
-  filterD(agei<=agecap) 
+  sample_n(1)  %>%  # sample one scale from each fish zone (5 scales sampled from each fish)
+  gather(agei, radi, rad1:rad9) %>%
+  arrange(id, agei) %>% 
+  dplyr::select(id, fish, agecap, lencap, radcap, agei, radi, zone) %>% 
+  mutate(agei = as.numeric(stringr::str_sub(agei, 4, 4))) %>% 
+  filter(!is.na(radi), agei<=agecap) -> sample1
 
 #calculate starting values for back-calculation methods based on just zone A1 "preferred area"
 #back-calculation methods with ratios
@@ -199,8 +130,8 @@ d <- coef(lm.ls)[[2]]
 
 sample1 %>%
     filter(zone == "A1") %>%
-    mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
-                    BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A1 #Body Proportional Hypothesis (Whitney and Carlander 1956) 
+    mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
+                    BPH_len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A1 #Body Proportional Hypothesis (Whitney and Carlander 1956) 
 
 
 sample1 %>%
@@ -214,8 +145,8 @@ d <- coef(lm.ls)[[2]]
 
 sample1 %>%
   filter(zone == "A2") %>%
-  mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A2
+  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A2
 
 sample1 %>%
   filter(zone == "A3" & agei == 1)-> lm_data #filter by agei so only one sample/region/fish
@@ -228,8 +159,8 @@ d <- coef(lm.ls)[[2]]
 
 sample1 %>%
   filter(zone == "A3") %>%
-  mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A3
+  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A3
 
 sample1 %>%
   filter(zone == "A4" & agei == 1)-> lm_data
@@ -242,8 +173,8 @@ d <- coef(lm.ls)[[2]]
 
 sample1 %>%
   filter(zone == "A4") %>%
-  mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A4
+  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A4
 
 sample1 %>%
   filter(zone == "A6" & agei == 1)-> lm_data
@@ -256,8 +187,8 @@ d <- coef(lm.ls)[[2]]
 
 sample1 %>%
   filter(zone == "A6") %>%
-  mutate(SPH.len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH.len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A6
+  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A6
 
 x<- rbind(sample_A1, sample_A2) #combine data for all zones
 x<- rbind(x, sample_A3)
@@ -266,113 +197,102 @@ x<- rbind(x, sample_A6)
 
 x %>%
   group_by(agei, zone) %>%
-  summarize(n.radcap=validn(radcap), mn.radcap=mean(radcap),sd.radcap=sd(radcap),
-            ss.radcap = sum(radcap^2),cv.radcap = coefficient.variation(sd.radcap, mn.radcap),
-            n.SPH=validn(SPH.len),mn.SPH.len=mean(SPH.len),sd.SPH.len=sd(SPH.len),ss.SPH.len = sum(SPH.len^2),
-            cv.SPH = coefficient.variation(sd.SPH.len, mn.SPH.len),error.SPH=qt(0.975,df=n.SPH-1)*sd.SPH.len/sqrt(n.SPH),
-            upper.SPH=mn.SPH.len+error.SPH,
-            lower.SPH=mn.SPH.len-error.SPH,
-            n.BPH=validn(BPH.len),mn.BPH.len=mean(BPH.len),sd.BPH.len=sd(BPH.len), ss.BPH.len = sum(BPH.len^2),
-            cv.BPH = coefficient.variation(sd.BPH.len, mn.BPH.len),error.BPH=qt(0.975,df=n.BPH-1)*sd.BPH.len/sqrt(n.BPH),
-            upper.BPH=mn.BPH.len+error.BPH,
-            lower.BPH=mn.BPH.len-error.BPH) %>%
+  summarize(n = n(),
+             mn_radcap = mean(radcap),
+             sd_radcap = sd(radcap),
+             ss_radcap = sum(radcap^2),
+             cv_radcap = sd_radcap / mn_radcap,
+             mn_SPH_len = mean(SPH_len),
+             sd_SPH_len = sd(SPH_len),
+             ss_SPH_len = sum(SPH_len^2),
+             cv_SPH = sd_SPH_len / mn_SPH_len,
+             error_SPH = qt(0.975, df= n - 1) * sd_SPH_len / sqrt(n),
+             upper_SPH = mn_SPH_len + error_SPH,
+             lower_SPH = mn_SPH_len - error_SPH,
+             mn_BPH_len = mean(BPH_len),
+             sd_BPH_len = sd(BPH_len), 
+             ss_BPH_len = sum(BPH_len^2),
+             cv_BPH = sd_BPH_len / mn_BPH_len,
+             error_BPH = qt(0.975,df = n - 1) * sd_BPH_len / sqrt(n),
+             upper_BPH = mn_BPH_len + error_BPH,
+             lower_BPH = mn_BPH_len - error_BPH) %>%
   as.data.frame() -> sample2
 write.csv(sample2, "output/table_summary_obj1.csv") 
 
-x %>% dplyr::select(fish, agei, zone, SPH.len) %>%
-             spread(key = zone, value = SPH.len) -> data_wide_SPH
+x %>% dplyr::select(fish, agei, zone, SPH_len) %>%
+             spread(key = zone, value = SPH_len) -> data_wide_sph
 
   
-x %>% dplyr::select(fish, agei, zone, BPH.len) %>%
-  spread(key = zone, value = BPH.len) %>%
-  as.data.frame() -> data_wide_BPH
+x %>% dplyr::select(fish, agei, zone, BPH_len) %>%
+  spread(key = zone, value = BPH_len) %>%
+  as.data.frame() -> data_wide_bph
 
 #calculate difference in back-calculated zones in percents from zone A1
 #http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
 
 #SCALE PROPOTIONAL HYPOTHESIS
-data_wide_SPH %<>% 
+data_wide_sph %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
          A4= abs((A1-A4)/A1)*100,
          A6= abs((A1-A6)/A1)*100)%>% 
-  dplyr::select(fish, agei,A2, A3, A4, A6) 
-
-data_wide_SPH %>% 
+  dplyr::select(fish, agei,A2, A3, A4, A6) %>% 
   gather(variable, value, -agei, -fish) %>% 
   group_by(agei, variable) %>% 
-  summarise(mean.SPH=mean(value, na.rm=T),
-            sd.SPH=sd(value, na.rm=T),
-            n.SPH=n(),
-            se.SPH=sd(value, na.rm=T)/sqrt(n()))%>%
+  summarise(mean_SPH=mean(value, na.rm=T),
+            sd_SPH=sd(value, na.rm=T),
+            n_SPH=n(),
+            se_SPH=sd(value, na.rm=T)/sqrt(n()))%>%
   mutate(age = as.factor(agei),
-         zone=as.factor(variable)) -> data_wide_SPH 
+         zone=as.factor(variable)) -> data_wide_sph
 
 #BODY PROPOTIONAL HYPOTHESIS
-data_wide_BPH %<>%
+data_wide_bph %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
          A4= abs((A1-A4)/A1)*100,
          A6= abs((A1-A6)/A1)*100) %>% 
-  dplyr::select(fish, agei,A2, A3, A4, A6)
-
-data_wide_BPH  %>%  
+  dplyr::select(fish, agei,A2, A3, A4, A6) %>%  
   gather(variable, value, -agei, -fish) %>% 
   group_by(agei, variable) %>% 
-  summarise(mean.BPH=mean(value, na.rm=T),
-            sd.BPH=sd(value, na.rm=T),
-            n.BPH=n(),
-            se.BPH=sd(value, na.rm=T)/sqrt(n())) %>% 
+  summarise(mean_BPH=mean(value, na.rm=T),
+            sd_BPH=sd(value, na.rm=T),
+            n_BPH=n(),
+            se_BPH=sd(value, na.rm=T)/sqrt(n())) %>% 
   mutate(age = as.factor(agei),
-         zone=as.factor(variable)) -> data_wide_BPH 
+         zone=as.factor(variable)) -> data_wide_bph 
 
 #plots by SPH
-tickr_length <- data.frame(mean.SPH = 0:18)
-axisb <- tickr(tickr_length, mean.SPH, 2)
-ggplot(data = data_wide_SPH, aes(x = age, y = mean.SPH)) +
-  geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
-  scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.9,.75), legend.title=element_blank())+
-  annotate("text", x = 1.9, y=18, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
-  scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
-  geom_text(size=2.5, aes(y=mean.SPH+0.2, label=round (n.SPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
-  labs(x = "Age", y =  "Mean % Difference")-> SPH
+data_wide_sph %>% 
+  group_by(age) %>% 
+  summarise(labels = mean(n_SPH)) -> labels
+
+data_wide_sph %>% 
+  ggplot(aes(age, mean_SPH)) +
+  geom_bar(aes(fill=zone), stat="identity", position="dodge", alpha=0.9) +
+  scale_fill_grey(start = 0, end = .8, name = "") + 
+  theme(legend.position=c(.9,.75)) +
+  annotate("text", x = 5, y=15, label="A) Scale Proportional Hypothesis", 
+           family="Times") +
+  geom_text(data = labels, aes(age, y = -0.4, label=labels, group=age), 
+            size = 2.5) +
+  xlab("Age") +
+  ylab("Mean % Difference") -> SPH
 
 tickr_length <- data.frame(mean.SPH = 0:300)
 axisb <- tickr(tickr_length, mean.SPH, 50)
-ggplot(data = sample2, aes(x = as.factor(agei), y = mn.SPH.len)) +
+ggplot(data = sample2, aes(x = as.factor(agei), y = mn_SPH_len)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.05,.7), legend.title=element_blank())+
   annotate("text", x = 2, y=250, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250), limits = c(0,250))+
   #geom_text(size=2.5, aes(y=upper.SPH+4, label=round (n.SPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
-  geom_errorbar(aes(ymin = lower.SPH, ymax = upper.SPH, group=zone),
+  geom_errorbar(aes(ymin = lower_SPH, ymax = upper_SPH, group=zone),
                 width = 0.2,
                 linetype = "solid",
                 position = position_dodge(width = 1),
                 color="black", size=1)+
   labs(x = "Age", y =  "Back-Calculated Length (mm)")-> SPH2
-
-#ANCOVA Models (SPH)
-lm_data_zone %>% 
-  do(taggingr = lm(radcap~lencap + zone, data = sample1)) -> lm_out
-
-lm_out %>% 
-  tidy(taggingr) %>% 
-  write_csv("output/SPH_ancova.csv")
-
-lm_out %>% 
-  glance(taggingr) %>% 
-  write_csv("output/SPH_ancova_R2.csv")
-
-lm_out %>% 
-  augment(taggingr) %>% 
-  mutate(fit = (.fitted)) %>% 
-  ggplot(aes(x = lencap, y = radcap)) +
-  geom_point(color="grey50")+facet_wrap(~zone)+geom_line(aes(lencap, fit), color = "black") + 
-  annotate("text", x = 175, y=7, label="Scale Proportional Hypothesis", family="Times New Roman")+
-  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> SPH3
-ggsave("figs/SPH_ANCOVA.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #Linear models by zone (SPH)
 lm_data_zone %>% 
@@ -474,27 +394,33 @@ cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
 ggsave("figs/SPH_regression.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #plots by BPH
-tickr_length <- data.frame(mean.SPH = 0:35)
-axisb <- tickr(tickr_length, mean.SPH, 5)
-ggplot(data = data_wide_BPH, aes(x = age, y = mean.BPH)) +
-  geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
-  scale_fill_grey(start = 0, end = .8)+theme(legend.position="none")+
-  annotate("text", x = 1.9, y=35, label="B) Body Proportional Hypothesis", family="Times New Roman")+
-  scale_y_continuous(breaks = axisb$breaks, labels = axisb$labels) +
-  geom_text(size=2.5, aes(y=mean.BPH+0.2, label=round(n.BPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
-  labs(x = "Age", y =  "Mean % Difference")-> BPH
+data_wide_bph %>% 
+  group_by(age) %>% 
+  summarise(labels = mean(n_BPH)) -> labels
+
+data_wide_bph %>% 
+  ggplot(aes(age, mean_BPH)) +
+  geom_bar(aes(fill=zone), stat="identity", position="dodge", alpha=0.9) +
+  scale_fill_grey(start = 0, end = .8, guide = F) + 
+  theme(legend.position=c(.9,.75)) +
+  annotate("text", x = 5, y=30, 
+           label="B) Body Proportional Hypothesis", family="Times") +
+  geom_text(data = labels, aes(age, y = -1.2, label=labels, group=age),
+            size = 2.5) +
+  xlab("Age") +
+  ylab("Mean % Difference") -> BPH
 cowplot::plot_grid(SPH, BPH,   align = "hv", nrow = 2, ncol=1) 
 ggsave("figs/length_diff.png", dpi = 500, height = 6, width = 8, units = "in")
 
 tickr_length <- data.frame(mean.BPH = 0:350)
 axisb <- tickr(tickr_length, mean.BPH, 50)
-ggplot(data = sample2, aes(x = as.factor(agei), y = mn.BPH.len)) +
+ggplot(data = sample2, aes(x = as.factor(agei), y = mn_BPH_len)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position="none")+
   annotate("text", x = 2, y=350, label="B) Body Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250, 300, 350), limits = c(0,350))+
   #geom_text(size=2.5, aes(y=upper.BPH+4, label=round (n.BPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
-  geom_errorbar(aes(ymin = lower.BPH, ymax = upper.BPH, group=zone),
+  geom_errorbar(aes(ymin = lower_BPH, ymax = upper_BPH, group=zone),
                 width = 0.2,
                 linetype = "solid",
                 position = position_dodge(width = 1),
@@ -502,29 +428,6 @@ ggplot(data = sample2, aes(x = as.factor(agei), y = mn.BPH.len)) +
   labs(x = "Age", y =  "Back-Calculated Length (mm)")-> BPH2
 cowplot::plot_grid(SPH2, BPH2,   align = "hv", nrow = 2, ncol=1) 
 ggsave("figs/length.png", dpi = 500, height = 6, width = 8, units = "in")
-
-
-#ANCOVA Models (BPH)
-lm_data_zone %>% 
-  do(taggingr = lm(lencap ~ radcap + zone, data = .)) -> lm_out
-
-lm_out %>% 
-  tidy(taggingr) %>% 
-  write_csv("output/BPH_ancova.csv")
-
-lm_out %>% 
-  tidy(taggingr) %>% 
-  write_csv("output/BPH_ancova_R2.csv")
-
-lm_out %>% 
-  augment(taggingr) %>% 
-  mutate(fit = (.fitted)) %>% 
-  ggplot(aes(x = radcap, y = lencap)) +
-  geom_point()+facet_wrap(~zone)+geom_line(aes(radcap, fit), color ="grey50") + 
-  annotate("text", x = 4, y=250, label="Body Proportional Hypothesis", family="Times New Roman")+
-  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
-  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> BPH3
-ggsave("figs/BPH_ANCOVA.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #Linear models by zone (BPH)
 lm_data_zone %>% 
@@ -628,11 +531,13 @@ ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width =8, units = "in")
 #BPH and SPH regression fig
 lm_out_SPH %>% 
   augment(A1) %>% 
-  mutate(fit_SPH = (.fitted)) -> lm_out_SPH1
+  mutate(fit_SPH = (.fitted)) %>% 
+  as.data.frame()-> lm_out_SPH1
 
 lm_out_BPH %>% 
   augment(A1) %>% 
-  mutate(fit_BPH = (.fitted)) -> lm_out_BPH1
+  mutate(fit_BPH = (.fitted)) %>% 
+  as.data.frame()-> lm_out_BPH1
 
   ggplot(aes(x = radcap, y = lencap), data=lm_out_BPH1) +
   geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
@@ -760,7 +665,51 @@ lm_out_BPH %>%
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A6 
 cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
 ggsave("figs/BPH_SPH_regression.png", dpi = 500, height = 6, width =8, units = "in") 
-  
+
+#ANCOVA Models (SPH)
+lm_data_zone %>% 
+  do(taggingr = lm(radcap~lencap + zone, data = sample1)) -> lm_out
+
+lm_out %>% 
+  tidy(taggingr) %>% 
+  write_csv("output/SPH_ancova.csv")
+
+lm_out %>% 
+  glance(taggingr) %>% 
+  write_csv("output/SPH_ancova_R2.csv")
+
+lm_out %>% 
+  augment(taggingr) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
+  geom_point(color="grey50")+facet_wrap(~zone)+geom_line(aes(lencap, fit), color = "black") + 
+  annotate("text", x = 175, y=7, label="Scale Proportional Hypothesis", family="Times New Roman")+
+  scale_x_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> SPH3
+ggsave("figs/SPH_ANCOVA.png", dpi = 500, height = 6, width = 8, units = "in")
+
+#ANCOVA Models (BPH)
+lm_data_zone %>% 
+  do(taggingr = lm(lencap ~ radcap + zone, data = .)) -> lm_out
+
+lm_out %>% 
+  tidy(taggingr) %>% 
+  write_csv("output/BPH_ancova.csv")
+
+lm_out %>% 
+  tidy(taggingr) %>% 
+  write_csv("output/BPH_ancova_R2.csv")
+
+lm_out %>% 
+  augment(taggingr) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = radcap, y = lencap)) +
+  geom_point()+facet_wrap(~zone)+geom_line(aes(radcap, fit), color ="grey50") + 
+  annotate("text", x = 4, y=250, label="Body Proportional Hypothesis", family="Times New Roman")+
+  scale_y_continuous(breaks = c(100, 150, 200, 250), limits = c(100,250))+
+  labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> BPH3
+ggsave("figs/BPH_ANCOVA.png", dpi = 500, height = 6, width = 8, units = "in")
+
 #Test #2: PCA 
 #test for normality
 eda.norm <- function(x, ...)
