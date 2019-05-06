@@ -118,16 +118,16 @@ data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no sco
 
 data_clean %>%
   dplyr::select(status_h, GSI, sex_histology, catch_date) %>%
-  group_by(status_h,sex_histology, catch_date ) %>%
+  group_by(status_h, sex_histology, catch_date) %>%
   summarise(n = n(),
-            median = median(GSI), mean =mean(GSI),sd=sd(GSI),se=sd(GSI)/sqrt(n()))%>%
+            median = median(GSI), mean =mean(GSI),sd=sd(GSI),se=sd(GSI)/sqrt(n()), min = min(GSI))%>%
   as.data.frame() -> tablex  
 
 data_clean %>%
   dplyr::select(status_h, GSI, sex_histology) %>%
   group_by(status_h,sex_histology) %>%
   summarise(n = n(),
-            median = median(GSI), mean =mean(GSI),sd=sd(GSI),se=sd(GSI)/sqrt(n()))%>%
+            median = median(GSI, na.rm=T), mean =mean(GSI, na.rm=T),sd=sd(GSI, na.rm=T),se=sd(GSI, na.rm=T)/sqrt(n()),min = min(GSI,na.rm=T))%>%
   as.data.frame() -> tabley 
 
 #Figures 
