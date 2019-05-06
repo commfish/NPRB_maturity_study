@@ -20,7 +20,7 @@ library(FNGr)
 library(cowplot)
 library(psych)
 devtools::install_github("ben-williams/FNGr")
-
+theme_set(theme_sleek())
 
 # load data ---- 
 data <- read.csv("data/data_11_26_2018.csv", check.names = FALSE) 
@@ -82,6 +82,7 @@ cohen.kappa(data_clean) #this is higher since only by immature/mature
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   mutate(maturation_status_histology = as.numeric(maturation_status_histology),
                       GSI = as.numeric(GSI)) %>%
+  filter(!(GSI %in% c(0))) %>%
   mutate(status_h = ifelse(maturation_status_histology>2, 'mature','immature'),
          status_gsi = ifelse(GSI>0.0499, 'mature','immature')) -> data_clean
 
@@ -95,11 +96,13 @@ data_clean %>%
   group_by(status_gsi) %>%
   summarise(count = n()) -> tabley
 
-res <- prop.test(x = c(337, 709), n = c(726, 726),  correct = FALSE)
+res <- prop.test(x = c(113, 484), n = c(501, 501),  correct = FALSE)
+res #Pearson's and p-value output
 
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   mutate(maturation_status_histology = as.numeric(maturation_status_histology),
          GSI = as.numeric(GSI)) %>%
+  filter(!(GSI %in% c(0))) %>%
   mutate(status_h = ifelse(maturation_status_histology>2, 'mature','immature'),
          status_gsi = ifelse(GSI>0.0499, 'mature','immature'))%>%
   dplyr::select(status_h, status_gsi) -> data_clean
@@ -116,63 +119,24 @@ data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no sco
 data_clean %>%
   dplyr::select(status_h, GSI, sex_histology, catch_date) %>%
   group_by(status_h,sex_histology, catch_date ) %>%
-  summarise_all(funs(n(),median, mean,sd,se=sd(.)/sqrt(n())))-> tablex  
+  summarise(n = n(),
+            median = median(GSI), mean =mean(GSI),sd=sd(GSI),se=sd(GSI)/sqrt(n()))%>%
+  as.data.frame() -> tablex  
 
 data_clean %>%
   dplyr::select(status_h, GSI, sex_histology) %>%
   group_by(status_h,sex_histology) %>%
-  summarise_all(funs(n(),median, mean,sd,se=sd(.)/sqrt(n())))-> tabley  
+  summarise(n = n(),
+            median = median(GSI), mean =mean(GSI),sd=sd(GSI),se=sd(GSI)/sqrt(n()))%>%
+  as.data.frame() -> tabley 
 
 #Figures 
-loadfonts(device="win")
-windowsFonts(Times=windowsFont("TT Times New Roman"))
-theme_set(theme_bw(base_size=12, base_family='Times New Roman') +
-            theme(panel.grid.major = element_blank(), 
-                  panel.grid.minor = element_blank(),
-                  plot.title = element_text(family='Times New Roman', hjust = 0.5, size=12),
-                  axis.text.y = element_text(size=12,colour="black",family="Times New Roman"),
-                  axis.title.y = element_text(size=12,colour="black",family="Times New Roman")))
-tickr_length <- data.frame(length_millimeters = 200:1000)
-axisf <- tickr(tickr_length, length_millimeters, 100)
-
-#bubble plot of age versus histology
-bb <- c(201,100,50,20,10,5) # define breaks.
-ll <- c("200+","100","50","20","10", "5") # labels.
-p<-ggplot(table1)+ geom_point(aes(x = age, y = maturation_status_histology, size = count),shape=16, alpha=0.80) +
-  labs(x="Age", y = "Maturation Stage (histology)") +  scale_size_continuous(name = "",
-                                                                             breaks = bb,
-                                                                             limits = c(0, 250),
-                                                                             labels = ll,
-                                                                             range = c(0, 10))
-ggsave(filename = 'figs/bubbleplot.png', dpi =200, width=6, height=8, units = "in")
-
-#Box plot of GSI cutoff
+#Boxplot of GSI cutoff by sex
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   filter(!(GSI %in% c(0))) %>%
   mutate(maturation_status_histology = as.numeric(maturation_status_histology),
          GSI = as.numeric(GSI)) %>%
-  mutate(status_h = ifelse(maturation_status_histology>1, 'Mature','Immature')) -> data_clean
-
-data_clean %>% filter(sex_histology == "Female") -> female 
-female<- as.data.frame(female)
-data_clean %>% filter(sex_histology == "Male") -> male 
-
-female<-ggplot(female)+ geom_boxplot(aes(x = status_h, y = GSI))+
-  labs(x="", y = "GSI") + theme(legend.position="none")+
-  geom_text(aes(x =10/25/2017, y= 0.075, label="Females"),hjust = -0.6,  family="Times New Roman", colour="black")
-
-male<-ggplot(male)+ geom_boxplot(aes(x = status_h, y = GSI))+
-  labs(x="", y = "GSI") + theme(legend.position="none")+
-  geom_text(aes(x =10/25/2017, y= 0.025, label="Males"),hjust = -0.6,  family="Times New Roman", colour="black")
-cowplot::plot_grid(female, male, nrow = 1, ncol=2) 
-ggsave(filename = 'figs/gsi.png', dpi =200, width=8, height=6, units = "in")
-
-#Boxplot of GSI cutoff by catch_date and sex
-data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
-  filter(!(GSI %in% c(0))) %>%
-  mutate(maturation_status_histology = as.numeric(maturation_status_histology),
-         GSI = as.numeric(GSI)) %>%
-  mutate(status_h = ifelse(maturation_status_histology>1, 'Mature','Immature')) -> data_clean
+  mutate(status_h = ifelse(maturation_status_histology>2, 'Mature','Immature')) -> data_clean
 
 data_clean %>% filter(sex_histology == "Female" )->female
 female<- as.data.frame(female)
@@ -180,31 +144,27 @@ female<- as.data.frame(female)
 females<-ggplot(female, aes(status_h, GSI, colour = status_h)) +
   geom_boxplot(position=position_dodge(width=0.9)) +
   stat_summary( fun.data = fun_length, geom = "text", 
-                position=position_dodge(width=0.9), vjust=2, family="Times New Roman", size=3)+
+                position=position_dodge(width=0.9), vjust=3, family="Times New Roman", size=3)+
   labs(x="", y = "GSI") + theme(legend.position="none")+scale_colour_grey(start = .6, end = .1)+
   geom_text(aes(x =10/25/2017, y= 0.075, label="Females"),hjust = -0.6,  family="Times New Roman", colour="black")
 
 data_clean %>% filter(sex_histology == "Male") -> male 
-library(plyr)
-ddply(male, .(catch_date), summarise, label = length(GSI))
       
 males<-ggplot(male, aes(status_h, GSI, colour = status_h)) +
   geom_boxplot(position=position_dodge(width=0.9)) +
-  stat_summary( fun.data = fun_length, geom = "text", 
+  stat_summary(fun.data = fun_length, geom = "text", 
                 position=position_dodge(width=0.9), vjust=2, family="Times New Roman", size=3)+
   labs(x="", y = "GSI") + theme(legend.position="none")+scale_colour_grey(start = .6, end = .1)+
   geom_text(aes(x =10/25/2017, y= 0.075, label="Males"),hjust = -0.6,  family="Times New Roman", colour="black")
 cowplot::plot_grid(females, males, nrow = 1, ncol=2)
 ggsave(filename = 'figs/gsi_boxplots.png', dpi =200, width=8, height=6, units = "in")
-ggplot_build(females)$data #boxplot data
-ggplot_build(males)$data #boxplot data
 
-#GSI sample size by catch date, sex, and histology stage
+#GSI sample size by females only
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   filter(!(GSI %in% c(0))) %>%
   mutate(maturation_status_histology = as.numeric(maturation_status_histology),
          GSI = as.numeric(GSI)) %>%
-  mutate(status_h = ifelse(maturation_status_histology>1, 'Mature','Immature')) -> data_clean
+  mutate(status_h = ifelse(maturation_status_histology>2, 'Mature','Immature')) -> data_clean
 
 data_clean %>%
   dplyr::select(maturation_status_histology , GSI, sex_histology, catch_date) %>%
@@ -221,3 +181,17 @@ females<-ggplot(female, aes(maturation_status_histology, GSI)) +
   labs(x="Female maturity stage (based on histology)", y = "Sample size") + theme(legend.title=element_blank(), legend.position=c(.9,.9))
 
 ggsave(filename = 'figs/gsi_sample_size_females.png', dpi =200, width=8, height=6, units = "in")
+
+tickr_length <- data.frame(length_millimeters = 200:1000)
+axisf <- tickr(tickr_length, length_millimeters, 100)
+
+#bubble plot of age versus histology
+bb <- c(201,100,50,20,10,5) # define breaks.
+ll <- c("200+","100","50","20","10", "5") # labels.
+p<-ggplot(table1)+ geom_point(aes(x = age, y = maturation_status_histology, size = count),shape=16, alpha=0.80) +
+  labs(x="Age", y = "Maturation Stage (histology)") +  scale_size_continuous(name = "",
+                                                                             breaks = bb,
+                                                                             limits = c(0, 250),
+                                                                             labels = ll,
+                                                                             range = c(0, 10))
+ggsave(filename = 'figs/bubbleplot.png', dpi =200, width=6, height=8, units = "in")
