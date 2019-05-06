@@ -82,7 +82,7 @@ cohen.kappa(data_clean) #this is higher since only by immature/mature
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   mutate(maturation_status_histology = as.numeric(maturation_status_histology),
                       GSI = as.numeric(GSI)) %>%
-  mutate(status_h = ifelse(maturation_status_histology>1, 'mature','immature'),
+  mutate(status_h = ifelse(maturation_status_histology>2, 'mature','immature'),
          status_gsi = ifelse(GSI>0.0499, 'mature','immature')) -> data_clean
 
 data_clean %>%
@@ -95,12 +95,12 @@ data_clean %>%
   group_by(status_gsi) %>%
   summarise(count = n()) -> tabley
 
-res <- prop.test(x = c(264, 709), n = c(726, 726),  correct = FALSE)
+res <- prop.test(x = c(337, 709), n = c(726, 726),  correct = FALSE)
 
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   mutate(maturation_status_histology = as.numeric(maturation_status_histology),
          GSI = as.numeric(GSI)) %>%
-  mutate(status_h = ifelse(maturation_status_histology>1, 'mature','immature'),
+  mutate(status_h = ifelse(maturation_status_histology>2, 'mature','immature'),
          status_gsi = ifelse(GSI>0.0499, 'mature','immature'))%>%
   dplyr::select(status_h, status_gsi) -> data_clean
 
@@ -111,7 +111,7 @@ data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no sco
  filter(!(GSI %in% c(0))) %>%
   mutate(maturation_status_histology = as.numeric(maturation_status_histology),
          GSI = as.numeric(GSI)) %>%
-  mutate(status_h = ifelse(maturation_status_histology>1, 'mature','immature')) -> data_clean
+  mutate(status_h = ifelse(maturation_status_histology>2, 'mature','immature')) -> data_clean
 
 data_clean %>%
   dplyr::select(status_h, GSI, sex_histology, catch_date) %>%
