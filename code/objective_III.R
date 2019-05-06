@@ -11,23 +11,6 @@ fun_length <- function(x){
   return(data.frame(y=median(x),label= paste0("n=", length(x))))
 }
 
-
-is_installed <- function(mypkg){ is.element(mypkg, installed.packages()[,1])}
-
-load_or_install <- function(package_names){
-  for(package_name in package_names){
-    if(!is_installed(package_name)){install.packages(package_name,repos="http://lib.stat.cmu.edu/R/CRAN")}
-    library(package_name,character.only=TRUE,quietly=TRUE,verbose=FALSE)
-  }}
-
-load_or_install(c("extrafont",
-                  "tidyverse",
-                  "dgof",
-                  "Matching",
-                  "devtools",
-                  "FNGr",
-                  "cowplot",
-                  "psych"))
 library(extrafont)
 library(tidyverse)
 library(dgof)
@@ -36,22 +19,7 @@ library(devtools)
 library(FNGr)
 library(cowplot)
 library(psych)
-
-tickr <- function(
-  data, # dataframe
-  var, # column of interest
-  to # break point definition 
-){
-  
-  VAR <- enquo(var) # makes VAR a dynamic variable
-  
-  data %>% 
-    distinct(!!VAR) %>%
-    #    ungroup(!!VAR) %>% 
-    mutate(labels = ifelse(!!VAR %in% seq(to * round(min(!!VAR) / to), max(!!VAR), to),
-                           !!VAR, "")) %>%
-    dplyr::select(breaks = UQ(VAR), labels)
-}
+devtools::install_github("ben-williams/FNGr")
 
 
 # load data ---- 
@@ -65,16 +33,15 @@ data_clean %>%
   group_by(maturity_state_field, maturation_status_histology) %>%
   summarise(count = n()) -> table3 
 
-
-#cohen kappa evaluation (macro and histology)
+#Macroscopic versus Histology
+#cohen kappa evaluation 
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
-dplyr::select(maturation_status_histology = maturation_status_histology,
-              maturity_state_field = maturity_state_field) -> data_clean
+  dplyr::select(maturation_status_histology = maturation_status_histology,
+                maturity_state_field = maturity_state_field) -> data_clean
 data_clean %>%
   group_by(maturity_state_field, maturation_status_histology) %>%
   summarise(count = n()) -> table3a 
 cohen.kappa(data_clean) # all stages
-
 
 #Two proportions z-test with continuity correction
 #The function returns:
@@ -83,12 +50,12 @@ cohen.kappa(data_clean) # all stages
   #a 95% confidence intervals
   #an estimated probability of success 
 
-#macroscopic versus histology
+#Pearson's X^2
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   mutate(maturation_status_histology = as.numeric(maturation_status_histology),
                       maturity_state_field = as.numeric(maturity_state_field)) %>%
-  mutate(status_h = ifelse(maturation_status_histology>1, 'mature','immature'),
-         status_m = ifelse(maturity_state_field>1, 'mature','immature')) -> data_clean
+  mutate(status_h = ifelse(maturation_status_histology>2, 'mature','immature'),
+         status_m = ifelse(maturity_state_field>2, 'mature','immature')) -> data_clean
 
 data_clean %>%
   dplyr::select(status_h) %>%
@@ -100,13 +67,13 @@ data_clean %>%
   group_by(status_m) %>%
   summarise(count = n()) -> tabley
 
-res <- prop.test(x = c(264, 141), n = c(726, 726),  correct = FALSE)
+res <- prop.test(x = c(337, 335), n = c(726, 726),  correct = FALSE) #immature
 
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   mutate(maturation_status_histology = as.numeric(maturation_status_histology),
          maturity_state_field = as.numeric(maturity_state_field)) %>%
-  mutate(status_h = ifelse(maturation_status_histology>1, 'mature','immature'),
-         status_m = ifelse(maturity_state_field>1, 'mature','immature')) %>%
+  mutate(status_h = ifelse(maturation_status_histology>2, 'mature','immature'),
+         status_m = ifelse(maturity_state_field>2, 'mature','immature')) %>%
 dplyr::select(status_h, status_m) -> data_clean
 
 cohen.kappa(data_clean) #this is higher since only by immature/mature
