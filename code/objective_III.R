@@ -19,6 +19,7 @@ library(devtools)
 library(FNGr)
 library(cowplot)
 library(psych)
+library(broom)
 devtools::install_github("ben-williams/FNGr")
 theme_set(theme_sleek())
 
@@ -181,30 +182,36 @@ females<-ggplot(female, aes(maturation_status_histology, GSI)) +
 
 ggsave(filename = 'figs/gsi_sample_size_females.png', dpi =200, width=8, height=6, units = "in")
 
-
-
-
-
-tickr_length <- data.frame(length_millimeters = 200:1000)
-axisf <- tickr(tickr_length, length_millimeters, 100)
-#bubble plot of age versus histology
-bb <- c(201,100,50,20,10,5) # define breaks.
-ll <- c("200+","100","50","20","10", "5") # labels.
-p<-ggplot(table1)+ geom_point(aes(x = age, y = maturation_status_histology, size = count),shape=16, alpha=0.80) +
-  labs(x="Age", y = "Maturation Stage (histology)") +  scale_size_continuous(name = "",
-                                                                             breaks = bb,
-                                                                             limits = c(0, 250),
-                                                                             labels = ll,
-                                                                             range = c(0, 10))
-ggsave(filename = 'figs/bubbleplot.png', dpi =200, width=6, height=8, units = "in")
-
-#regression 
-data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
+#regression (females)
+data %>% 
+  filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   filter(!(GSI %in% c(0))) %>%
   mutate(maturation_status_histology = as.numeric(maturation_status_histology),
          GSI = as.numeric(GSI)) %>%
   mutate(status_h = ifelse(maturation_status_histology>2, 1,0)) %>% 
-  filter(sex_histology == "Female") -> data_clean
+  filter(sex_histology == "Female") %>%
+  arrange(status_h, GSI)-> data_clean
+
+data_clean %>%
+  mutate(value_I = ifelse(GSI>0.016,1,0)) %>%
+  group_by(status_h)%>%
+  summarise(n = n(),
+            value1 = sum(value_I)/n(),
+            value2 =(n()-sum(value_I))/n(),
+            value_I = sum(value_I),
+            value_M = n()-value_I,
+            min=min(GSI))-> cutoff_1.6
+
+data_clean %>%
+  mutate(value_I = ifelse(GSI>0.012,1,0)) %>%
+  group_by(status_h)%>%
+  summarise(n = n(),
+            value1 = sum(value_I)/n(),
+            value2 =(n()-sum(value_I))/n(),
+            value_I = sum(value_I),
+            value_M = n()-value_I,
+            min=min(GSI))-> cutoff_1.2
+  
 
 data_clean %>% 
   mutate(log_gsi = log(GSI),
@@ -227,6 +234,28 @@ lm_out %>%
 ggplot() +
   geom_point(data=data1, aes(x = length, y = gsi), color ="grey50") + 
   geom_point(data=data2, aes(length, gsi), color = "black")+ 
-  labs(y = "GSI", x =  "Length (mm)") + stat_smooth(data=data1,aes(length, gsi), col = "black") +
-  stat_smooth(data=data2,aes(length, gsi), col = "black")
-ggsave(file="figures/terminal/tah_108_catch.png", plot=tah_108_catch, width=10, height=8)
+  labs(y = "GSI", x =  "Length (mm)") + geom_smooth(method= 'lm', data=data1,aes(length, gsi), col = "black") +
+  geom_smooth(method= 'lm', data=data2, aes(length, gsi), col = "black") +
+  geom_hline(yintercept = 0.016, linetype="dotted", color = "grey50", size=1) +
+  geom_hline(yintercept = 0.012, linetype="dotted", color = "grey50", size=1) +
+  geom_text(aes(x =135, y= 0.07, label="Females"),family="Times New Roman", colour="black", size=5) +
+  geom_text(aes(x =225, y= 0.05, label="mature"),family="Times New Roman", colour="black") +
+  geom_text(aes(x =135, y= 0.007, label="immature"),family="Times New Roman", colour="black") +
+  geom_text(aes(x =136, y= 0.0175, label="cut-off = 1.6%"),family="Times New Roman", colour="black", size=3) +
+  geom_text(aes(x =136, y= 0.0135, label="cut-off = 1.2%"),family="Times New Roman", colour="black", size=3)
+
+ggsave(file="figs/cut_off.png", dpi=500, width=6, height=4)
+
+
+tickr_length <- data.frame(length_millimeters = 200:1000)
+axisf <- tickr(tickr_length, length_millimeters, 100)
+#bubble plot of age versus histology
+bb <- c(201,100,50,20,10,5) # define breaks.
+ll <- c("200+","100","50","20","10", "5") # labels.
+p<-ggplot(table1)+ geom_point(aes(x = age, y = maturation_status_histology, size = count),shape=16, alpha=0.80) +
+  labs(x="Age", y = "Maturation Stage (histology)") +  scale_size_continuous(name = "",
+                                                                             breaks = bb,
+                                                                             limits = c(0, 250),
+                                                                             labels = ll,
+                                                                             range = c(0, 10))
+ggsave(filename = 'figs/bubbleplot.png', dpi =200, width=6, height=8, units = "in")
