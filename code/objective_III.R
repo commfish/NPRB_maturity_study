@@ -26,7 +26,6 @@ theme_set(theme_sleek())
 data <- read.csv("data/data_11_26_2018.csv", check.names = FALSE) 
 
 #clean data ----
-
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2")))-> data_clean
 
 data_clean %>%
@@ -182,9 +181,12 @@ females<-ggplot(female, aes(maturation_status_histology, GSI)) +
 
 ggsave(filename = 'figs/gsi_sample_size_females.png', dpi =200, width=8, height=6, units = "in")
 
+
+
+
+
 tickr_length <- data.frame(length_millimeters = 200:1000)
 axisf <- tickr(tickr_length, length_millimeters, 100)
-
 #bubble plot of age versus histology
 bb <- c(201,100,50,20,10,5) # define breaks.
 ll <- c("200+","100","50","20","10", "5") # labels.
@@ -195,3 +197,36 @@ p<-ggplot(table1)+ geom_point(aes(x = age, y = maturation_status_histology, size
                                                                              labels = ll,
                                                                              range = c(0, 10))
 ggsave(filename = 'figs/bubbleplot.png', dpi =200, width=6, height=8, units = "in")
+
+#regression 
+data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
+  filter(!(GSI %in% c(0))) %>%
+  mutate(maturation_status_histology = as.numeric(maturation_status_histology),
+         GSI = as.numeric(GSI)) %>%
+  mutate(status_h = ifelse(maturation_status_histology>2, 1,0)) %>% 
+  filter(sex_histology == "Female") -> data_clean
+
+data_clean %>% 
+  mutate(log_gsi = log(GSI),
+         log_length = log(length_mm)) -> log_data
+
+log_data %>% 
+  do(A1 = lm(log_gsi ~ log_length, data = log_data[log_data$status_h==1,]),
+     A2 = lm(log_gsi ~ log_length, data = log_data[log_data$status_h==0,])) -> lm_out
+
+lm_out %>% 
+  augment(A1) %>% 
+  mutate(gsi = exp(log_gsi), 
+  length = exp(log_length), 
+  fit = exp(.fitted)) -> data1 
+lm_out %>% 
+  augment(A2) %>% 
+  mutate(gsi = exp(log_gsi), 
+         length = exp(log_length), 
+         fit = exp(.fitted)) -> data2 
+ggplot() +
+  geom_point(data=data1, aes(x = length, y = gsi), color ="grey50") + 
+  geom_point(data=data2, aes(length, gsi), color = "black")+ 
+  labs(y = "GSI", x =  "Length (mm)") + stat_smooth(data=data1,aes(length, gsi), col = "black") +
+  stat_smooth(data=data2,aes(length, gsi), col = "black")
+ggsave(file="figures/terminal/tah_108_catch.png", plot=tah_108_catch, width=10, height=8)
