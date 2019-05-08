@@ -145,7 +145,7 @@ females<-ggplot(female, aes(status_h, GSI, colour = status_h)) +
   geom_boxplot(position=position_dodge(width=0.9)) +
   stat_summary( fun.data = fun_length, geom = "text", 
                 position=position_dodge(width=0.9), vjust=3, family="Times New Roman", size=3)+
-  labs(x="", y = "GSI") + theme(legend.position="none")+scale_colour_grey(start = .6, end = .1)+
+  labs(x="", y = "GSI") + theme(legend.position="none")+scale_colour_grey(start = .1, end = .1)+
   geom_text(aes(x =10/25/2017, y= 0.075, label="Females"),hjust = -0.6,  family="Times New Roman", colour="black")
 
 data_clean %>% filter(sex_histology == "Male") -> male 
@@ -154,7 +154,7 @@ males<-ggplot(male, aes(status_h, GSI, colour = status_h)) +
   geom_boxplot(position=position_dodge(width=0.9)) +
   stat_summary(fun.data = fun_length, geom = "text", 
                 position=position_dodge(width=0.9), vjust=2, family="Times New Roman", size=3)+
-  labs(x="", y = "GSI") + theme(legend.position="none")+scale_colour_grey(start = .6, end = .1)+
+  labs(x="", y = "GSI") + theme(legend.position="none")+scale_colour_grey(start = .1, end = .1)+
   geom_text(aes(x =10/25/2017, y= 0.075, label="Males"),hjust = -0.6,  family="Times New Roman", colour="black")
 cowplot::plot_grid(females, males, nrow = 1, ncol=2)
 ggsave(filename = 'figs/gsi_boxplots.png', dpi =200, width=8, height=6, units = "in")
