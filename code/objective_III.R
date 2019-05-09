@@ -20,11 +20,13 @@ library(FNGr)
 library(cowplot)
 library(psych)
 library(broom)
+library(lubridate)
 devtools::install_github("ben-williams/FNGr")
 theme_set(theme_sleek())
 
 # load data ---- 
 data <- read.csv("data/data_11_26_2018.csv", check.names = FALSE) 
+spawn <- read.csv("data/spawn_timing_Sitka.csv", check.names = FALSE) 
 
 #clean data ----
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2")))-> data_clean
@@ -249,13 +251,26 @@ ggsave(file="figs/cut_off.png", dpi=500, width=6, height=4)
 
 tickr_length <- data.frame(length_millimeters = 200:1000)
 axisf <- tickr(tickr_length, length_millimeters, 100)
+
 #bubble plot of age versus histology
-bb <- c(201,100,50,20,10,5) # define breaks.
-ll <- c("200+","100","50","20","10", "5") # labels.
-p<-ggplot(table1)+ geom_point(aes(x = age, y = maturation_status_histology, size = count),shape=16, alpha=0.80) +
-  labs(x="Age", y = "Maturation Stage (histology)") +  scale_size_continuous(name = "",
-                                                                             breaks = bb,
-                                                                             limits = c(0, 250),
-                                                                             labels = ll,
-                                                                             range = c(0, 10))
-ggsave(filename = 'figs/bubbleplot.png', dpi =200, width=6, height=8, units = "in")
+spawn  %>%
+  mutate(date = mdy(date),
+  month = month(date),
+         day=day(date)) -> data1
+data1$date2 <- paste(data1$year, data1$month, data1$day, sep="-") %>% ymd() %>% as.Date()
+data1 %>% 
+  mutate(julian = yday(date2),
+         spawn1 = replace(spawn, spawn == 0, NA)) %>%
+  dplyr::select(year, julian, spawn, spawn1) -> data1
+
+axisx <- tickr(data1, year, 2)
+axisy <- tickr(data1, julian, 5)
+ggplot(data=data1, aes(x = year, y = julian, size = spawn1)) +
+  geom_point(shape = 21, colour = "black", fill = "black") +
+  scale_size(range = c(1, 5)) +
+  xlab('') +
+  ylab('Julian Day') +
+  guides(size = FALSE) +
+  scale_x_continuous(breaks = axisx$breaks, labels = axisx$labels) +
+  scale_y_continuous(breaks = axisy$breaks, labels = axisy$labels) 
+ggsave(filename = 'figs/bubbleplot.png', dpi =200, width=8, height=6, units = "in")
