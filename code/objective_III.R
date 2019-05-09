@@ -1,7 +1,7 @@
 #notes---
 #author: Sara E Miller 
 #contact: sara.miller@alaska.gov; 907-465-4245
-#Last edited: December, 2018
+#Last edited: May, 2019
 
 # load ----
 #font_import() #only do this one time - it takes a while
@@ -21,7 +21,7 @@ library(cowplot)
 library(psych)
 library(broom)
 library(lubridate)
-devtools::install_github("ben-williams/FNGr")
+#devtools::install_github("ben-williams/FNGr")
 theme_set(theme_sleek())
 
 # load data ---- 
