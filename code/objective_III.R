@@ -53,49 +53,40 @@ cohen.kappa(data_clean) # all stages
   #an estimated probability of success 
 
 #Pearson's X^2
-data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
-  mutate(maturation_status_histology = as.numeric(maturation_status_histology),
-                      maturity_state_field = as.numeric(maturity_state_field)) %>%
-  mutate(status_h = ifelse(maturation_status_histology>2, 'mature','immature'),
-         status_m = ifelse(maturity_state_field>2, 'mature','immature')) -> data_clean
+data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) -> data_clean
 
 data_clean %>%
-  dplyr::select(status_h) %>%
-  group_by(status_h) %>%
+  dplyr::select(maturity_state_histology) %>%
+  group_by(maturity_state_histology) %>%
   summarise(count = n()) -> tablex  
 
 data_clean %>%
-  dplyr::select(status_m) %>%
-  group_by(status_m) %>%
+  dplyr::select(maturity_state_Hjort) %>%
+  group_by(maturity_state_Hjort) %>%
   summarise(count = n()) -> tabley
 
 res <- prop.test(x = c(337, 335), n = c(726, 726),  correct = FALSE) #immature
 
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
-  mutate(maturation_status_histology = as.numeric(maturation_status_histology),
-         maturity_state_field = as.numeric(maturity_state_field)) %>%
-  mutate(status_h = ifelse(maturation_status_histology>2, 'mature','immature'),
-         status_m = ifelse(maturity_state_field>2, 'mature','immature')) %>%
-dplyr::select(status_h, status_m) -> data_clean
+dplyr::select(maturity_state_histology, maturity_state_Hjort) -> data_clean
 
 cohen.kappa(data_clean) #this is higher since only by immature/mature
 
 #GSI versus histology
-data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
-  mutate(maturation_status_histology = as.numeric(maturation_status_histology),
-                      GSI = as.numeric(GSI)) %>%
-  filter(!(GSI %in% c(0))) %>%
-  mutate(status_h = ifelse(maturation_status_histology>2, 'mature','immature'),
-         status_gsi = ifelse(GSI>0.0499, 'mature','immature')) -> data_clean
+data %>% 
+  filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6")))%>%
+  mutate(GSI=as.numeric(GSI)) %>%
+  filter(GSI > 0) -> data_clean
+
 
 data_clean %>%
-  dplyr::select(status_h) %>%
-  group_by(status_h) %>%
+  dplyr::select(maturity_state_histology) %>%
+  group_by(maturity_state_histology) %>%
   summarise(count = n()) -> tablex  
 
 data_clean %>%
-  dplyr::select(status_gsi) %>%
-  group_by(status_gsi) %>%
+  dplyr::select(maturity_state_GSI) %>%
+  group_by(maturity_state_GSI) %>%
   summarise(count = n()) -> tabley
 
 res <- prop.test(x = c(113, 484), n = c(501, 501),  correct = FALSE)
@@ -188,15 +179,12 @@ ggsave(filename = 'figs/gsi_sample_size_females.png', dpi =200, width=8, height=
 data %>% 
   filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   filter(!(GSI %in% c(0))) %>%
-  mutate(maturation_status_histology = as.numeric(maturation_status_histology),
-         GSI = as.numeric(GSI)) %>%
-  mutate(status_h = ifelse(maturation_status_histology>2, 1,0)) %>% 
   filter(sex_histology == "Female") %>%
   arrange(status_h, GSI)-> data_clean
 
 data_clean %>%
   mutate(value_I = ifelse(GSI>0.016,1,0)) %>%
-  group_by(status_h)%>%
+  group_by(maturity_state_histology) %>%
   summarise(n = n(),
             value1 = sum(value_I)/n(),
             value2 =(n()-sum(value_I))/n(),
@@ -245,12 +233,7 @@ ggplot() +
   geom_text(aes(x =135, y= 0.007, label="immature"),family="Times New Roman", colour="black") +
   geom_text(aes(x =136, y= 0.0175, label="cut-off = 1.6%"),family="Times New Roman", colour="black", size=3) +
   geom_text(aes(x =136, y= 0.0135, label="cut-off = 1.2%"),family="Times New Roman", colour="black", size=3)
-
 ggsave(file="figs/cut_off.png", dpi=500, width=6, height=4)
-
-
-tickr_length <- data.frame(length_millimeters = 200:1000)
-axisf <- tickr(tickr_length, length_millimeters, 100)
 
 #bubble plot of age versus histology
 spawn  %>%
