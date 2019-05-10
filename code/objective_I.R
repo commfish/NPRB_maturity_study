@@ -744,7 +744,7 @@ citation(package = "pwr")
 readCitationFile(file, meta = NULL)
 
 
-Data <- read.csv("data/scale.csv", sep=",", header = TRUE, check.names = FALSE)  #Read in csv file, subset the spawning stock
+Data <- read.csv("data/scale.csv")  #Read in csv file, subset the spawning stock
 Dataset <- melt(Data, id=c("Year", "AGE", "SEX","LENGTH"), na.rm=TRUE)
 Age_3<-subset(Dataset, Dataset$AGE==3&Dataset$variable=='CSW3')
 Age_3<-subset(Age_3, select=c(value))
