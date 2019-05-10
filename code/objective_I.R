@@ -43,19 +43,60 @@ clean_dataset %>%
 
 #calculate proportion of outer scale ring
 clean_dataset %>% 
+  dplyr::select(age,maturity_state_histology, scale_region, sex_histology, Increment1, Increment2, Increment3, 
+                Increment4, Increment5, Increment6, Increment7, image_name, length_mm, weight_grams, 
+                scale_condition_code, scale_region, scale_shape, sex_histology, maturation_status_histology) %>%
+  gather(value, variable, Increment1:Increment7) %>%
+  filter(!is.na(variable)) %>%
+  spread (key = value, value = variable)->s1
+
+clean_dataset %>%             
+  mutate(anu1 = ifelse(is.na(Increment1), 0 , Increment1),
+         anu2 = ifelse(is.na(Increment2), 0 , Increment2),
+         anu3 = ifelse(is.na(Increment3), 0 , Increment3),
+         anu4 = ifelse(is.na(Increment4), 0 , Increment4),
+         anu5 = ifelse(is.na(Increment5), 0 , Increment5),
+         anu6 = ifelse(is.na(Increment6), 0 , Increment6),
+         anu7 = ifelse(is.na(Increment7), 0 , Increment7)) %>% 
   rowwise() %>% 
-  mutate(total_scale_radius = sum(Increment1, Increment2, Increment3, Increment4, Increment5, Increment6, Increment7, na.rm=TRUE)) -> x
+  mutate(radcap = sum(anu1, anu2, anu3, anu4, anu5, anu6, anu7)) %>% 
+  mutate(rad1 = anu1,#calculate radial units (ie. focus to each annulus)
+         rad2 = sum(anu1, anu2),
+         rad3 = sum(anu1, anu2, anu3),
+         rad4 = sum(anu1, anu2, anu3, anu4),
+         rad5 = sum(anu1, anu2, anu3, anu4, anu5),
+         rad6 = sum(anu1, anu2, anu3, anu4, anu5, anu6),
+         rad7 = sum(anu1, anu2, anu3, anu4, anu5, anu6, anu7),
+         prop1 = rad1 / radcap,
+         prop2 = rad2 / radcap,
+         prop3 = rad3 / radcap,
+         prop4 = rad4 / radcap,
+         prop5 = rad5 / radcap,
+         prop6 = rad6 / radcap,
+         prop7 = rad7 / radcap) %>%
+  mutate(prop1_adj = prop1,
+         prop2_adj = ifelse(prop2==1, NA, prop2),
+         prop3_adj = ifelse(prop3==1, NA, prop3),
+         prop4_adj = ifelse(prop4==1, NA, prop4),
+         prop5_adj = ifelse(prop5==1, NA, prop5),
+         prop6_adj = ifelse(prop6==1, NA, prop6),
+         prop7_adj = ifelse(prop7==1, NA, prop7)) %>%
+  rowwise() %>% 
+  mutate(max=max(prop1_adj, prop2_adj, prop3_adj, prop4_adj, prop5_adj, prop6_adj, prop7_adj))->sample1
 
+sample1 %>%
+  gather(value, variable, prop1_adj:prop7_adj) %>% 
+  group_by(image_name) %>% 
+  filter(!is.na(variable)) %>%
+  summarize(max=max(variable))%>%
+  mutate(outer_prop=1-max)-> sample2 #outer prop
 
-#FIGURE 3; Histograms of outer ring all years (1995-2016 data)
-Data <- read.csv("scale_increments.csv", sep=",", header = TRUE, check.names = FALSE)  #Read in csv file, subset the spawning stock
-Dataset <- melt(Data, id=c("Year", "AGE", "SEX","LENGTH"), na.rm=TRUE)
-Age_3<-subset(Dataset, Dataset$AGE==3&Dataset$variable=='CSW3')
-Age_3<-subset(Age_3, select=c(value))
-Age_4<-subset(Dataset, Dataset$AGE==4&Dataset$variable=='CSW4') 
-Age_5<-subset(Dataset, Dataset$AGE==5&Dataset$variable=='CSW5') 
-Age_6<-subset(Dataset, Dataset$AGE==6&Dataset$variable=='CSW6') 
-Age_7<-subset(Dataset, Dataset$AGE==7&Dataset$variable=='CSW7') 
+merge<- merge(x = sample1, y= sample2, by=c("image_name"), all.x  = T)
+
+#Histograms of outer ring 
+#datasets by ages
+merge %>%
+  
 eda.norm <- function(x, ...)
 {
   par(mfrow=c(2,2))
