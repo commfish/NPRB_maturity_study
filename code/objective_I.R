@@ -96,7 +96,18 @@ merge<- merge(x = sample1, y= sample2, by=c("image_name"), all.x  = T)
 #Histograms of outer ring 
 #datasets by ages
 merge %>%
-  
+  filter(age == 2) -> age2
+merge %>%
+  filter(age == 3) -> age3
+merge %>%
+  filter(age == 4) -> age4
+merge %>%
+  filter(age == 5) -> age5
+merge %>%
+  filter(age == 6) -> age6
+merge %>%
+  filter(age == 7) -> age7
+
 eda.norm <- function(x, ...)
 {
   par(mfrow=c(2,2))
@@ -115,23 +126,22 @@ eda.norm <- function(x, ...)
   lines(y, pnorm(y, mean(x), sqrt(var(x))))
   shapiro.test(x)
 }
-attach(Age_3)
-eda.norm(Age_3)
-eda.norm(as.numeric(Age_3$value))
-eda.norm(as.numeric(Age_4$value))
 
-Age_3$Year<-as.factor(Age_3$Year)
-cdat <- ddply(Age_3, "Year", summarise, mean.Year=mean(value))
-png(file='Histograms1.png', res=200, width=13, height=10, units ="in") 
-x<-ggplot(Age_3, aes(x=value,)) + geom_histogram(alpha=0.5, position = 'identity')+
-  ylab("Frequency")+ xlab("Scale increment length (mm)")+
-  scale_x_continuous(breaks=seq(0,max(Age_3$value, na.rm=TRUE),0.5) )
-x<-x+geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
-                linetype="dashed", size=1)
-x<-x+ggtitle("Age 3; n=663")+theme_set(theme_bw(base_size=14,base_family=
-                                                  'Times New Roman')+
-                                         theme(panel.grid.major = element_blank(),
-                                               panel.grid.minor = element_blank()))
+eda.norm(as.numeric(age2$outer_prop))
+eda.norm(as.numeric(age3$outer_prop))
+eda.norm(as.numeric(age4$outer_prop))
+eda.norm(as.numeric(age5$outer_prop))
+eda.norm(as.numeric(age6$outer_prop))
+eda.norm(as.numeric(age7$outer_prop))
+
+tickr_length <- data.frame(outer_prop = 0:1)
+axisb <- tickr(tickr_length, outer_prop, 0.2)
+ 
+ggplot(age2, aes(x=outer_prop)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment proportion") +
+  scale_x_continuous(breaks = axisb$breaks, labels = axisb$labels) +
+  ggtitle("Age 2; n=215") +
+  facet_wrap(~maturity_state_histology)
 
 x3<-ggplot(Age_3, aes(x=value, color=variable, fill=variable)) +
   geom_density(alpha=0.5, adjust=1)+
