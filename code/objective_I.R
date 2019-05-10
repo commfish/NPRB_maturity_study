@@ -43,15 +43,8 @@ clean_dataset %>%
 
 #calculate proportion of outer scale ring
 clean_dataset %>% 
-  dplyr::select(age,maturity_state_histology, scale_region, sex_histology, Increment1, Increment2, Increment3, 
-                Increment4, Increment5, Increment6, Increment7, image_name, length_mm, weight_grams, 
-                scale_condition_code, scale_region, scale_shape, sex_histology, maturation_status_histology) %>%
-  gather(value, variable, Increment1:Increment7) %>%
-  filter(!is.na(variable)) %>%
-  spread (key = value, value = variable)->s1
-
-clean_dataset %>%             
-  mutate(anu1 = ifelse(is.na(Increment1), 0 , Increment1),
+  mutate(mature = ifelse(maturity_state_histology == 'I', 'immature', 'mature'),
+         anu1 = ifelse(is.na(Increment1), 0 , Increment1),
          anu2 = ifelse(is.na(Increment2), 0 , Increment2),
          anu3 = ifelse(is.na(Increment3), 0 , Increment3),
          anu4 = ifelse(is.na(Increment4), 0 , Increment4),
@@ -134,23 +127,19 @@ eda.norm(as.numeric(age5$outer_prop))
 eda.norm(as.numeric(age6$outer_prop))
 eda.norm(as.numeric(age7$outer_prop))
 
-tickr_length <- data.frame(outer_prop = 0:1)
-axisb <- tickr(tickr_length, outer_prop, 0.2)
+tickr_length <- data.frame(prop = 0:1)
+axisb <- tickr(tickr_length, prop, 0.1)
  
 ggplot(age2, aes(x=outer_prop)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment proportion") +
-  scale_x_continuous(breaks = axisb$breaks, labels = axisb$labels) +
+  scale_x_continuous(breaks = c(0,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1), limits = c(0,1))+
   ggtitle("Age 2; n=215") +
-  facet_wrap(~maturity_state_histology)
+  facet_wrap(~mature)
 
-x3<-ggplot(Age_3, aes(x=value, color=variable, fill=variable)) +
+ggplot(age2, aes(x=outer_prop, color=outer_prop, fill=outer_prop)) +
   geom_density(alpha=0.5, adjust=1)+
   labs(x="Scale increment length (mm)", y="Density")
-x3<-x3+ggtitle("Age 3")+theme_set(theme_bw(base_size=14,base_family=
-                                             'Times New Roman')+
-                                    theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x3<-x3 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_3$value+0.1, na.rm=TRUE),0.2))
+x3<-x3+ggtitle("Age 3")+scale_x_continuous(breaks=seq(0,max(Age_3$value+0.1, na.rm=TRUE),0.2))
 
 
 Age_4$Year<-as.factor(Age_4$Year)
@@ -753,3 +742,58 @@ p.p.two <- pwr.p.test(h=0.3, power = 0.99, alternative = "two.sided")
 x<-plot(p.p.two, xlab="Sample Size", xlim=c(0,500), ylim=c(0,100) )
 citation(package = "pwr")
 readCitationFile(file, meta = NULL)
+
+
+Data <- read.csv("data/scale.csv", sep=",", header = TRUE, check.names = FALSE)  #Read in csv file, subset the spawning stock
+Dataset <- melt(Data, id=c("Year", "AGE", "SEX","LENGTH"), na.rm=TRUE)
+Age_3<-subset(Dataset, Dataset$AGE==3&Dataset$variable=='CSW3')
+Age_3<-subset(Age_3, select=c(value))
+Age_4<-subset(Dataset, Dataset$AGE==4&Dataset$variable=='CSW4') 
+Age_5<-subset(Dataset, Dataset$AGE==5&Dataset$variable=='CSW5') 
+Age_6<-subset(Dataset, Dataset$AGE==6&Dataset$variable=='CSW6') 
+Age_7<-subset(Dataset, Dataset$AGE==7&Dataset$variable=='CSW7') 
+eda.norm <- function(x, ...)
+{
+  par(mfrow=c(2,2))
+  if(sum(is.na(x)) > 0)
+    warning("NA's were removed before plotting")
+  x <- x[!is.na(x)]
+  hist(x, main = "Histogram and non-\nparametric density estimate", prob = T)
+  iqd <- summary(x)[5] - summary(x)[2]
+  lines(density(x, width = 2 * iqd))
+  boxplot(x, main = "Boxplot", ...)
+  qqnorm(x)
+  qqline(x)
+  plot.ecdf(x, main="Empirical and normal cdf")
+  LIM <- par("usr")
+  y <- seq(LIM[1],LIM[2],length=100)
+  lines(y, pnorm(y, mean(x), sqrt(var(x))))
+  shapiro.test(x)
+}
+attach(Age_3)
+eda.norm(Age_3)
+eda.norm(as.numeric(Age_3$value))
+eda.norm(as.numeric(Age_4$value))
+
+Age_3$Year<-as.factor(Age_3$Year)
+cdat <- ddply(Age_3, "Year", summarise, mean.Year=mean(value))
+png(file='Histograms1.png', res=200, width=13, height=10, units ="in") 
+x<-ggplot(Age_3, aes(x=value,)) + geom_histogram(alpha=0.5, position = 'identity')+
+  ylab("Frequency")+ xlab("Scale increment length (mm)")+
+  scale_x_continuous(breaks=seq(0,max(Age_3$value, na.rm=TRUE),0.5) )
+x<-x+geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
+                linetype="dashed", size=1)
+x<-x+ggtitle("Age 3; n=663")+theme_set(theme_bw(base_size=14,base_family=
+                                                  'Times New Roman')+
+                                         theme(panel.grid.major = element_blank(),
+                                               panel.grid.minor = element_blank()))
+
+x3<-ggplot(Age_3, aes(x=value, color=variable, fill=variable)) +
+  geom_density(alpha=0.5, adjust=1)+
+  labs(x="Scale increment length (mm)", y="Density")
+x3<-x3+ggtitle("Age 3")+theme_set(theme_bw(base_size=14,base_family=
+                                             'Times New Roman')+
+                                    theme(panel.grid.major = element_blank(),
+                                          panel.grid.minor = element_blank()))
+x3<-x3 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_3$value+0.1, na.rm=TRUE),0.2))
+
