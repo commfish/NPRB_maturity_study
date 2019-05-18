@@ -14,6 +14,9 @@ library(cowplot)
 library(mixtools)
 library(mixdist)
 library(fitdistrplus)
+library(gam)
+library(mgcv)
+library(visreg)
 
 theme_set(theme_sleek())
 
@@ -415,3 +418,72 @@ x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=
 summary(mixmdl6)
 dev.off()
 
+
+#test for difference in proportions for mature/immature outer ring
+res <- t.test(age3mature$aprop, age3immature$aprop) 
+
+#GAM 
+merge %>% 
+  mutate(age=as.factor(age),
+         maturity = ifelse(mature == "mature", 1, 0)) -> merge
+fit <- gam(maturity ~ s(aprop) + age, family = binomial, data=merge) 
+fit1 <- gam(maturity ~ s(aprop) , family = binomial, data=merge) 
+fit2 <- gam(maturity ~ s(aprop, by = age) , family = binomial, data=merge) 
+fit3 <- gam(maturity ~ s(aprop, by = age) + age, family = binomial, data=merge) 
+summary(fit)
+summary(fit1)
+summary(fit2)
+summary(fit3)
+plot(fit1)
+plot(fit2)
+AIC(fit, fit1, fit2, fit3)
+
+fit4 <- gam(aprop ~ age, data = merge)
+summary(fit4)
+
+merge %>% 
+  filter(age=='3') %>% 
+  ggplot(aes(age, anu_adj, color = mature)) +
+  geom_jitter() 
+
+#Gam.object <- gam(maturity ~ s(aprop), family = binomial, data=merge, trace=TRUE) 
+summary(Gam.object) 
+
+
+par(mfrow=c(1,1)) #to partition the Plotting Window
+plot(Gam.object,se = TRUE)  
+plot(Gam.object,pages=1,residuals=TRUE,all.terms=TRUE,shade=TRUE,shade.col=2)
+plot(Gam.object,pages=1,seWithMean=TRUE) ## better coverage intervals
+
+ggplot.model <- function(model, type="conditional", res=FALSE, 
+                         col.line="#7fc97f", col.point="#beaed4", size.line=1, size.point=1) 
+{
+require(visreg)
+require(plyr)
+plotdata <- visreg(model, type = type, plot = FALSE)
+smooths <- ldply(plotdata, function(part)   
+    data.frame(Variable = part$meta$x, 
+               x=part$fit[[part$meta$x]], 
+               smooth=part$fit$visregFit, 
+               lower=part$fit$visregLwr, 
+               upper=part$fit$visregUpr))
+  residuals <- ldply(plotdata, function(part)
+    data.frame(Variable = part$meta$x, 
+               x=part$res[[part$meta$x]], 
+               y=part$res$visregRes))
+  if (res)
+    ggplot(smooths, aes(x, smooth)) + geom_line(col=col.line, size=size.line) +
+    geom_line(aes(y=lower), linetype="dashed", col=col.line, size=size.line) +
+    geom_line(aes(y=upper), linetype="dashed", col=col.line, size=size.line) +
+    geom_point(data = residuals, aes(x, y), col=col.point, size=size.point) +
+    facet_grid(. ~ Variable, scales = "free_x")
+  else
+    ggplot(smooths, aes(x, smooth)) + geom_line(col=col.line, size=size.line) +
+    geom_line(aes(y=lower), linetype="dashed", col=col.line, size=size.line) +
+    geom_line(aes(y=upper), linetype="dashed", col=col.line, size=size.line) +
+    facet_grid(. ~ Variable, scales = "free_x")
+}
+
+ggplot.model(Gam.object)
+ggplot.model(Gam.object, res=TRUE)
+visreg(Gam.object, "aprop", gg=TRUE)
