@@ -106,9 +106,15 @@ sample1 %>%
 
 merge<- merge(x = sample1, y= sample2, by=c("image_name"), all.x  = T)
 merge %>%
-  mutate(variable="variable",
-         aprop = asintrans(outer_prop))-> merge
-
+  mutate(aprop = asintrans(outer_prop),
+         anu_adj = ifelse(anu1>0 & anu2==0 & anu3 ==0 & anu4 ==0 & anu5==0 & anu6==0 & anu7==0, anu1,
+                          ifelse(anu1>0 & anu2>0& anu3 ==0 & anu4 ==0 & anu5==0 & anu6==0 & anu7==0, anu2,
+                                 ifelse(anu1>0 & anu2>0 & anu3>0 & anu4 ==0 & anu5==0 & anu6==0 & anu7==0, anu3,
+                                        ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5==0 & anu6==0 & anu7==0, anu4,
+                                               ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6==0 & anu7==0, anu5,
+                                                      ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6>0 & anu7==0, anu6,anu7))))))) %>%
+  dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, mature, max, outer_prop, aprop, anu_adj) -> merge
+         
 #Histograms of outer ring 
 #datasets by ages
 merge %>%
@@ -151,6 +157,17 @@ eda.norm(as.numeric(age3mature$aprop))
 eda.norm(as.numeric(age4mature$aprop))
 eda.norm(as.numeric(age5mature$aprop)) #normal
 eda.norm(as.numeric(age6mature$aprop)) #normal
+
+merge %>%
+  filter(age == 2) -> age2
+merge %>%
+  filter(age == 3) -> age3
+merge %>%
+  filter(age == 4) -> age4
+merge %>%
+  filter(age == 5) -> age5
+merge %>%
+  filter(age == 6) -> age6 
  
 ggplot(age2, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment proportion") +
@@ -233,20 +250,168 @@ merge %>%
   filter(age == 6) -> age6  
 
 png(file='figs/Mixture_Models.png', res=200, width=13, height=10, units ="in") 
-par(mfrow=c(5,2)) 
-age2<-age2[,c(86)]
+par(mfrow=c(3,2)) 
+age2<-age2[,c(8)]
 mixmdl2 <- normalmixEM(age2)
 x3<-plot(mixmdl2, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
          main2="Age 2", xlab2="Scale increment Proportions", xlim=c(0,1))
 x3<-lines(density(age2), lty=2, lwd=2)
 x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
            merge = TRUE, bty = "n")
+summary(mixmdl2)
+
+age3<-age3[,c(8)]
+mixmdl3 <- normalmixEM(age3)
+x3<-plot(mixmdl3, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 3", xlab2="Scale increment Proportions", xlim=c(0,1))
+x3<-lines(density(age3), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
 summary(mixmdl3)
 
-f <- apply(age2, 2, fitdist, "norm")
-colnames(age2) <- "Measurement"
-hx <- dnorm(age2$Measurement)
-Measurement<-age2$Measurement
-x<-fitdist(Measurement, "norm")
-x3a<-denscomp(x, main="Age 2", xlab="Scale increments (mm)", xlim = c(0,1),addlegend=T,
-              legendtext=c("mature (n=37)"),lwd=2)
+age4<-age4[,c(8)]
+mixmdl4 <- normalmixEM(age4)
+x3<-plot(mixmdl4, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 4", xlab2="Scale increment Proportions", xlim=c(0,1))
+x3<-lines(density(age4), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl4)
+
+age5<-age5[,c(8)]
+mixmdl5 <- normalmixEM(age5)
+x3<-plot(mixmdl5, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 5", xlab2="Scale increment Proportions", xlim=c(0,1))
+x3<-lines(density(age5), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl5)
+
+age6<-age6[,c(8)]
+mixmdl6 <- normalmixEM(age6)
+x3<-plot(mixmdl6, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 6", xlab2="Scale increment Proportions", xlim=c(0,1))
+x3<-lines(density(age6), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl6)
+dev.off()
+
+merge %>%
+  filter(age == 2) -> age2
+merge %>%
+  filter(age == 3) -> age3
+merge %>%
+  filter(age == 4) -> age4
+merge %>%
+  filter(age == 5) -> age5
+merge %>%
+  filter(age == 6) -> age6 
+
+png(file='figs/Mixture_Models_Transform.png', res=200, width=13, height=10, units ="in") 
+par(mfrow=c(3,2)) 
+age2<-age2[,c(9)]
+mixmdl2 <- normalmixEM(age2)
+x3<-plot(mixmdl2, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 2", xlab2="Scale increment Proportions (T)", xlim=c(0,1))
+x3<-lines(density(age2), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl2)
+
+age3<-age3[,c(9)]
+mixmdl3 <- normalmixEM(age3)
+x3<-plot(mixmdl3, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 3", xlab2="Scale increment Proportions (T)", xlim=c(0,1))
+x3<-lines(density(age3), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl3)
+
+age4<-age4[,c(9)]
+mixmdl4 <- normalmixEM(age4)
+x3<-plot(mixmdl4, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 4", xlab2="Scale increment Proportions (T)", xlim=c(0,1))
+x3<-lines(density(age4), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl4)
+
+age5<-age5[,c(9)]
+mixmdl5 <- normalmixEM(age5)
+x3<-plot(mixmdl5, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 5", xlab2="Scale increment Proportions (T)", xlim=c(0,1))
+x3<-lines(density(age5), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl5)
+
+age6<-age6[,c(9)]
+mixmdl6 <- normalmixEM(age6)
+x3<-plot(mixmdl6, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 6", xlab2="Scale increment Proportions (T)", xlim=c(0,1))
+x3<-lines(density(age6), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl6)
+dev.off()
+
+merge %>%
+  filter(age == 2) -> age2
+merge %>%
+  filter(age == 3) -> age3
+merge %>%
+  filter(age == 4) -> age4
+merge %>%
+  filter(age == 5) -> age5
+merge %>%
+  filter(age == 6) -> age6
+
+png(file='figs/Mixture_Models_Measurement.png', res=200, width=13, height=10, units ="in") 
+par(mfrow=c(3,2)) 
+age2<-age2[,c(10)]
+mixmdl2 <- normalmixEM(age2)
+x3<-plot(mixmdl2, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 2", xlab2="Scale increment (mm)", xlim=c(0,4))
+x3<-lines(density(age2), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl2)
+
+age3<-age3[,c(10)]
+mixmdl3 <- normalmixEM(age3)
+x3<-plot(mixmdl3, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 3", xlab2="Scale increment (mm)", xlim=c(0,4))
+x3<-lines(density(age3), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl3)
+
+age4<-age4[,c(10)]
+mixmdl4 <- normalmixEM(age4)
+x3<-plot(mixmdl4, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 4", xlab2="Scale increment (Proportions (mm)", xlim=c(0,4))
+x3<-lines(density(age4), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl4)
+
+age5<-age5[,c(10)]
+mixmdl5 <- normalmixEM(age5)
+x3<-plot(mixmdl5, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 5", xlab2="Scale increment (Proportions (mm)", xlim=c(0,4))
+x3<-lines(density(age5), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl5)
+
+age6<-age6[,c(10)]
+mixmdl6 <- normalmixEM(age6)
+x3<-plot(mixmdl6, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 6", xlab2="Scale increment (mm)", xlim=c(0,4))
+x3<-lines(density(age6), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl6)
+dev.off()
+
