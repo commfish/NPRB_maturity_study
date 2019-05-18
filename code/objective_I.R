@@ -16,6 +16,25 @@ theme_set(theme_sleek())
 
 asintrans <- function(p) {asin(sqrt(p))} # arctransformation function
 
+eda.norm <- function(x, ...) #normality test function
+{
+  par(mfrow=c(2,2))
+  if(sum(is.na(x)) > 0)
+    warning("NA's were removed before plotting")
+  x <- x[!is.na(x)]
+  hist(x, main = "Histogram and non-\nparametric density estimate", prob = T)
+  iqd <- summary(x)[5] - summary(x)[2]
+  lines(density(x, width = 2 * iqd))
+  boxplot(x, main = "Boxplot", ...)
+  qqnorm(x)
+  qqline(x)
+  plot.ecdf(x, main="Empirical and normal cdf")
+  LIM <- par("usr")
+  y <- seq(LIM[1],LIM[2],length=100)
+  lines(y, pnorm(y, mean(x), sqrt(var(x))))
+  shapiro.test(x)
+}
+
 # load data ---- 
 data <- read.csv("data/data_11_26_2018.csv", check.names = FALSE) 
 increment <- read.csv("data/increment_measurements.csv", check.names = FALSE) 
@@ -66,17 +85,15 @@ clean_dataset %>%
          prop4 = rad4 / radcap,
          prop5 = rad5 / radcap,
          prop6 = rad6 / radcap,
-         prop7 = rad7 / radcap) %>%
+         prop7 = rad7 / radcap)%>%
   mutate(prop1_adj = prop1,
          prop2_adj = ifelse(prop2==1, NA, prop2),
          prop3_adj = ifelse(prop3==1, NA, prop3),
          prop4_adj = ifelse(prop4==1, NA, prop4),
          prop5_adj = ifelse(prop5==1, NA, prop5),
          prop6_adj = ifelse(prop6==1, NA, prop6),
-         prop7_adj = ifelse(prop7==1, NA, prop7)) %>%
-  rowwise() %>% 
-  mutate(max=max(prop1_adj, prop2_adj, prop3_adj, prop4_adj, prop5_adj, prop6_adj, prop7_adj))->sample1
-
+         prop7_adj = ifelse(prop7==1, NA, prop7)) -> sample1
+ 
 sample1 %>%
   gather(value, variable, prop1_adj:prop7_adj) %>% 
   group_by(image_name) %>% 
@@ -86,48 +103,51 @@ sample1 %>%
 
 merge<- merge(x = sample1, y= sample2, by=c("image_name"), all.x  = T)
 merge %>%
-  mutate(variable="variable")-> merge
+  mutate(variable="variable",
+         aprop = asintrans(outer_prop))-> merge
+
 #Histograms of outer ring 
 #datasets by ages
 merge %>%
-  filter(age == 2) -> age2
+  filter(age == 2) %>%
+  filter(mature == "mature")-> age2mature
 merge %>%
-  filter(age == 3) -> age3
+  filter(age == 2) %>%
+  filter(mature == "immature")-> age2immature
 merge %>%
-  filter(age == 4) -> age4
+  filter(age == 3) %>%
+  filter(mature == "mature")-> age3mature
 merge %>%
-  filter(age == 5) -> age5
+  filter(age == 3) %>%
+  filter(mature == "immature")-> age3immature
 merge %>%
-  filter(age == 6) -> age6
+  filter(age == 4) %>%
+  filter(mature == "mature")-> age4mature
 merge %>%
-  filter(age == 7) -> age7
+  filter(age == 4) %>%
+  filter(mature == "immature")-> age4immature
+merge %>%
+  filter(age == 5) %>%
+  filter(mature == "mature")-> age5mature
+merge %>%
+  filter(age == 5) %>%
+  filter(mature == "immature")-> age5immature
+merge %>%
+  filter(age == 6) %>%
+  filter(mature == "mature")-> age6mature
+merge %>%
+  filter(age == 6) %>%
+  filter(mature == "immature")-> age6immature
 
-eda.norm <- function(x, ...)
-{
-  par(mfrow=c(2,2))
-  if(sum(is.na(x)) > 0)
-    warning("NA's were removed before plotting")
-  x <- x[!is.na(x)]
-  hist(x, main = "Histogram and non-\nparametric density estimate", prob = T)
-  iqd <- summary(x)[5] - summary(x)[2]
-  lines(density(x, width = 2 * iqd))
-  boxplot(x, main = "Boxplot", ...)
-  qqnorm(x)
-  qqline(x)
-  plot.ecdf(x, main="Empirical and normal cdf")
-  LIM <- par("usr")
-  y <- seq(LIM[1],LIM[2],length=100)
-  lines(y, pnorm(y, mean(x), sqrt(var(x))))
-  shapiro.test(x)
-}
-
-eda.norm(as.numeric(age2$outer_prop))
-eda.norm(as.numeric(age3$outer_prop))
-eda.norm(as.numeric(age4$outer_prop))
-eda.norm(as.numeric(age5$outer_prop))
-eda.norm(as.numeric(age6$outer_prop))
-eda.norm(as.numeric(age7$outer_prop))
-
+#test each age/maturity for normality
+eda.norm(as.numeric(age2immature$aprop))
+#eda.norm(as.numeric(age2mature$aprop))
+eda.norm(as.numeric(age3immature$aprop))
+eda.norm(as.numeric(age3mature$aprop))
+#eda.norm(as.numeric(age4immature$aprop))
+eda.norm(as.numeric(age4mature$aprop))
+eda.norm(as.numeric(age5mature$aprop)) #normal
+eda.norm(as.numeric(age6mature$aprop)) #normal
  
 ggplot(age2, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment proportion") +
