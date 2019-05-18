@@ -11,6 +11,9 @@ library(tidyverse)
 library(FNGr)
 library(broom)
 library(cowplot)
+library(mixtools)
+library(mixdist)
+library(fitdistrplus)
 
 theme_set(theme_sleek())
 
@@ -216,3 +219,34 @@ ggplot(age6, aes(x=outer_prop, color=mature, fill=mature)) +
 cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, plot10, align = "vh", nrow = 5, ncol=2)
 ggsave("figs/histogram.png", dpi = 500, height = 10, width =8, units = "in")
 
+#Fit gaussian mixture models
+#datasets by ages
+merge %>%
+  filter(age == 2) -> age2
+merge %>%
+  filter(age == 3) -> age3
+merge %>%
+  filter(age == 4) -> age4
+merge %>%
+  filter(age == 5) -> age5
+merge %>%
+  filter(age == 6) -> age6  
+
+png(file='figs/Mixture_Models.png', res=200, width=13, height=10, units ="in") 
+par(mfrow=c(5,2)) 
+age2<-age2[,c(86)]
+mixmdl2 <- normalmixEM(age2)
+x3<-plot(mixmdl2, which=2, cex.axis=1, cex.lab=1, cex.main=1.1,
+         main2="Age 2", xlab2="Scale increment Proportions", xlim=c(0,1))
+x3<-lines(density(age2), lty=2, lwd=2)
+x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
+           merge = TRUE, bty = "n")
+summary(mixmdl3)
+
+f <- apply(age2, 2, fitdist, "norm")
+colnames(age2) <- "Measurement"
+hx <- dnorm(age2$Measurement)
+Measurement<-age2$Measurement
+x<-fitdist(Measurement, "norm")
+x3a<-denscomp(x, main="Age 2", xlab="Scale increments (mm)", xlim = c(0,1),addlegend=T,
+              legendtext=c("mature (n=37)"),lwd=2)
