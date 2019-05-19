@@ -64,7 +64,17 @@ merge1 %>%
 clean_dataset %>% 
   dplyr::select(age,maturity_state_histology, scale_region, sex_histology) %>% 
   group_by(maturity_state_histology, age, sex_histology) %>% 
-  summarize(n=n())-> x #sample sizes for study
+  summarize(n=n())-> table1 #sample sizes for study
+
+clean_dataset %>% 
+  dplyr::select(maturity_state_histology, maturation_status_histology) %>% 
+  group_by(maturity_state_histology,maturation_status_histology) %>% 
+  summarize(n=n())-> table2 #sample sizes for study
+
+clean_dataset %>% 
+  dplyr::select(scale_region) %>% 
+  group_by(scale_region) %>% 
+  summarize(n=n())-> table3 #sample sizes for study
 
 #calculate proportion of outer scale ring
 clean_dataset %>% 
@@ -108,6 +118,9 @@ sample1 %>%
   mutate(outer_prop=1-max)-> sample2 #outer prop
 
 merge<- merge(x = sample1, y= sample2, by=c("image_name"), all.x  = T)
+
+#anu_adj is measurement of outer ring
+#aprop is arcsine transform of outer_prop
 merge %>%
   mutate(aprop = asintrans(outer_prop),
          anu_adj = ifelse(anu1>0 & anu2==0 & anu3 ==0 & anu4 ==0 & anu5==0 & anu6==0 & anu7==0, anu1,
@@ -181,7 +194,7 @@ ggplot(age2, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alph
 
 ggplot(age2, aes(x=outer_prop, color=mature, fill=mature)) +
   geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) +
+  scale_fill_manual(values=c("#999999", "#E69F00" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) + 
   ylab("Density")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot2
 
@@ -194,7 +207,7 @@ ggplot(age3, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alph
 
 ggplot(age3, aes(x=outer_prop, color=mature, fill=mature)) +
   geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) +
+  scale_fill_manual(values=c("#999999", "#E69F00" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
   ylab("Density")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot4
 
@@ -207,7 +220,7 @@ ggplot(age4, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alph
 
 ggplot(age4, aes(x=outer_prop, color=mature, fill=mature)) +
   geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) +
+  scale_fill_manual(values=c("#999999", "#E69F00" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
   ylab("Density")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot6
 
@@ -220,7 +233,7 @@ ggplot(age5, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alph
 
 ggplot(age5, aes(x=outer_prop, color=mature, fill=mature)) +
   geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) +
+  scale_fill_manual(values=c("#999999", "#E69F00" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
   ylab("Density")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) -> plot8
 
@@ -233,7 +246,7 @@ ggplot(age6, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alph
 
 ggplot(age6, aes(x=outer_prop, color=mature, fill=mature)) +
   geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) +
+  scale_fill_manual(values=c("#999999", "#E69F00" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
   ylab("Density")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot10
 cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, plot10, align = "vh", nrow = 5, ncol=2)
@@ -425,11 +438,11 @@ res <- t.test(age3mature$aprop, age3immature$aprop)
 #GAM 
 merge %>% 
   mutate(age=as.factor(age),
-         maturity = ifelse(mature == "mature", 1, 0)) -> merge
-fit <- gam(maturity ~ s(aprop) + age, family = binomial, data=merge) 
-fit1 <- gam(maturity ~ s(aprop) , family = binomial, data=merge) 
-fit2 <- gam(maturity ~ s(aprop, by = age) , family = binomial, data=merge) 
-fit3 <- gam(maturity ~ s(aprop, by = age) + age, family = binomial, data=merge) 
+         maturity = ifelse(mature == "mature", 1, 0)) -> dataset
+fit <- gam(maturity ~ s(aprop) + age, family = binomial, data=dataset) 
+fit1 <- gam(maturity ~ s(aprop) , family = binomial, data=dataset) 
+fit2 <- gam(maturity ~ s(aprop, by = age) , family = binomial, data=dataset) 
+fit3 <- gam(maturity ~ s(aprop, by = age) + age, family = binomial, data=dataset) 
 summary(fit)
 summary(fit1)
 summary(fit2)
@@ -438,52 +451,25 @@ plot(fit1)
 plot(fit2)
 AIC(fit, fit1, fit2, fit3)
 
-fit4 <- gam(aprop ~ age, data = merge)
+fit4 <- gam(aprop ~ age, data = dataset)
 summary(fit4)
 
-merge %>% 
-  filter(age=='3') %>% 
-  ggplot(aes(age, anu_adj, color = mature)) +
-  geom_jitter() 
-
-#Gam.object <- gam(maturity ~ s(aprop), family = binomial, data=merge, trace=TRUE) 
-summary(Gam.object) 
 
 
-par(mfrow=c(1,1)) #to partition the Plotting Window
-plot(Gam.object,se = TRUE)  
-plot(Gam.object,pages=1,residuals=TRUE,all.terms=TRUE,shade=TRUE,shade.col=2)
-plot(Gam.object,pages=1,seWithMean=TRUE) ## better coverage intervals
+dataset %>% 
+  ggplot(aes(x = age, y = outer_prop, color = mature)) +
+  geom_jitter(size = 1) + labs(x = "Age",y = "Outer Increment Proportion") + 
+  theme(legend.title=element_blank(), legend.position=c(.85,.9)) +
+  scale_color_manual(values=c("#999999", "#E69F00")) +
+  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot1
 
-ggplot.model <- function(model, type="conditional", res=FALSE, 
-                         col.line="#7fc97f", col.point="#beaed4", size.line=1, size.point=1) 
-{
-require(visreg)
-require(plyr)
-plotdata <- visreg(model, type = type, plot = FALSE)
-smooths <- ldply(plotdata, function(part)   
-    data.frame(Variable = part$meta$x, 
-               x=part$fit[[part$meta$x]], 
-               smooth=part$fit$visregFit, 
-               lower=part$fit$visregLwr, 
-               upper=part$fit$visregUpr))
-  residuals <- ldply(plotdata, function(part)
-    data.frame(Variable = part$meta$x, 
-               x=part$res[[part$meta$x]], 
-               y=part$res$visregRes))
-  if (res)
-    ggplot(smooths, aes(x, smooth)) + geom_line(col=col.line, size=size.line) +
-    geom_line(aes(y=lower), linetype="dashed", col=col.line, size=size.line) +
-    geom_line(aes(y=upper), linetype="dashed", col=col.line, size=size.line) +
-    geom_point(data = residuals, aes(x, y), col=col.point, size=size.point) +
-    facet_grid(. ~ Variable, scales = "free_x")
-  else
-    ggplot(smooths, aes(x, smooth)) + geom_line(col=col.line, size=size.line) +
-    geom_line(aes(y=lower), linetype="dashed", col=col.line, size=size.line) +
-    geom_line(aes(y=upper), linetype="dashed", col=col.line, size=size.line) +
-    facet_grid(. ~ Variable, scales = "free_x")
-}
+dataset %>% 
+  ggplot(aes(x = age, y = outer_prop, color = mature)) + labs(x = "Age",
+  y = "Outer Increment Proportion")  +
+  geom_boxplot() + theme(legend.position= "none") +
+  scale_color_manual(values=c("#999999", "#E69F00")) +
+  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot2
 
-ggplot.model(Gam.object)
-ggplot.model(Gam.object, res=TRUE)
-visreg(Gam.object, "aprop", gg=TRUE)
+cowplot::plot_grid(plot1, plot2, align = "vh", nrow = 1, ncol=2)
+ggsave("figs/boxplot.png", dpi = 500, height = 4, width = 6, units = "in")
+
