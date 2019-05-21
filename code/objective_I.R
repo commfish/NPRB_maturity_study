@@ -15,8 +15,10 @@ library(mixtools)
 library(mixdist)
 library(fitdistrplus)
 library(gam)
+library(car)
+library(lmtest)
 library(mgcv)
-library(visreg)
+#library(visreg)
 
 theme_set(theme_sleek())
 
@@ -439,23 +441,52 @@ res <- t.test(age3mature$aprop, age3immature$aprop)
 merge %>% 
   mutate(age=as.factor(age),
          maturity = ifelse(mature == "mature", 1, 0)) -> dataset
-fit <- gam(maturity ~ s(aprop) + age, family = binomial, data=dataset) 
-fit1 <- gam(maturity ~ s(aprop) , family = binomial, data=dataset) 
+fit <- glm(maturity ~ (aprop) , family = binomial, data=dataset) 
+fit1 <- glm(maturity ~ (aprop) + age, family = binomial, data=dataset) 
 fit2 <- gam(maturity ~ s(aprop, by = age) , family = binomial, data=dataset) 
 fit3 <- gam(maturity ~ s(aprop, by = age) + age, family = binomial, data=dataset) 
+fit4 <- gam(maturity ~  age, family = binomial, data=dataset) 
 summary(fit)
 summary(fit1)
 summary(fit2)
 summary(fit3)
+summary(fit4)
 plot(fit1)
 plot(fit2)
-AIC(fit, fit1, fit2, fit3)
+plot(fit3)
+AIC(fit, fit1, fit2, fit3, fit4)
 
-fit4 <- gam(aprop ~ age, data = dataset)
-summary(fit4)
+fit5 <- gam(aprop ~ age, data = dataset)
+summary(fit5)
 
+#diagnostics of best model
+coef <- coefficients(fit3) # coefficients
+resid <- residuals(fit3) # residuals
+pred <- predict(fit3) # fitted values
+rsq <- summary(fit3)$r.squared # R-sq for the fit
+se <- summary(fit)$sigma # se of the fit
+plot.gam(fit3)
+gam.check(fit3)
+shapiro.test(resid)
+durbinWatsonTest(resid)
+dwtest(fit3)
+#Durbin-Watson Test
+#2 is no autocorrelation.
+#0 to <2 is positive autocorrelation (common in time series data).
+#>2 to 4 is negative autocorrelation (less common in time series data).
+#A rule of thumb is that test statistic values in the range of 1.5 to 2.5 are relatively normal
+#Field(2009) suggests that values under 1 or more than 3 are a definite cause for concern.
+#Field, A.P. (2009). Discovering statistics using SPSS: and sex and drugs and rock ‘n’ roll (3rd edition). London:Sage.
 
+#If the model distributional assumptions are met then usually these plots
+#should be close to a straight line (although discrete data can yield marked random departures from this line). 
+par(mfrow=c(2,2))
+qqnorm(residuals(fit3),pch=19,cex=.3)
+qq.gam(pif,pch=19,cex=.3)
+qq.gam(pif,rep=100,level=.9)
+qq.gam(pif,rep=100,level=1,type="pearson",pch=19,cex=.2)
 
+#figures 
 dataset %>% 
   ggplot(aes(x = age, y = outer_prop, color = mature)) +
   geom_jitter(size = 1) + labs(x = "Age",y = "Outer Increment Proportion") + 
