@@ -441,10 +441,11 @@ res <- t.test(age3mature$aprop, age3immature$aprop)
 merge %>% 
   mutate(age=as.factor(age),
          maturity = ifelse(mature == "mature", 1, 0)) -> dataset
-fit <- glm(maturity ~ (aprop) , family = binomial, data=dataset) 
-fit1 <- glm(maturity ~ (aprop) + age, family = binomial, data=dataset) 
-fit2 <- gam(maturity ~ s(aprop, by = age) , family = binomial, data=dataset) 
-fit3 <- gam(maturity ~ s(aprop, by = age) + age, family = binomial, data=dataset) 
+fit <- glm(maturity ~ (outer_prop) , family = binomial, data=dataset)
+fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = dataset[dataset$age==3,]) 
+fit1 <- glm(maturity ~ (outer_prop) + age, family = binomial, data=dataset) 
+fit2 <- gam(maturity ~ s(outer_prop, by = age) , family = binomial, data=dataset) 
+fit3 <- gam(maturity ~ s(outer_prop, by = age) + age, family = binomial, data=dataset) 
 fit4 <- gam(maturity ~  age, family = binomial, data=dataset) 
 summary(fit)
 summary(fit1)
@@ -456,7 +457,7 @@ plot(fit2)
 plot(fit3)
 AIC(fit, fit1, fit2, fit3, fit4)
 
-fit5 <- gam(aprop ~ age, data = dataset)
+fit5 <- gam(outer_prop ~ age, data = dataset)
 summary(fit5)
 
 #diagnostics of best model
@@ -485,8 +486,71 @@ qqnorm(residuals(fit3),pch=19,cex=.3)
 qq.gam(pif,pch=19,cex=.3)
 qq.gam(pif,rep=100,level=.9)
 qq.gam(pif,rep=100,level=1,type="pearson",pch=19,cex=.2)
+dev.off()
+#Generalized Linear models 
+dataset %>% 
+  do(A1 = glm(maturity ~ outer_prop, data = dataset, family = binomial),
+     A2 = glm(maturity ~ outer_prop, data = dataset[dataset$age==3,], family= binomial)) -> lm_out
 
-#figures 
+lm_out %>% 
+  tidy(A1) %>% 
+  mutate(model = "fit") -> A1
+lm_out %>% 
+  tidy(A2) %>% 
+  mutate(model = "fit_age3") -> A2
+x<- rbind(A1, A2) #combine data for all zones
+write_csv(x, "output/lm.csv")
+
+lm_out %>% 
+  glance(A1) %>% 
+  mutate(model = "fit") -> A1
+lm_out %>% 
+  glance(A2) %>% 
+  mutate(model = "fit_age3") -> A2
+x<- rbind(A1, A2) #combine data for all zones
+write_csv(x, "output/lm_R2.csv")
+
+lm_out %>% 
+  augment(A1) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = outer_prop, y = maturity)) +
+  geom_point(color ="grey50")+geom_line(aes(maturity, fit), color = "black") + 
+  annotate("text", x = 200, y=7, label="A1", family="Times New Roman")+
+  scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1))+
+  labs(y = "Maturity", x =  "Outer Proportion")-> A1
+
+lm_out %>% 
+  augment(A2) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = outer_prop, y = maturity)) +
+  geom_point(color ="grey50")+geom_line(aes(maturity, fit), color = "black") + 
+  #annotate("text", x = 0, y=2, label="Age 3", family="Times New Roman")+
+  scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1))+
+  labs(y = "Maturity", x =  "Outer Proportion")-> plot1
+
+lm_out %>% 
+  augment(A2) %>% 
+  mutate(resid = (.resid),
+         fit = (.fitted)) %>% 
+  ggplot(aes(x = fit, y = resid)) +
+  geom_point(color ="grey50") + 
+  #annotate("text", x = 0, y=2, label="Age 3", family="Times New Roman")+
+  scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1)) +
+  geom_hline(yintercept = 0, lty=2) + geom_smooth(method="auto") +
+  labs(y = "Residuals", x =  "Fitted Values")-> plot2
+
+#Residual plots
+op <- par(oma=c(4,1,1,1))
+fit3.diag <- glm.diag(fit3)
+glm.diag.plots(fit3, fit3.diag)
+par(op)
+
+ggplot(data=dataset, aes(x = fitted(fit3), y = residuals(fit3))) + geom_point() +
+  labs(y = "Residuals", x =  "Fitted Values") +
+abline(h=0, lty=2) +
+lines(smooth.spline(fitted(fit3), residuals(fit3)))#plot of the fitted vs. residuals (upper right)
+ 
+'#Boxplot Figures 
 dataset %>% 
   ggplot(aes(x = age, y = outer_prop, color = mature)) +
   geom_jitter(size = 1) + labs(x = "Age",y = "Outer Increment Proportion") + 
@@ -503,4 +567,3 @@ dataset %>%
 
 cowplot::plot_grid(plot1, plot2, align = "vh", nrow = 1, ncol=2)
 ggsave("figs/boxplot.png", dpi = 500, height = 4, width = 6, units = "in")
-
