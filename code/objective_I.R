@@ -437,7 +437,7 @@ dev.off()
 #test for difference in proportions for mature/immature outer ring
 res <- t.test(age3mature$aprop, age3immature$aprop) 
 
-#GAM 
+#GAM Models
 merge %>% 
   mutate(age=as.factor(age),
          maturity = ifelse(mature == "mature", 1, 0)) -> dataset
@@ -487,6 +487,7 @@ qq.gam(pif,pch=19,cex=.3)
 qq.gam(pif,rep=100,level=.9)
 qq.gam(pif,rep=100,level=1,type="pearson",pch=19,cex=.2)
 dev.off()
+
 #Generalized Linear models 
 dataset %>% 
   do(A1 = glm(maturity ~ outer_prop, data = dataset, family = binomial),
@@ -536,11 +537,11 @@ lm_out %>%
   geom_point(color ="grey50") + 
   #annotate("text", x = 0, y=2, label="Age 3", family="Times New Roman")+
   scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1)) +
-  geom_hline(yintercept = 0, lty=2) + geom_smooth(method="auto") +
+  geom_hline(yintercept = 0, lty=2) + 
   labs(y = "Residuals", x =  "Fitted Values")-> plot2
 
 #Residual plots
-op <- par(oma=c(4,1,1,1))
+op <- par(oma=c(1,1,1,1))
 fit3.diag <- glm.diag(fit3)
 glm.diag.plots(fit3, fit3.diag)
 par(op)
@@ -550,7 +551,7 @@ ggplot(data=dataset, aes(x = fitted(fit3), y = residuals(fit3))) + geom_point() 
 abline(h=0, lty=2) +
 lines(smooth.spline(fitted(fit3), residuals(fit3)))#plot of the fitted vs. residuals (upper right)
  
-'#Boxplot Figures 
+#Boxplot Figures 
 dataset %>% 
   ggplot(aes(x = age, y = outer_prop, color = mature)) +
   geom_jitter(size = 1) + labs(x = "Age",y = "Outer Increment Proportion") + 
