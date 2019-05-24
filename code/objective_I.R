@@ -18,7 +18,8 @@ library(gam)
 library(car)
 library(lmtest)
 library(mgcv)
-#library(visreg)
+library(visreg)
+library(boot)
 
 theme_set(theme_sleek())
 
@@ -443,17 +444,13 @@ merge %>%
          maturity = ifelse(mature == "mature", 1, 0)) -> dataset
 fit <- glm(maturity ~ (outer_prop) , family = binomial, data=dataset)
 fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = dataset[dataset$age==3,]) 
-fit1 <- glm(maturity ~ (outer_prop) + age, family = binomial, data=dataset) 
-fit2 <- gam(maturity ~ s(outer_prop, by = age) , family = binomial, data=dataset) 
-fit3 <- gam(maturity ~ s(outer_prop, by = age) + age, family = binomial, data=dataset) 
-fit4 <- gam(maturity ~  age, family = binomial, data=dataset) 
+fit4 <- glm(maturity ~ (outer_prop) + age, family = binomial, data=dataset) 
+fit5 <- gam(maturity ~ s(outer_prop, by = age) , family = binomial, data=dataset) 
+fit6 <- gam(maturity ~ s(outer_prop, by = age) + age, family = binomial, data=dataset) 
+fit7 <- gam(maturity ~  age, family = binomial, data=dataset) 
 summary(fit)
-summary(fit1)
-summary(fit2)
 summary(fit3)
-summary(fit4)
-plot(fit1)
-plot(fit2)
+plot(fit)
 plot(fit3)
 AIC(fit, fit1, fit2, fit3, fit4)
 
@@ -520,37 +517,70 @@ lm_out %>%
   scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1))+
   labs(y = "Maturity", x =  "Outer Proportion")-> A1
 
-lm_out %>% 
+lm_out %>% #fitted line plot
   augment(A2) %>% 
   mutate(fit = (.fitted)) %>% 
   ggplot(aes(x = outer_prop, y = maturity)) +
   geom_point(color ="grey50")+geom_line(aes(maturity, fit), color = "black") + 
-  #annotate("text", x = 0, y=2, label="Age 3", family="Times New Roman")+
   scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1))+
   labs(y = "Maturity", x =  "Outer Proportion")-> plot1
 
-lm_out %>% 
+lm_out %>% #resids versus fitted
   augment(A2) %>% 
   mutate(resid = (.resid),
          fit = (.fitted)) %>% 
   ggplot(aes(x = fit, y = resid)) +
   geom_point(color ="grey50") + 
-  #annotate("text", x = 0, y=2, label="Age 3", family="Times New Roman")+
   scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1)) +
   geom_hline(yintercept = 0, lty=2) + 
   labs(y = "Residuals", x =  "Fitted Values")-> plot2
 
+lm_out %>% #resids versus fitted
+  augment(A2) %>% 
+  mutate(resid = (.std.resid),
+         fit = (.fitted)) %>% 
+  ggplot(aes(x = fit, y = resid)) +
+  geom_point(color ="grey50") + 
+  scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1)) +
+  geom_hline(yintercept = 0, lty=2) + 
+  labs(y = "Standardized Residuals", x =  "Fitted Values")-> plot3
+
+
+lm_out %>% #Cook's distance plot
+  augment(A2) %>% 
+  mutate(cooksd = (.cooksd),
+         count = 1:143) %>% 
+  ggplot(aes(x = count, y = cooksd)) +
+  geom_point(color ="black") + 
+  scale_y_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1)) +
+  labs(y = "Cook's distance values", x =  "")-> plot4
+#cook's distance plot [Zuur et al. (2013): A beginner's Guide to GLM and GLMM with ]
+#plot(cooks.distance(fit3), ylim=c(0,1), ylab="Cook distance values", type="h")
+#qqline plot
+
+
+
+
+
+
 #Residual plots
-op <- par(oma=c(1,1,1,1))
 fit3.diag <- glm.diag(fit3)
 glm.diag.plots(fit3, fit3.diag)
-par(op)
 
-ggplot(data=dataset, aes(x = fitted(fit3), y = residuals(fit3))) + geom_point() +
-  labs(y = "Residuals", x =  "Fitted Values") +
-abline(h=0, lty=2) +
-lines(smooth.spline(fitted(fit3), residuals(fit3)))#plot of the fitted vs. residuals (upper right)
- 
+
+# Residual vs. fitted
+E2 <- resid(fit3, type="pearson")
+F2 <- fitted(fit3, type="response")
+plot(x=F2, y=E2, xlab="fitted values", ylab="Pearson residuals")
+abline(h=0, lty=2)
+
+# Cook's distance
+
+
+# Pearson residuals vs. continous covariate
+plot(x=df$SYNTAXSCORE, y=E2, xlab="SYNTAXSCORE", ylab="Pearson residuals")
+abline(h=0, lty=2)
+
 #Boxplot Figures 
 dataset %>% 
   ggplot(aes(x = age, y = outer_prop, color = mature)) +
