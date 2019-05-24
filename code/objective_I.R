@@ -22,7 +22,9 @@ library(visreg)
 library(boot)
 
 theme_set(theme_sleek())
-
+fun_length <- function(x){
+  return(data.frame(y=median(x),label= paste0(length(x))))
+}
 asintrans <- function(p) {asin(sqrt(p))} # arctransformation function
 
 eda.norm <- function(x, ...) #normality test function
@@ -553,32 +555,12 @@ lm_out %>% #Cook's distance plot
   geom_point(color ="black") + 
   scale_y_continuous(breaks = c(0, 0.1, .2, 0.3), limits = c(0,0.3)) +
   labs(y = "Cook's distance values", x =  "")-> plot4
-#cook's distance plot [Zuur et al. (2013): A beginner's Guide to GLM and GLMM with ]
+#cook's distance plot [Zuur et al. (2013): A beginner's Guide to GLM and GLMM with R]
 #plot(cooks.distance(fit3), ylim=c(0,1), ylab="Cook distance values", type="h")
 #qqline plot
 #Pearson residuals vs. continous covariate
 cowplot::plot_grid(plot1, plot2, plot3, plot4, align = "vh", nrow = 2, ncol=2)
 ggsave("figs/glm_diagnostics.png", dpi = 500, height = 6, width = 8, units = "in")
-
-
-
-
-
-#Residual plots
-fit3.diag <- glm.diag(fit3)
-glm.diag.plots(fit3, fit3.diag)
-
-
-# Residual vs. fitted
-E2 <- resid(fit3, type="pearson")
-F2 <- fitted(fit3, type="response")
-plot(x=F2, y=E2, xlab="fitted values", ylab="Pearson residuals")
-abline(h=0, lty=2)
-
-# Pearson residuals vs. continous covariate
-plot(x=df$SYNTAXSCORE, y=E2, xlab="SYNTAXSCORE", ylab="Pearson residuals")
-abline(h=0, lty=2)
-#Zuur et al. (2013): A beginner's Guide to GLM and GLMM with R.
 
 #Boxplot Figures 
 dataset %>% 
@@ -604,3 +586,20 @@ dataset %>%
 
 cowplot::plot_grid(plot1, plot2, plot3, align = "vh", nrow = 1, ncol=3)
 ggsave("figs/boxplot.png", dpi = 500, height = 6, width = 8, units = "in")
+cowplot::plot_grid(plot1, plot2, align = "vh", nrow = 1, ncol=2)
+ggsave("figs/boxplot2.png", dpi = 500, height = 6, width = 8, units = "in")
+#Residual plots
+fit3.diag <- glm.diag(fit3)
+glm.diag.plots(fit3, fit3.diag)
+
+
+# Residual vs. fitted
+E2 <- resid(fit3, type="pearson")
+F2 <- fitted(fit3, type="response")
+plot(x=F2, y=E2, xlab="fitted values", ylab="Pearson residuals")
+abline(h=0, lty=2)
+
+# Pearson residuals vs. continous covariate
+plot(x=df$SYNTAXSCORE, y=E2, xlab="SYNTAXSCORE", ylab="Pearson residuals")
+abline(h=0, lty=2)
+#Zuur et al. (2013): A beginner's Guide to GLM and GLMM with R.
