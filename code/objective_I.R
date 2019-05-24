@@ -523,7 +523,7 @@ lm_out %>% #fitted line plot
   ggplot(aes(x = outer_prop, y = maturity)) +
   geom_point(color ="grey50")+geom_line(aes(maturity, fit), color = "black") + 
   scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1))+
-  labs(y = "Maturity", x =  "Outer Proportion")-> plot1
+  labs(y = "Maturity", x =  "Outer Increment Proportion")-> plot1
 
 lm_out %>% #resids versus fitted
   augment(A2) %>% 
@@ -551,12 +551,14 @@ lm_out %>% #Cook's distance plot
          count = 1:143) %>% 
   ggplot(aes(x = count, y = cooksd)) +
   geom_point(color ="black") + 
-  scale_y_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1)) +
+  scale_y_continuous(breaks = c(0, 0.1, .2, 0.3), limits = c(0,0.3)) +
   labs(y = "Cook's distance values", x =  "")-> plot4
 #cook's distance plot [Zuur et al. (2013): A beginner's Guide to GLM and GLMM with ]
 #plot(cooks.distance(fit3), ylim=c(0,1), ylab="Cook distance values", type="h")
 #qqline plot
-
+#Pearson residuals vs. continous covariate
+cowplot::plot_grid(plot1, plot2, plot3, plot4, align = "vh", nrow = 2, ncol=2)
+ggsave("figs/glm_diagnostics.png", dpi = 500, height = 6, width = 8, units = "in")
 
 
 
@@ -576,12 +578,13 @@ abline(h=0, lty=2)
 # Pearson residuals vs. continous covariate
 plot(x=df$SYNTAXSCORE, y=E2, xlab="SYNTAXSCORE", ylab="Pearson residuals")
 abline(h=0, lty=2)
+#Zuur et al. (2013): A beginner's Guide to GLM and GLMM with R.
 
 #Boxplot Figures 
 dataset %>% 
   ggplot(aes(x = age, y = outer_prop, color = mature)) +
   geom_jitter(size = 1) + labs(x = "Age",y = "Outer Increment Proportion") + 
-  theme(legend.title=element_blank(), legend.position=c(.85,.9)) +
+  theme(legend.title=element_blank(), legend.position=c(.8,.9)) +
   scale_color_manual(values=c("#999999", "#E69F00")) +
   scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot1
 
@@ -592,5 +595,12 @@ dataset %>%
   scale_color_manual(values=c("#999999", "#E69F00")) +
   scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot2
 
-cowplot::plot_grid(plot1, plot2, align = "vh", nrow = 1, ncol=2)
-ggsave("figs/boxplot.png", dpi = 500, height = 4, width = 6, units = "in")
+dataset %>% 
+  ggplot(aes(x = mature, y = outer_prop, color=mature)) + labs(x = "",
+  y = "Outer Increment Proportion")  +
+  geom_boxplot() + theme(legend.position= "none") +
+  scale_color_manual(values=c("#999999", "#E69F00")) +
+  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot3
+
+cowplot::plot_grid(plot1, plot2, plot3, align = "vh", nrow = 1, ncol=3)
+ggsave("figs/boxplot.png", dpi = 500, height = 6, width = 8, units = "in")
