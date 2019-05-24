@@ -545,7 +545,6 @@ lm_out %>% #resids versus fitted
   geom_hline(yintercept = 0, lty=2) + 
   labs(y = "Standardized Residuals", x =  "Fitted Values")-> plot3
 
-
 lm_out %>% #Cook's distance plot
   augment(A2) %>% 
   mutate(cooksd = (.cooksd),
@@ -573,9 +572,6 @@ E2 <- resid(fit3, type="pearson")
 F2 <- fitted(fit3, type="response")
 plot(x=F2, y=E2, xlab="fitted values", ylab="Pearson residuals")
 abline(h=0, lty=2)
-
-# Cook's distance
-
 
 # Pearson residuals vs. continous covariate
 plot(x=df$SYNTAXSCORE, y=E2, xlab="SYNTAXSCORE", ylab="Pearson residuals")
