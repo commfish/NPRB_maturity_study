@@ -134,10 +134,9 @@ merge %>%
                                         ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5==0 & anu6==0 & anu7==0, anu4,
                                                ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6==0 & anu7==0, anu5,
                                                       ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6>0 & anu7==0, anu6,anu7))))))) %>%
-  dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, mature, max, outer_prop, aprop, anu_adj) -> merge
+  mutate(maturity = ifelse(mature=='mature', 1, 0)) %>%
+  dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, mature, max, outer_prop, aprop, anu_adj, maturity) -> merge
 
-merge %>%
-  filter(age == 3) -> dataset 
 
 #Histograms of outer ring 
 #datasets by ages
@@ -444,50 +443,48 @@ dev.off()
 res <- t.test(age3mature$aprop, age3immature$aprop) 
 
 #Generalized Linear models 
-#dataset %>% 
+#merge %>% 
 #  do(A1 = glm(maturity ~ outer_prop, data = dataset, family = binomial(link=logit)),
 #     A2 = glm(maturity ~ outer_prop, data = dataset[dataset$age==3,], family= binomial(link=logit))) -> lm_out
+merge %>%
+  filter(age == 3) -> dataset
 fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = dataset) 
+fitall <- glm(maturity ~ (outer_prop) , family = binomial, data = merge) 
 dataset %>% 
-  do(A1 = glm(maturity ~ outer_prop, data = dataset, family = binomial(link=logit)),
-     A2 = glm(maturity ~ outer_prop, data = dataset[dataset$age==3,], family= binomial(link=logit))) -> lm_out
-head(augment(A2,dataset[dataset$age==3,], type.residuals="pearson"))
+  do(A2 = glm(maturity ~ outer_prop, data = dataset, family = binomial(link=logit))) -> lm_out
+head(augment(lm_out,dataset, type.residuals="pearson"))
+outlierTest(fit3) #Bonferroni p-values
+residualPlots(fit3) #lack-of fit curvature test
 
-lm_out %>% 
-  tidy(A1) %>% 
-  mutate(model = "fit") -> A1
 lm_out %>% 
   tidy(A2) %>% 
   mutate(model = "fit_age3") -> A2
-x<- rbind(A1, A2) #combine data for all zones
-write_csv(x, "output/lm.csv")
+write_csv(A2, "output/lm.csv")
 
-lm_out %>% 
-  glance(A1) %>% 
-  mutate(model = "fit") -> A1
 lm_out %>% 
   glance(A2) %>% 
   mutate(model = "fit_age3") -> A2
-x<- rbind(A1, A2) #combine data for all zones
-write_csv(x, "output/lm_R2.csv")
+write_csv(A2, "output/lm_R2.csv")
 
 lm_out %>% 
   augment(A2) %>% 
   mutate(resid = (.resid)) %>% 
   ggplot(aes(x = outer_prop, y = resid)) +
+  geom_hline(yintercept = 0, lty=2) + 
   geom_point(color ="grey50") + 
   scale_x_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4,0.5), limits = c(0, 0.5))+
-  scale_y_continuous(breaks = c(-2, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
+  scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
   geom_smooth(aes(colour = outer_prop, fill = outer_prop)) +
   labs(y = "Pearson residuals", x =  "Outer proportion")-> plot1
 
-lm_out %>% 
+lm_out %>% #Pearson residuals
   augment(A2) %>% 
   mutate(resid = (.resid),
          fit = (.fitted)) %>% 
   ggplot(aes(x = fit, y = resid)) +
   geom_point(color ="grey50") + 
-  scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1)) +
+  scale_x_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4,0.5), limits = c(0, 0.5))+
+  scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
   geom_smooth(aes(colour = fit, fill = fit)) +
   geom_hline(yintercept = 0, lty=2) + 
   labs(y = "Pearson residuals", x =  "Fitted values")-> plot2
@@ -495,37 +492,59 @@ lm_out %>%
 lm_out %>% #Cook's distance plot
   augment(A2) %>% 
   mutate(cooksd = (.cooksd),
-         resid = (.resid),
          count = 1:143,
-         name = ) %>% 
+         name= ifelse(cooksd >0.05, count, "")) %>% 
   ggplot(aes(x = count, y = cooksd, label=name)) +
-  geom_bar(aes(y = cooksd),
-           stat = "identity", colour = "grey50", 
+  geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
            width = 0.8, position = position_dodge(width = 0.2)) + 
-  geom_text(stat='count', aes(label=..count..), vjust=-1) +
+  geom_text(size = 3, position = position_stack(vjust = 1.1)) + 
   scale_y_continuous(breaks = c(0, 0.05, 0.1, 0.15, .2), limits = c(0,0.2)) +
-  labs(y = "Cook's distance values", x =  "Index")-> plot3
+  labs(y = "Cook's distance", x =  "Index") -> plot3
 
-
-cowplot::plot_grid(plot1, plot2, plot3, align = "vh", nrow = 2, ncol=2)
+lm_out %>% #leverage
+  augment(A2) %>% 
+  mutate(hat= (.hat),
+         count = 1:143,
+         name= ifelse(hat >0.05, count, "")) %>% 
+  ggplot(aes(x = count, y = hat, label=name)) +
+  geom_bar(stat = "identity", colour = "grey50", 
+           fill = "lightgrey",alpha=.7,
+           width = 0.8, position = position_dodge(width = 0.2)) + 
+  geom_text(size = 3, position = position_stack(vjust = 1.1)) + 
+  scale_y_continuous(breaks = c(0, 0.05, 0.1, 0.15, .2), limits = c(0,0.2)) +
+  labs(y = "hat-values", x =  "Index") -> plot4
+cowplot::plot_grid(plot1, plot2, plot3, plot4,  align = "vh", nrow = 2, ncol=2)
 ggsave("figs/glm_diagnostics.png", dpi = 500, height = 6, width = 8, units = "in")
+
+par(mfrow=c(1,1))
+png(filename="figs/glm_diagnostics1.png", width = 6, height = 6, units = 'in', res = 400)
+windowsFonts(A = windowsFont("Times New Roman"))
+influencePlot(fit3, xlab="Hat-values", ylab="Studentized residuals", family="A")
+dev.off()
+png(filename="figs/glm_diagnostics2.png", width = 8, height = 6, units = 'in', res = 400)
+influenceIndexPlot(fitall, family="A", main="")
+dev.off()
+
+#remove datapoint 92 to determine differnce in coefficients
+fit3outlier<-update(fit3, subset=-c(92))
+compareCoefs(fit3, fit3outlier)
 
 #GAM Models
 merge %>% 
   mutate(age=as.factor(age),
-         maturity = ifelse(mature == "mature", 1, 0)) -> dataset
-fit <- glm(maturity ~ (outer_prop) , family = binomial, data=dataset)
-fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = dataset[dataset$age==3,]) 
-fit4 <- glm(maturity ~ (outer_prop) + age, family = binomial, data=dataset) 
+         maturity = ifelse(mature == "mature", 1, 0)) -> merge
+fit <- glm(maturity ~ (outer_prop) , family = binomial, data=merge)
+fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = merge[merge$age==3,]) 
+fit4 <- glm(maturity ~ (outer_prop) + age, family = binomial, data=merge) 
 fit5 <- gam(maturity ~ s(outer_prop, by = age) , family = binomial, data=dataset) 
 fit6 <- gam(maturity ~ s(outer_prop, by = age) + age, family = binomial, data=dataset) 
-fit7 <- gam(maturity ~  age, family = binomial, data=dataset) 
+fit7 <- glm(maturity ~  age, family = binomial, data=merge) 
 summary(fit)
 summary(fit3)
 plot(fit)
 plot(fit3)
-AIC(fit, fit1, fit2, fit3, fit4)
+AIC(fit, fit4, fit7)
 
 fit5 <- gam(outer_prop ~ age, data = dataset)
 summary(fit5)
@@ -573,54 +592,12 @@ dev.off()
 
 
 
- %>% #resids versus fitted
-  augment(A2) %>% 
-  mutate(resid = (.resid),
-         fit = (.fitted)) %>% 
-  ggplot(aes(x = fit, y = resid)) +
-  geom_point(color ="grey50") + 
-  scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1)) +
-  geom_hline(yintercept = 0, lty=2) + 
-  labs(y = "Residuals", x =  "Fitted Values")-> plot2
 
 
 
-lm_out %>% 
-  augment(A1) %>% 
-  mutate(fit = (.fitted)) %>% 
-  ggplot(aes(x = outer_prop, y = maturity)) +
-  geom_point(color ="grey50")+geom_line(aes(maturity, fit), color = "black") + 
-  annotate("text", x = 200, y=7, label="A1", family="Times New Roman")+
-  scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1))+
-  labs(y = "Maturity", x =  "Outer Proportion")-> A1
 
-lm_out %>% #fitted line plot
-  augment(A2) %>% 
-  mutate(fit = (.fitted)) %>% 
-  ggplot(aes(x = outer_prop, y = maturity)) +
-  geom_point(color ="grey50")+geom_line(aes(maturity, fit), color = "black") + 
-  scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1))+
-  labs(y = "Maturity", x =  "Outer Increment Proportion")-> plot1
 
-lm_out %>% #resids versus fitted
-  augment(A2) %>% 
-  mutate(resid = (.resid),
-         fit = (.fitted)) %>% 
-  ggplot(aes(x = fit, y = resid)) +
-  geom_point(color ="grey50") + 
-  scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1)) +
-  geom_hline(yintercept = 0, lty=2) + 
-  labs(y = "Residuals", x =  "Fitted Values")-> plot2
 
-lm_out %>% #resids versus fitted
-  augment(A2) %>% 
-  mutate(resid = (.std.resid),
-         fit = (.fitted)) %>% 
-  ggplot(aes(x = fit, y = resid)) +
-  geom_point(color ="grey50") + 
-  scale_x_continuous(breaks = c(0, .25,0.5,.75, 1), limits = c(0,1)) +
-  geom_hline(yintercept = 0, lty=2) + 
-  labs(y = "Standardized Residuals", x =  "Fitted Values")-> plot3
 
 
 #cook's distance plot [Zuur et al. (2013): A beginner's Guide to GLM and GLMM with R]
