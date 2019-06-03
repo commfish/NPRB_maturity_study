@@ -442,19 +442,21 @@ dev.off()
 #test for difference in proportions for mature/immature outer ring
 res <- t.test(age3mature$aprop, age3immature$aprop) 
 
-#Generalized Linear models 
+#Generalized Linear models (age-3 only)
 #merge %>% 
-#  do(A1 = glm(maturity ~ outer_prop, data = dataset, family = binomial(link=logit)),
-#     A2 = glm(maturity ~ outer_prop, data = dataset[dataset$age==3,], family= binomial(link=logit))) -> lm_out
+#  do(A1 = glm(maturity ~ outer_prop, data = merge, family = binomial(link=logit)),
+#     A2 = glm(maturity ~ outer_prop, data = merge[merge$age==3,], family= binomial(link=logit))) -> lm_out
 merge %>%
   filter(age == 3) -> dataset
 fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = dataset) 
-fitall <- glm(maturity ~ (outer_prop) , family = binomial, data = merge) 
+
 dataset %>% 
   do(A2 = glm(maturity ~ outer_prop, data = dataset, family = binomial(link=logit))) -> lm_out
 head(augment(lm_out,dataset, type.residuals="pearson"))
 outlierTest(fit3) #Bonferroni p-values
 residualPlots(fit3) #lack-of fit curvature test
+marginalModelPlots(fit3)
+mmp(fit3, dataset$outer_prop, xlab="outer proportion", ylab="maturity" , family="A")
 
 lm_out %>% 
   tidy(A2) %>% 
@@ -466,7 +468,7 @@ lm_out %>%
   mutate(model = "fit_age3") -> A2
 write_csv(A2, "output/lm_R2.csv")
 
-lm_out %>% 
+lm_out %>% # Pearson residuals against covariate
   augment(A2) %>% 
   mutate(resid = (.resid)) %>% 
   ggplot(aes(x = outer_prop, y = resid)) +
@@ -477,7 +479,7 @@ lm_out %>%
   geom_smooth(aes(colour = outer_prop, fill = outer_prop)) +
   labs(y = "Pearson residuals", x =  "Outer proportion")-> plot1
 
-lm_out %>% #Pearson residuals
+lm_out %>% #Pearson residuals against fitted
   augment(A2) %>% 
   mutate(resid = (.resid),
          fit = (.fitted)) %>% 
@@ -488,6 +490,30 @@ lm_out %>% #Pearson residuals
   geom_smooth(aes(colour = fit, fill = fit)) +
   geom_hline(yintercept = 0, lty=2) + 
   labs(y = "Pearson residuals", x =  "Fitted values")-> plot2
+
+# Create a temporary data frame of hypothetical values
+outer.data <- data.frame(outer_prop = seq(0, 1, 0.1))
+# Predict the fitted values given the model and hypothetical data
+predicted.data <- as.data.frame(predict(fit3, newdata = outer.data, 
+                                        type="link", se=TRUE))
+# Combine the hypothetical data and predicted values
+new.data <- cbind(outer.data, predicted.data)
+
+# Calculate confidence intervals
+std <- qnorm(0.95 / 2 + 0.5)
+new.data$ymin <- fit3$family$linkinv(new.data$fit - std * new.data$se)
+new.data$ymax <- fit3$family$linkinv(new.data$fit + std * new.data$se)
+new.data$fit <- fit3$family$linkinv(new.data$fit)  # Rescale to 0-1
+
+dataset %>% #outer verus maturity
+ggplot(aes(x=outer_prop, y=maturity)) +
+  geom_point() + 
+  geom_ribbon(data=new.data, aes(y=fit, ymin=ymin, ymax=ymax), alpha=0.5) + 
+  geom_line(data=new.data, aes(y=fit)) + 
+  labs(x="Outer proportions", y="Maturity") + 
+  scale_x_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4,0.5), limits = c(0, 0.5)) +
+  scale_y_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8,1.0), limits = c(0, 1.0)) -> plot3
+
 
 lm_out %>% #Cook's distance plot
   augment(A2) %>% 
@@ -500,7 +526,7 @@ lm_out %>% #Cook's distance plot
            width = 0.8, position = position_dodge(width = 0.2)) + 
   geom_text(size = 3, position = position_stack(vjust = 1.1)) + 
   scale_y_continuous(breaks = c(0, 0.05, 0.1, 0.15, .2), limits = c(0,0.2)) +
-  labs(y = "Cook's distance", x =  "Index") -> plot3
+  labs(y = "Cook's distance", x =  "Index") -> plot4
 
 lm_out %>% #leverage
   augment(A2) %>% 
@@ -513,8 +539,21 @@ lm_out %>% #leverage
            width = 0.8, position = position_dodge(width = 0.2)) + 
   geom_text(size = 3, position = position_stack(vjust = 1.1)) + 
   scale_y_continuous(breaks = c(0, 0.05, 0.1, 0.15, .2), limits = c(0,0.2)) +
-  labs(y = "hat-values", x =  "Index") -> plot4
-cowplot::plot_grid(plot1, plot2, plot3, plot4,  align = "vh", nrow = 2, ncol=2)
+  labs(y = "hat-values", x =  "Index") -> plot5
+
+lm_out %>% #Pearson by index
+  augment(A2) %>% 
+  mutate(resid = (.resid),
+         count = 1:143) %>% 
+  ggplot(aes(x = count, y = resid)) +
+  geom_bar(stat = "identity", colour = "grey50", 
+           fill = "lightgrey",alpha=.7,
+           width = 0.8, position = position_dodge(width = 0.2)) + 
+  scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
+  labs(y = "Pearson residuals", x =  "Index") -> plot6
+
+
+cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, plot6,  align = "vh", nrow = 3, ncol=2)
 ggsave("figs/glm_diagnostics.png", dpi = 500, height = 6, width = 8, units = "in")
 
 par(mfrow=c(1,1))
@@ -526,6 +565,11 @@ png(filename="figs/glm_diagnostics2.png", width = 8, height = 6, units = 'in', r
 influenceIndexPlot(fitall, family="A", main="")
 dev.off()
 
+#quantile quantile plots
+par(mfrow = c(1,1)) #qqplot
+plot(fit3, 2, family="Times")
+tau_est <- fit3$summary.hyperpar[1,4]
+nu_est <- fit3$summary.hyperpar[2,4]
 #remove datapoint 92 to determine differnce in coefficients
 fit3outlier<-update(fit3, subset=-c(92))
 compareCoefs(fit3, fit3outlier)
@@ -534,17 +578,20 @@ compareCoefs(fit3, fit3outlier)
 merge %>% 
   mutate(age=as.factor(age),
          maturity = ifelse(mature == "mature", 1, 0)) -> merge
-fit <- glm(maturity ~ (outer_prop) , family = binomial, data=merge)
-fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = merge[merge$age==3,]) 
-fit4 <- glm(maturity ~ (outer_prop) + age, family = binomial, data=merge) 
-fit5 <- gam(maturity ~ s(outer_prop, by = age) , family = binomial, data=dataset) 
-fit6 <- gam(maturity ~ s(outer_prop, by = age) + age, family = binomial, data=dataset) 
-fit7 <- glm(maturity ~  age, family = binomial, data=merge) 
+fit1 <- glm(maturity ~ (outer_prop) , family = binomial, data=merge)
+fit2 <- glm(maturity ~ (outer_prop) + age, family = binomial, data=merge) 
+fit3 <- glm(maturity ~  age, family = binomial, data=merge) 
+
+#fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = merge[merge$age==3,]) 
+
+#fit5 <- gam(maturity ~ s(outer_prop, by = age) , family = binomial, data=dataset) 
+#fit6 <- gam(maturity ~ s(outer_prop, by = age) + age, family = binomial, data=dataset) 
+
 summary(fit)
 summary(fit3)
 plot(fit)
 plot(fit3)
-AIC(fit, fit4, fit7)
+AIC(fit1, fit2, fit3)
 
 fit5 <- gam(outer_prop ~ age, data = dataset)
 summary(fit5)
@@ -632,6 +679,8 @@ cowplot::plot_grid(plot1, plot2, plot3, align = "vh", nrow = 1, ncol=3)
 ggsave("figs/boxplot.png", dpi = 500, height = 6, width = 8, units = "in")
 cowplot::plot_grid(plot1, plot2, align = "vh", nrow = 1, ncol=2)
 ggsave("figs/boxplot2.png", dpi = 500, height = 6, width = 8, units = "in")
+
+
 #Residual plots
 fit3.diag <- glm.diag(fit3)
 glm.diag.plots(fit3, fit3.diag)
