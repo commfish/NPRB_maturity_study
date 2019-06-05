@@ -20,6 +20,8 @@ library(lmtest)
 library(mgcv)
 library(visreg)
 library(boot)
+library(AICmodavg)
+library(rms)
 
 theme_set(theme_sleek())
 fun_length <- function(x){
@@ -574,13 +576,20 @@ nu_est <- fit3$summary.hyperpar[2,4]
 fit3outlier<-update(fit3, subset=-c(92))
 compareCoefs(fit3, fit3outlier)
 
-#GAM Models
+#GLM Models (all ages)
 merge %>% 
   mutate(age=as.factor(age),
          maturity = ifelse(mature == "mature", 1, 0)) -> merge
-fit1 <- glm(maturity ~ (outer_prop) , family = binomial, data=merge)
-fit2 <- glm(maturity ~ (outer_prop) + age, family = binomial, data=merge) 
-fit3 <- glm(maturity ~  age, family = binomial, data=merge) 
+fit0<- glm(maturity ~ 1 , family = binomial, data=merge) 
+fit1<- glm(maturity ~  age, data=merge, family = binomial) 
+fit2 <- glm(maturity ~ (outer_prop) , family = binomial, data=merge)
+fit3 <- glm(maturity ~ (outer_prop) + age, family = binomial, data=merge) 
+fit1<-303.1/787.4
+fit2<-370.2/787.4
+fit3<-302.8/787.4
+AICc(fit0)
+Anova(fit1)
+#peudo R2 calc.????
 
 #fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = merge[merge$age==3,]) 
 
