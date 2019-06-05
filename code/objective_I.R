@@ -48,6 +48,7 @@ merge1<-merge(increment, data_clean, all.y=T)
 merge1 %>% 
   filter(!(Increment1 %in% c("", NA))) %>% 
   filter(!(scale_region%in% c("OOA (OUT OF AREA)")))-> clean_dataset #n=568 useable samples
+  #filter(!(scale_region%in% c("OOA (OUT OF AREA)", "A", "C", "D", "E", "G", "H")))-> clean_dataset #n=568 useable samples
 
 clean_dataset %>% 
   dplyr::select(age,maturity_state_histology, scale_region, sex_histology) %>% 
@@ -119,6 +120,12 @@ merge %>%
                                                       ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6>0 & anu7==0, anu6,anu7))))))) %>%
   mutate(maturity = ifelse(mature=='mature', 1, 0)) %>%
   dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, mature, max, outer_prop, aprop, anu_adj, maturity) -> merge
+merge %>% 
+  mutate(age=as.factor(age),
+         maturity = ifelse(mature == "mature", 1, 0)) -> merge
+
+merge %>%
+  filter(age == 3) -> dataset
 
 #Exploratory Plots
 #A) Histograms of outer ring 
@@ -420,6 +427,31 @@ x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=
 summary(mixmdl6)
 dev.off()
 
+#C) Boxplot Figures 
+merge %>% 
+  ggplot(aes(x = age, y = outer_prop, color = mature)) +
+  geom_jitter(size = 1) + labs(x = "Age",y = "Outer Increment Proportion") + 
+  theme(legend.title=element_blank(), legend.position=c(.8,.9)) +
+  scale_color_manual(values=c("#999999", "#E69F00")) +
+  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot1
+
+merge %>% 
+ ggplot(aes(x = age, y = outer_prop, color = mature)) + labs(x = "Age",
+                                                              y = "Outer Increment Proportion")  +
+  geom_boxplot() + theme(legend.position= "none") +
+  scale_color_manual(values=c("#999999", "#E69F00")) +
+  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot2
+
+dataset %>% 
+  ggplot(aes(x = mature, y = outer_prop, color=mature)) + labs(x = "",
+                                                               y = "Outer Increment Proportion (Age 3)")  +
+  geom_boxplot() + theme(legend.position= "none") +
+  scale_color_manual(values=c("#999999", "#E69F00")) +
+  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot3
+
+cowplot::plot_grid(plot1, plot3, align = "vh", nrow = 1, ncol=2)
+ggsave("figs/boxplot.png", dpi = 500, height = 6, width = 8, units = "in")
+
 
 #test for difference in proportions for mature/immature outer ring
 res <- t.test(age3mature$aprop, age3immature$aprop) 
@@ -428,9 +460,12 @@ res <- t.test(age3mature$aprop, age3immature$aprop)
 #merge %>% 
 #  do(A1 = glm(maturity ~ outer_prop, data = merge, family = binomial(link=logit)),
 #     A2 = glm(maturity ~ outer_prop, data = merge[merge$age==3,], family= binomial(link=logit))) -> lm_out
-merge %>%
-  filter(age == 3) -> dataset
+
 fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = dataset) 
+AICc(fit3)
+Anova(fit3)
+RsqGLM(fit3)#peudo R2 
+summary(fit3)
 
 dataset %>% 
   do(A2 = glm(maturity ~ outer_prop, data = dataset, family = binomial(link=logit))) -> lm_out
@@ -439,6 +474,9 @@ outlierTest(fit3) #Bonferroni p-values
 residualPlots(fit3) #lack-of fit curvature test
 marginalModelPlots(fit3) #marginal model plots
 mmp(fit3, dataset$outer_prop, xlab="outer proportion", ylab="maturity" , family="A")
+#remove datapoint 92 to determine differnce in coefficients
+fit3outlier<-update(fit3, subset=-c(92))
+compareCoefs(fit3, fit3outlier)
 
 lm_out %>% 
   tidy(A2) %>% 
@@ -548,38 +586,22 @@ par(mfrow = c(1,1)) #qqplot
 plot(fit3, 2, family="Times")
 tau_est <- fit3$summary.hyperpar[1,4]
 nu_est <- fit3$summary.hyperpar[2,4]
-#remove datapoint 92 to determine differnce in coefficients
-fit3outlier<-update(fit3, subset=-c(92))
-compareCoefs(fit3, fit3outlier)
 
 #Generalized Linear models (ages 2-7)
-merge %>% 
-  mutate(age=as.factor(age),
-         maturity = ifelse(mature == "mature", 1, 0)) -> merge
 fit0<- glm(maturity ~ 1 , family = binomial, data=merge) 
 fit1<- glm(maturity ~  age, data=merge, family = binomial) 
 fit2 <- glm(maturity ~ (outer_prop) , family = binomial, data=merge)
 fit3 <- glm(maturity ~ (outer_prop) + age, family = binomial, data=merge) 
-fit1<-303.1/787.4
-fit2<-370.2/787.4
-fit3<-302.8/787.4
-AICc(fit0)
-Anova(fit1)
-RsqGLM(fit1)#peudo R2 
+AICc(fit3)
+Anova(fit3)
+RsqGLM(fit3)#peudo R2 
+summary(fit3)
 
+#Generalized Additive Models
 #fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = merge[merge$age==3,]) 
-
 #fit5 <- gam(maturity ~ s(outer_prop, by = age) , family = binomial, data=dataset) 
 #fit6 <- gam(maturity ~ s(outer_prop, by = age) + age, family = binomial, data=dataset) 
-
-summary(fit)
-summary(fit3)
-plot(fit)
-plot(fit3)
-AIC(fit1, fit2, fit3)
-
-fit5 <- gam(outer_prop ~ age, data = dataset)
-summary(fit5)
+AIC(fit1, fit2, fit3, fit4)
 
 #diagnostics of best model
 coef <- coefficients(fit3) # coefficients
@@ -601,10 +623,6 @@ ynumeracy <- predict(fit3, list(outer_prop=xnumeracy),type="response")
 plot(data$outer_prop, data$maturity, pch = 16, xlab = "NUMERACY SCORE", ylab = "ADMISSION")
 lines(xnumeracy, ynumeracy, col = "red", lwd = 2)
 
-
-
-
-
 #Durbin-Watson Test
 #2 is no autocorrelation.
 #0 to <2 is positive autocorrelation (common in time series data).
@@ -621,55 +639,14 @@ qq.gam(pif,pch=19,cex=.3)
 qq.gam(pif,rep=100,level=.9)
 qq.gam(pif,rep=100,level=1,type="pearson",pch=19,cex=.2)
 dev.off()
-
-
-
-
-
-
-
-
-
-
-
 #cook's distance plot [Zuur et al. (2013): A beginner's Guide to GLM and GLMM with R]
 #plot(cooks.distance(fit3), ylim=c(0,1), ylab="Cook distance values", type="h")
 #qqline plot
 #Pearson residuals vs. continous covariate
 
-
-#Boxplot Figures 
-dataset %>% 
-  ggplot(aes(x = age, y = outer_prop, color = mature)) +
-  geom_jitter(size = 1) + labs(x = "Age",y = "Outer Increment Proportion") + 
-  theme(legend.title=element_blank(), legend.position=c(.8,.9)) +
-  scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot1
-
-dataset %>% 
-  ggplot(aes(x = age, y = outer_prop, color = mature)) + labs(x = "Age",
-  y = "Outer Increment Proportion")  +
-  geom_boxplot() + theme(legend.position= "none") +
-  scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot2
-
-dataset %>% 
-  ggplot(aes(x = mature, y = outer_prop, color=mature)) + labs(x = "",
-  y = "Outer Increment Proportion")  +
-  geom_boxplot() + theme(legend.position= "none") +
-  scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot3
-
-cowplot::plot_grid(plot1, plot2, plot3, align = "vh", nrow = 1, ncol=3)
-ggsave("figs/boxplot.png", dpi = 500, height = 6, width = 8, units = "in")
-cowplot::plot_grid(plot1, plot2, align = "vh", nrow = 1, ncol=2)
-ggsave("figs/boxplot2.png", dpi = 500, height = 6, width = 8, units = "in")
-
-
 #Residual plots
 fit3.diag <- glm.diag(fit3)
 glm.diag.plots(fit3, fit3.diag)
-
 
 # Residual vs. fitted
 E2 <- resid(fit3, type="pearson")
