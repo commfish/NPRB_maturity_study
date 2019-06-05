@@ -120,9 +120,8 @@ merge %>%
   mutate(maturity = ifelse(mature=='mature', 1, 0)) %>%
   dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, mature, max, outer_prop, aprop, anu_adj, maturity) -> merge
 
-
-#Histograms of outer ring 
-#datasets by ages
+#Exploratory Plots
+#A) Histograms of outer ring 
 merge %>%
   filter(age == 2) %>%
   filter(mature == "mature")-> age2mature
@@ -242,7 +241,7 @@ ggplot(age6, aes(x=outer_prop, color=mature, fill=mature)) +
 cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, plot10, align = "vh", nrow = 5, ncol=2)
 ggsave("figs/histogram.png", dpi = 500, height = 10, width =8, units = "in")
 
-#Fit gaussian mixture models
+#B) Fit gaussian mixture models
 #datasets by ages
 merge %>%
   filter(age == 2) -> age2
@@ -438,7 +437,7 @@ dataset %>%
 head(augment(lm_out,dataset, type.residuals="pearson"))
 outlierTest(fit3) #Bonferroni p-values
 residualPlots(fit3) #lack-of fit curvature test
-marginalModelPlots(fit3)
+marginalModelPlots(fit3) #marginal model plots
 mmp(fit3, dataset$outer_prop, xlab="outer proportion", ylab="maturity" , family="A")
 
 lm_out %>% 
@@ -474,16 +473,12 @@ lm_out %>% #Pearson residuals against fitted
   geom_hline(yintercept = 0, lty=2) + 
   labs(y = "Pearson residuals", x =  "Fitted values")-> plot2
 
-# Create a temporary data frame of hypothetical values
-outer.data <- data.frame(outer_prop = seq(0, 1, 0.1))
-# Predict the fitted values given the model and hypothetical data
-predicted.data <- as.data.frame(predict(fit3, newdata = outer.data, 
-                                        type="link", se=TRUE))
-# Combine the hypothetical data and predicted values
-new.data <- cbind(outer.data, predicted.data)
 
-# Calculate confidence intervals
-std <- qnorm(0.95 / 2 + 0.5)
+outer.data <- data.frame(outer_prop = seq(0, 1, 0.1))# Create a temporary data frame of hypothetical values
+predicted.data <- as.data.frame(predict(fit3, newdata = outer.data, # Predict the fitted values given the model and hypothetical data
+                                        type="link", se=TRUE))
+new.data <- cbind(outer.data, predicted.data)# Combine the hypothetical data and predicted values
+std <- qnorm(0.95 / 2 + 0.5)# Calculate confidence intervals
 new.data$ymin <- fit3$family$linkinv(new.data$fit - std * new.data$se)
 new.data$ymax <- fit3$family$linkinv(new.data$fit + std * new.data$se)
 new.data$fit <- fit3$family$linkinv(new.data$fit)  # Rescale to 0-1
@@ -511,7 +506,7 @@ lm_out %>% #Cook's distance plot
   scale_y_continuous(breaks = c(0, 0.05, 0.1, 0.15, .2), limits = c(0,0.2)) +
   labs(y = "Cook's distance", x =  "Index") -> plot4
 
-lm_out %>% #leverage
+lm_out %>% #leverage plot
   augment(A2) %>% 
   mutate(hat= (.hat),
          count = 1:143,
@@ -544,9 +539,9 @@ png(filename="figs/glm_diagnostics1.png", width = 6, height = 6, units = 'in', r
 windowsFonts(A = windowsFont("Times New Roman"))
 influencePlot(fit3, xlab="Hat-values", ylab="Studentized residuals", family="A")
 dev.off()
-png(filename="figs/glm_diagnostics2.png", width = 8, height = 6, units = 'in', res = 400)
-influenceIndexPlot(fitall, family="A", main="")
-dev.off()
+#png(filename="figs/glm_diagnostics2.png", width = 8, height = 6, units = 'in', res = 400)
+#influenceIndexPlot(fitall, family="A", main="")
+#dev.off()
 
 #quantile quantile plots
 par(mfrow = c(1,1)) #qqplot
@@ -557,7 +552,7 @@ nu_est <- fit3$summary.hyperpar[2,4]
 fit3outlier<-update(fit3, subset=-c(92))
 compareCoefs(fit3, fit3outlier)
 
-#GLM Models (all ages)
+#Generalized Linear models (ages 2-7)
 merge %>% 
   mutate(age=as.factor(age),
          maturity = ifelse(mature == "mature", 1, 0)) -> merge
