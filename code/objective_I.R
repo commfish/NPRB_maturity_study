@@ -22,7 +22,7 @@ library(visreg)
 library(boot)
 library(AICmodavg)
 library(rms)
-
+library(modEvA)
 theme_set(theme_sleek())
 fun_length <- function(x){
   return(data.frame(y=median(x),label= paste0(length(x))))
