@@ -5,6 +5,7 @@
 
 # load libraries----
 # devtools::install_github("ben-williams/FNGr")
+source("code/functions.R")
 library(extrafont)
 loadfonts(device="win")
 library(nlme)
@@ -12,7 +13,7 @@ library(tidyverse)
 library(FNGr)
 library(broom)
 library(cowplot)
-#library(mixtools)
+library(mixtools)
 #library(mixdist)
 #library(fitdistrplus)
 #library(gam)
@@ -21,34 +22,12 @@ library(car)
 #library(mgcv)
 #library(visreg)
 #library(boot)
-library(AICmodavg)
+library(AICcmodavg)
 #library(rms)
-library(modEvA) #pseudi-R squared
+library(modEvA) #pseudo-R squared
 library(MASS)
+library(digest)
 theme_set(theme_sleek())
-fun_length <- function(x){
-  return(data.frame(y=median(x),label= paste0(length(x))))
-}
-asintrans <- function(p) {asin(sqrt(p))} # arctransformation function
-
-eda.norm <- function(x, ...) #normality test function
-{
-  par(mfrow=c(2,2))
-  if(sum(is.na(x)) > 0)
-    warning("NA's were removed before plotting")
-  x <- x[!is.na(x)]
-  hist(x, main = "Histogram and non-\nparametric density estimate", prob = T)
-  iqd <- summary(x)[5] - summary(x)[2]
-  lines(density(x, width = 2 * iqd))
-  boxplot(x, main = "Boxplot", ...)
-  qqnorm(x)
-  qqline(x)
-  plot.ecdf(x, main="Empirical and normal cdf")
-  LIM <- par("usr")
-  y <- seq(LIM[1],LIM[2],length=100)
-  lines(y, pnorm(y, mean(x), sqrt(var(x))))
-  shapiro.test(x)
-}
 
 # load data ---- 
 data <- read.csv("data/data_11_26_2018.csv", check.names = FALSE) 
@@ -591,7 +570,7 @@ fit2<-370.2/787.4
 fit3<-302.8/787.4
 AICc(fit0)
 Anova(fit1)
-#peudo R2 calc.????
+RsqGLM(fit1)#peudo R2 
 
 #fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = merge[merge$age==3,]) 
 
