@@ -156,9 +156,10 @@ g <- coef(lm.age)[[3]]
 
 sample1 %>%
   filter(zone == "A2") %>%
-  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH_len=lencap*((c+d*radi)/(c+d*radcap)),
-         SPH_age=(-e/f)+(lencap+e/f+g/f*agecap)*(radi/radcap-g/f*agei))-> sample_A2 
+  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap)),#Body Proportional Hypothesis (Whitney and Carlander 1956) 
+         SPH_age=((-h)+(lencap+h+i*agecap)*(radi/radcap)-(i*agei)))-> sample_A2 #age effect (Morita & Matsuishi 2001)
+
 
 sample1 %>%
   filter(zone == "A3" & agei == 1)-> lm_data #filter by agei so only one sample/region/fish
@@ -175,9 +176,10 @@ g <- coef(lm.age)[[3]]
 
 sample1 %>%
   filter(zone == "A3") %>%
-  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH_len=lencap*((c+d*radi)/(c+d*radcap)),
-          SPH_age=(-e/f)+(lencap+e/f+g/f*agecap)*(radi/radcap-g/f*agei))-> sample_A3 
+  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap)),#Body Proportional Hypothesis (Whitney and Carlander 1956) 
+         SPH_age=((-h)+(lencap+h+i*agecap)*(radi/radcap)-(i*agei)))-> sample_A3 #age effect (Morita & Matsuishi 2001)
+
 
 sample1 %>%
   filter(zone == "A4" & agei == 1)-> lm_data
@@ -194,9 +196,10 @@ g <- coef(lm.age)[[3]]
 
 sample1 %>%
   filter(zone == "A4") %>%
-  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH_len=lencap*((c+d*radi)/(c+d*radcap)), 
-         SPH_age=(-e/f)+(lencap+e/f+g/f*agecap)*(radi/radcap-g/f*agei))-> sample_A4
+  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap)),#Body Proportional Hypothesis (Whitney and Carlander 1956) 
+         SPH_age=((-h)+(lencap+h+i*agecap)*(radi/radcap)-(i*agei)))-> sample_A4 #age effect (Morita & Matsuishi 2001)
+
 
 
 sample1 %>%
@@ -214,9 +217,9 @@ g <- coef(lm.age)[[3]]
 
 sample1 %>%
   filter(zone == "A6") %>%
-  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH_len=lencap*((c+d*radi)/(c+d*radcap)), 
-         SPH_age=(-e/f)+(lencap+e/f+g/f*agecap)*(radi/radcap-g/f*agei))-> sample_A6
+  mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap)),#Body Proportional Hypothesis (Whitney and Carlander 1956) 
+         SPH_age=((-h)+(lencap+h+i*agecap)*(radi/radcap)-(i*agei)))-> sample_A6 #age effect (Morita & Matsuishi 2001)
 
 x<- rbind(sample_A1, sample_A2) #combine data for all zones
 x<- rbind(x, sample_A3)
@@ -243,17 +246,28 @@ x %>%
              cv_BPH = sd_BPH_len / mn_BPH_len,
              error_BPH = qt(0.975,df = n - 1) * sd_BPH_len / sqrt(n),
              upper_BPH = mn_BPH_len + error_BPH,
-             lower_BPH = mn_BPH_len - error_BPH) %>%
+             lower_BPH = mn_BPH_len - error_BPH, 
+             mn_SPH_age = mean(SPH_age),
+            sd_SPH_age = sd(SPH_age), 
+            ss_SPH_age = sum(SPH_age^2),
+            cv_SPH_age = sd_SPH_age / mn_SPH_age,
+            error_SPH_age = qt(0.975,df = n - 1) * sd_SPH_age / sqrt(n),
+            upper_SPH_age = mn_SPH_age + error_SPH_age,
+            lower_SPH_age = mn_SPH_age - error_SPH_age) %>%
   as.data.frame() -> sample2
 write.csv(sample2, "output/table_summary_obj1.csv") 
 
 x %>% dplyr::select(fish, agei, zone, SPH_len) %>%
-             spread(key = zone, value = SPH_len) -> data_wide_sph
-
+             spread(key = zone, value = SPH_len)  %>%
+  as.data.frame() -> data_wide_sph
   
 x %>% dplyr::select(fish, agei, zone, BPH_len) %>%
   spread(key = zone, value = BPH_len) %>%
   as.data.frame() -> data_wide_bph
+
+x %>% dplyr::select(fish, agei, zone, SPH_age) %>%
+  spread(key = zone, value = SPH_age) %>%
+  as.data.frame() -> data_wide_sph_age
 
 #calculate difference in back-calculated zones in percents from zone A1
 #http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
@@ -289,6 +303,22 @@ data_wide_bph %>%
             se_BPH=sd(value, na.rm=T)/sqrt(n())) %>% 
   mutate(age = as.factor(agei),
          zone=as.factor(variable)) -> data_wide_bph 
+
+#AGE SPH
+data_wide_sph_age %>% 
+  mutate(A2= abs((A1-A2)/A1)*100,
+         A3= abs((A1-A3)/A1)*100,
+         A4= abs((A1-A4)/A1)*100,
+         A6= abs((A1-A6)/A1)*100) %>% 
+  dplyr::select(fish, agei,A2, A3, A4, A6) %>%  
+  gather(variable, value, -agei, -fish) %>% 
+  group_by(agei, variable) %>% 
+  summarise(mean_SPH_age=mean(value, na.rm=T),
+            sd_SPH_age=sd(value, na.rm=T),
+            n_SPH_age=n(),
+            se_SPH_age=sd(value, na.rm=T)/sqrt(n())) %>% 
+  mutate(age = as.factor(agei),
+         zone=as.factor(variable)) -> data_wide_sph_age 
 
 #plots by SPH
 data_wide_sph %>% 
@@ -555,6 +585,141 @@ lm_out_BPH %>%
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A6
 cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
 ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width =8, units = "in")
+
+#plots by SPH age
+data_wide_sph_age %>% 
+  group_by(age) %>% 
+  summarise(labels = mean(n_sph_age)) -> labels
+
+data_wide_sph_age %>% 
+  ggplot(aes(age, mean_SPH_age)) +
+  geom_bar(aes(fill=zone), stat="identity", position="dodge", alpha=0.9) +
+  scale_fill_grey(start = 0, end = .8, guide = F) + 
+  theme(legend.position=c(.9,.75)) +
+  annotate("text", x = 5, y=30, 
+           label="C) Age SPH", family="Times") +
+  geom_text(data = labels, aes(age, y = -1.2, label=labels, group=age),
+            size = 2.5) +
+  xlab("Age") +
+  ylab("Mean % Difference") -> SPH_age
+cowplot::plot_grid(SPH, BPH, SPH_age,   align = "hv", nrow = 3, ncol=1) 
+ggsave("figs/length_diff.png", dpi = 500, height = 6, width = 8, units = "in")
+
+tickr_length <- data.frame(mean.SPH.age = 0:350)
+axisb <- tickr(tickr_length, mean.SPH.age, 50)
+ggplot(data = sample2, aes(x = as.factor(agei), y = mn_SPH_age)) +
+  geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
+  scale_fill_grey(start = 0, end = .8)+theme(legend.position="none")+
+  annotate("text", x = 2, y=350, label="C) Age SPH", family="Times New Roman")+
+  scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250, 300, 350), limits = c(0,350))+
+  #geom_text(size=2.5, aes(y=upper.BPH+4, label=round (n.BPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
+  geom_errorbar(aes(ymin = lower_SPH_age, ymax = upper_SPH_age, group=zone),
+                width = 0.2,
+                linetype = "solid",
+                position = position_dodge(width = 1),
+                color="black", size=1)+
+  labs(x = "Age", y =  "Back-Calculated Length (mm)")-> SPH_age2
+cowplot::plot_grid(SPH2, BPH2,SPH_age2,   align = "hv", nrow = 3, ncol=1) 
+ggsave("figs/length.png", dpi = 500, height = 6, width = 8, units = "in")
+
+#Linear models by zone (SPH age)
+lm_data_zone %>% 
+  do(A1 = lm(radcap ~ lencap +age, data = lm_data_zone[lm_data_zone$zone=="A1",]),
+     A2 = lm(radcap ~ lencap +age, data = lm_data_zone[lm_data_zone$zone=="A2",]),
+     A3 = lm(radcap ~ lencap +age, data = lm_data_zone[lm_data_zone$zone=="A3",]),
+     A4 = lm(radcap ~ lencap +age, data = lm_data_zone[lm_data_zone$zone=="A4",]),
+     A6 = lm(radcap ~ lencap +age, data = lm_data_zone[lm_data_zone$zone=="A6",])) -> lm_out_SPH_age
+
+lm_out_SPH_age %>% 
+  tidy(A1) %>% 
+  mutate(zone = "A1") -> A1
+lm_out_SPH_age %>% 
+  tidy(A2) %>% 
+  mutate(zone = "A2") -> A2
+lm_out_SPH_age %>% 
+  tidy(A3) %>% 
+  mutate(zone = "A3") -> A3
+lm_out_SPH_age %>% 
+  tidy(A4) %>% 
+  mutate(zone = "A4") -> A4
+lm_out_SPH_age %>% 
+  tidy(A6) %>% 
+  mutate(zone = "A6") -> A6
+
+x<- rbind(A1, A2) #combine data for all zones
+x<- rbind(x, A3)
+x<- rbind(x, A4)
+x<- rbind(x, A6)
+write_csv(x, "output/SPH_age_lm.csv")
+
+lm_out_SPH_age %>% 
+  glance(A1) %>% 
+  mutate(zone = "A1") -> A1
+lm_out_SPH_age %>% 
+  glance(A2) %>% 
+  mutate(zone = "A2") -> A2
+lm_out_SPH_age %>% 
+  glance(A3) %>% 
+  mutate(zone = "A3") -> A3
+lm_out_SPH_age %>% 
+  glance(A4) %>% 
+  mutate(zone = "A4") -> A4
+lm_out_SPH_age %>% 
+  glance(A6) %>% 
+  mutate(zone = "A6") -> A6
+
+x<- rbind(A1, A2) #combine data for all zones
+x<- rbind(x, A3)
+x<- rbind(x, A4)
+x<- rbind(x, A6)
+write_csv(x, "output/SPH_age_lm_R2.csv")
+
+lm_out_SPH_age %>% 
+  augment(A1) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
+  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
+  annotate("text", x = 4.5, y=250, label="SPH age (A1)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A1
+
+lm_out_SPH_age %>% 
+  augment(A2) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
+  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
+  annotate("text", x = 4.5, y=250, label="SPH age (A2)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A2
+
+lm_out_SPH_age %>% 
+  augment(A3) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
+  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
+  annotate("text", x = 4.75, y=250, label="SPH age (A3)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A3
+
+lm_out_SPH_age %>% 
+  augment(A4) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
+  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
+  annotate("text", x = 3.5, y=250, label="SPH age(A4)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A4
+
+lm_out_SPH_age %>% 
+  augment(A6) %>% 
+  mutate(fit = (.fitted)) %>% 
+  ggplot(aes(x = lencap, y = radcap)) +
+  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
+  annotate("text", x = 3.5, y=250, label="SPH age(A6)", family="Times New Roman")+
+  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
+  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A6
+cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
+ggsave("figs/SPH_age_regression.png", dpi = 500, height = 6, width =8, units = "in")
 
 #BPH and SPH regression fig
 lm_out_SPH %>% 
