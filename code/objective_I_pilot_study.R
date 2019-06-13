@@ -126,12 +126,19 @@ a <- coef(lm.sl)[[1]]
 b <- coef(lm.sl)[[2]] 
 lm.ls <- lm(lencap~radcap,data=lm_data)
 c <- coef(lm.ls)[[1]] 
-d <- coef(lm.ls)[[2]] 
+d <- coef(lm.ls)[[2]]
+lm.age <- lm(radcap~lencap+agecap,data=lm_data)
+e <- coef(lm.age)[[1]] 
+f <- coef(lm.age)[[2]]
+g <- coef(lm.age)[[3]]
+h<-e/f
+i<-g/f
 
 sample1 %>%
     filter(zone == "A1") %>%
     mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), #Scale Proportional Hypothesis (Hile 1941:212)
-                    BPH_len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A1 #Body Proportional Hypothesis (Whitney and Carlander 1956) 
+                    BPH_len=lencap*((c+d*radi)/(c+d*radcap)),#Body Proportional Hypothesis (Whitney and Carlander 1956) 
+                          SPH_age=((-h)+(lencap+h+i*agecap)*(radi/radcap)-(i*agei)))-> sample_A1 #age effect (Morita & Matsuishi 2001)
 
 
 sample1 %>%
@@ -142,11 +149,16 @@ b <- coef(lm.sl)[[2]]
 lm.ls <- lm(lencap~radcap,data=lm_data)
 c <- coef(lm.ls)[[1]] 
 d <- coef(lm.ls)[[2]] 
+lm.age <- lm(radcap~lencap+agecap,data=lm_data)
+e <- coef(lm.age)[[1]] 
+f <- coef(lm.age)[[2]]
+g <- coef(lm.age)[[3]]
 
 sample1 %>%
   filter(zone == "A2") %>%
   mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH_len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A2
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap)),
+         SPH_age=(-e/f)+(lencap+e/f+g/f*agecap)*(radi/radcap-g/f*agei))-> sample_A2 
 
 sample1 %>%
   filter(zone == "A3" & agei == 1)-> lm_data #filter by agei so only one sample/region/fish
@@ -156,11 +168,16 @@ b <- coef(lm.sl)[[2]]
 lm.ls <- lm(lencap~radcap,data=lm_data)
 c <- coef(lm.ls)[[1]] 
 d <- coef(lm.ls)[[2]] 
+lm.age <- lm(radcap~lencap+agecap,data=lm_data)
+e <- coef(lm.age)[[1]] 
+f <- coef(lm.age)[[2]]
+g <- coef(lm.age)[[3]]
 
 sample1 %>%
   filter(zone == "A3") %>%
   mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH_len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A3
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap)),
+          SPH_age=(-e/f)+(lencap+e/f+g/f*agecap)*(radi/radcap-g/f*agei))-> sample_A3 
 
 sample1 %>%
   filter(zone == "A4" & agei == 1)-> lm_data
@@ -170,11 +187,17 @@ b <- coef(lm.sl)[[2]]
 lm.ls <- lm(lencap~radcap,data=lm_data)
 c <- coef(lm.ls)[[1]] 
 d <- coef(lm.ls)[[2]] 
+lm.age <- lm(radcap~lencap+agecap,data=lm_data)
+e <- coef(lm.age)[[1]] 
+f <- coef(lm.age)[[2]]
+g <- coef(lm.age)[[3]]
 
 sample1 %>%
   filter(zone == "A4") %>%
   mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH_len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A4
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap)), 
+         SPH_age=(-e/f)+(lencap+e/f+g/f*agecap)*(radi/radcap-g/f*agei))-> sample_A4
+
 
 sample1 %>%
   filter(zone == "A6" & agei == 1)-> lm_data
@@ -184,11 +207,16 @@ b <- coef(lm.sl)[[2]]
 lm.ls <- lm(lencap~radcap,data=lm_data)
 c <- coef(lm.ls)[[1]] 
 d <- coef(lm.ls)[[2]] 
+lm.age <- lm(radcap~lencap+agecap,data=lm_data)
+e <- coef(lm.age)[[1]] 
+f <- coef(lm.age)[[2]]
+g <- coef(lm.age)[[3]]
 
 sample1 %>%
   filter(zone == "A6") %>%
   mutate(SPH_len=(-a/b)+(lencap+a/b)*(radi/radcap), 
-         BPH_len=lencap*((c+d*radi)/(c+d*radcap))) -> sample_A6
+         BPH_len=lencap*((c+d*radi)/(c+d*radcap)), 
+         SPH_age=(-e/f)+(lencap+e/f+g/f*agecap)*(radi/radcap-g/f*agei))-> sample_A6
 
 x<- rbind(sample_A1, sample_A2) #combine data for all zones
 x<- rbind(x, sample_A3)
