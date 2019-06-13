@@ -330,7 +330,7 @@ data_wide_sph %>%
   geom_bar(aes(fill=zone), stat="identity", position="dodge", alpha=0.9) +
   scale_fill_grey(start = 0, end = .8, name = "") + 
   theme(legend.position=c(.9,.75)) +
-  annotate("text", x = 5, y=15, label="A) Scale Proportional Hypothesis", 
+  annotate("text", x = 2, y=20, label="A) Scale Proportional Hypothesis", 
            family="Times") +
   geom_text(data = labels, aes(age, y = -0.4, label=labels, group=age), 
             size = 2.5) +
@@ -461,31 +461,26 @@ data_wide_bph %>%
   geom_bar(aes(fill=zone), stat="identity", position="dodge", alpha=0.9) +
   scale_fill_grey(start = 0, end = .8, guide = F) + 
   theme(legend.position=c(.9,.75)) +
-  annotate("text", x = 5, y=30, 
+  annotate("text", x = 2, y=35, 
            label="B) Body Proportional Hypothesis", family="Times") +
   geom_text(data = labels, aes(age, y = -1.2, label=labels, group=age),
             size = 2.5) +
   xlab("Age") +
   ylab("Mean % Difference") -> BPH
-cowplot::plot_grid(SPH, BPH,   align = "hv", nrow = 2, ncol=1) 
-ggsave("figs/length_diff.png", dpi = 500, height = 6, width = 8, units = "in")
 
 tickr_length <- data.frame(mean.BPH = 0:350)
 axisb <- tickr(tickr_length, mean.BPH, 50)
 ggplot(data = sample2, aes(x = as.factor(agei), y = mn_BPH_len)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position="none")+
-  annotate("text", x = 2, y=350, label="B) Body Proportional Hypothesis", family="Times New Roman")+
-  scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250, 300, 350), limits = c(0,350))+
-  #geom_text(size=2.5, aes(y=upper.BPH+4, label=round (n.BPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
+  annotate("text", x = 2, y=250, label="B) Body Proportional Hypothesis", family="Times New Roman")+
+  scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250), limits = c(0,250))+
   geom_errorbar(aes(ymin = lower_BPH, ymax = upper_BPH, group=zone),
                 width = 0.2,
                 linetype = "solid",
                 position = position_dodge(width = 1),
                 color="black", size=1)+
   labs(x = "Age", y =  "Back-Calculated Length (mm)")-> BPH2
-cowplot::plot_grid(SPH2, BPH2,   align = "hv", nrow = 2, ncol=1) 
-ggsave("figs/length.png", dpi = 500, height = 6, width = 8, units = "in")
 
 #Linear models by zone (BPH)
 lm_data_zone %>% 
@@ -586,33 +581,32 @@ lm_out_BPH %>%
 cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
 ggsave("figs/BPH_regression.png", dpi = 500, height = 6, width =8, units = "in")
 
-#plots by SPH age
+#plots by age effect SPH
 data_wide_sph_age %>% 
   group_by(age) %>% 
-  summarise(labels = mean(n_sph_age)) -> labels
+  summarise(labels = mean(n_SPH_age)) -> labels
 
 data_wide_sph_age %>% 
   ggplot(aes(age, mean_SPH_age)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge", alpha=0.9) +
   scale_fill_grey(start = 0, end = .8, guide = F) + 
   theme(legend.position=c(.9,.75)) +
-  annotate("text", x = 5, y=30, 
-           label="C) Age SPH", family="Times") +
+  annotate("text", x = 2.5, y=10, 
+           label="C) Age Effect Scale Proportional Hypothesis", family="Times") +
   geom_text(data = labels, aes(age, y = -1.2, label=labels, group=age),
             size = 2.5) +
   xlab("Age") +
   ylab("Mean % Difference") -> SPH_age
 cowplot::plot_grid(SPH, BPH, SPH_age,   align = "hv", nrow = 3, ncol=1) 
-ggsave("figs/length_diff.png", dpi = 500, height = 6, width = 8, units = "in")
+ggsave("figs/length_diff.png", dpi = 500, height = 8, width = 8, units = "in")
 
 tickr_length <- data.frame(mean.SPH.age = 0:350)
 axisb <- tickr(tickr_length, mean.SPH.age, 50)
 ggplot(data = sample2, aes(x = as.factor(agei), y = mn_SPH_age)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge",alpha=0.9) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position="none")+
-  annotate("text", x = 2, y=350, label="C) Age SPH", family="Times New Roman")+
-  scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250, 300, 350), limits = c(0,350))+
-  #geom_text(size=2.5, aes(y=upper.BPH+4, label=round (n.BPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
+  annotate("text", x = 2.5, y=250, label="C) Age Effect Scale Proportional Hypothesis", family="Times New Roman")+
+  scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250), limits = c(0,250))+
   geom_errorbar(aes(ymin = lower_SPH_age, ymax = upper_SPH_age, group=zone),
                 width = 0.2,
                 linetype = "solid",
@@ -620,15 +614,15 @@ ggplot(data = sample2, aes(x = as.factor(agei), y = mn_SPH_age)) +
                 color="black", size=1)+
   labs(x = "Age", y =  "Back-Calculated Length (mm)")-> SPH_age2
 cowplot::plot_grid(SPH2, BPH2,SPH_age2,   align = "hv", nrow = 3, ncol=1) 
-ggsave("figs/length.png", dpi = 500, height = 6, width = 8, units = "in")
+ggsave("figs/length.png", dpi = 500, height = 8, width = 8, units = "in")
 
 #Linear models by zone (SPH age)
 lm_data_zone %>% 
-  do(A1 = lm(radcap ~ lencap +age, data = lm_data_zone[lm_data_zone$zone=="A1",]),
-     A2 = lm(radcap ~ lencap +age, data = lm_data_zone[lm_data_zone$zone=="A2",]),
-     A3 = lm(radcap ~ lencap +age, data = lm_data_zone[lm_data_zone$zone=="A3",]),
-     A4 = lm(radcap ~ lencap +age, data = lm_data_zone[lm_data_zone$zone=="A4",]),
-     A6 = lm(radcap ~ lencap +age, data = lm_data_zone[lm_data_zone$zone=="A6",])) -> lm_out_SPH_age
+  do(A1 = lm(radcap ~ lencap +agecap, data = lm_data_zone[lm_data_zone$zone=="A1",]),
+     A2 = lm(radcap ~ lencap +agecap, data = lm_data_zone[lm_data_zone$zone=="A2",]),
+     A3 = lm(radcap ~ lencap +agecap, data = lm_data_zone[lm_data_zone$zone=="A3",]),
+     A4 = lm(radcap ~ lencap +agecap, data = lm_data_zone[lm_data_zone$zone=="A4",]),
+     A6 = lm(radcap ~ lencap +agecap, data = lm_data_zone[lm_data_zone$zone=="A6",])) -> lm_out_SPH_age
 
 lm_out_SPH_age %>% 
   tidy(A1) %>% 
@@ -673,53 +667,6 @@ x<- rbind(x, A3)
 x<- rbind(x, A4)
 x<- rbind(x, A6)
 write_csv(x, "output/SPH_age_lm_R2.csv")
-
-lm_out_SPH_age %>% 
-  augment(A1) %>% 
-  mutate(fit = (.fitted)) %>% 
-  ggplot(aes(x = lencap, y = radcap)) +
-  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
-  annotate("text", x = 4.5, y=250, label="SPH age (A1)", family="Times New Roman")+
-  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
-  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A1
-
-lm_out_SPH_age %>% 
-  augment(A2) %>% 
-  mutate(fit = (.fitted)) %>% 
-  ggplot(aes(x = lencap, y = radcap)) +
-  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
-  annotate("text", x = 4.5, y=250, label="SPH age (A2)", family="Times New Roman")+
-  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
-  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A2
-
-lm_out_SPH_age %>% 
-  augment(A3) %>% 
-  mutate(fit = (.fitted)) %>% 
-  ggplot(aes(x = lencap, y = radcap)) +
-  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
-  annotate("text", x = 4.75, y=250, label="SPH age (A3)", family="Times New Roman")+
-  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
-  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A3
-
-lm_out_SPH_age %>% 
-  augment(A4) %>% 
-  mutate(fit = (.fitted)) %>% 
-  ggplot(aes(x = lencap, y = radcap)) +
-  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
-  annotate("text", x = 3.5, y=250, label="SPH age(A4)", family="Times New Roman")+
-  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
-  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A4
-
-lm_out_SPH_age %>% 
-  augment(A6) %>% 
-  mutate(fit = (.fitted)) %>% 
-  ggplot(aes(x = lencap, y = radcap)) +
-  geom_point(color ="grey50")+geom_line(aes(lencap, fit), color = "black") + 
-  annotate("text", x = 3.5, y=250, label="SPH age(A6)", family="Times New Roman")+
-  scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
-  labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> A6
-cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
-ggsave("figs/SPH_age_regression.png", dpi = 500, height = 6, width =8, units = "in")
 
 #BPH and SPH regression fig
 lm_out_SPH %>% 

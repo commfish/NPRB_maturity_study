@@ -22,7 +22,7 @@ library(car)
 #library(mgcv)
 #library(visreg)
 #library(boot)
-library(AICcmodavg)
+#library(AICcmodavg) #AICc
 #library(rms)
 library(modEvA) #pseudo-R squared
 library(MASS)
