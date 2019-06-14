@@ -344,7 +344,6 @@ ggplot(data = sample2, aes(x = as.factor(agei), y = mn_SPH_len)) +
   scale_fill_grey(start = 0, end = .8)+theme(legend.position=c(.05,.7), legend.title=element_blank())+
   annotate("text", x = 2, y=250, label="A) Scale Proportional Hypothesis", family="Times New Roman")+
   scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250), limits = c(0,250))+
-  #geom_text(size=2.5, aes(y=upper.SPH+4, label=round (n.SPH,0), group=zone), position=position_dodge(width=1), vjust=0)+
   geom_errorbar(aes(ymin = lower_SPH, ymax = upper_SPH, group=zone),
                 width = 0.2,
                 linetype = "solid",
@@ -712,8 +711,8 @@ my.formula1 <- x ~ y
                  eq.with.lhs = "italic(hat(y))~`=`~",
                  aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
                  parse = TRUE, vjust=3, size=3) +
-  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
-  geom_line(data =lm_out_SPH1, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
+  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", lty=2, size = 1) + 
+  geom_line(data =lm_out_SPH1, aes(x = fit_SPH, y = lencap), color = "black", size=1) + 
   annotate("text", x = 4.5, y=250, label="A1", size=5, family="Times New Roman")+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   scale_x_continuous(breaks = c(2,3,4,5,6,7), limits = c(2,7))+
@@ -734,8 +733,8 @@ lm_out_BPH %>%
                eq.with.lhs = "italic(hat(y))~`=`~",
                aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
                parse = TRUE, vjust=3, size=3) +
-  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
-  geom_line(data =lm_out_SPH2, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
+  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", lty=2, size = 1) + 
+  geom_line(data =lm_out_SPH2, aes(x = fit_SPH, y = lencap), color = "black", size=1, lty=1) + 
   annotate("text", x = 4.5, y=250, label="A2", size=5,family="Times New Roman")+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   scale_x_continuous(breaks = c(2,3,4,5,6,7), limits = c(2,7))+
@@ -756,8 +755,8 @@ lm_out_BPH %>%
                eq.with.lhs = "italic(hat(y))~`=`~",
                aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
                parse = TRUE, vjust=3, size=3) +
-  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
-  geom_line(data =lm_out_SPH3, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
+  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", lty=2, size = 1) + 
+  geom_line(data =lm_out_SPH3, aes(x = fit_SPH, y = lencap), color = "black", size=1, lty=1) + 
   annotate("text", x = 4.75, y=250, label="A3", size=5, family="Times New Roman")+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A3 
@@ -777,8 +776,8 @@ lm_out_BPH %>%
                eq.with.lhs = "italic(hat(y))~`=`~",
                aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
                parse = TRUE, vjust=3, size=3) +
-  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
-  geom_line(data =lm_out_SPH4, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
+  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1, lty=2) + 
+  geom_line(data =lm_out_SPH4, aes(x = fit_SPH, y = lencap), color = "black", size=1, lty=1) + 
   annotate("text", x = 3.75, y=250, label="A4", size=5, family="Times New Roman")+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A4 
@@ -798,8 +797,8 @@ lm_out_BPH %>%
                eq.with.lhs = "italic(hat(y))~`=`~",
                aes(label = paste(..eq.label.., ..rr.label.., sep = "*plain(\",\")~")), 
                parse = TRUE, vjust=3, size=3) +
-  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1) + 
-  geom_line(data =lm_out_SPH6, aes(x = fit_SPH, y = lencap), color = "black", size=2) + 
+  geom_point(color ="grey50")+geom_line(aes(x=radcap, y=fit_BPH), color = "black", size = 1, lty=2) + 
+  geom_line(data =lm_out_SPH6, aes(x = fit_SPH, y = lencap), color = "black", size=1, lty=1) + 
   annotate("text", x = 4, y=250, label="A6", size=5, family="Times New Roman")+
   scale_y_continuous(breaks = c(150, 200, 250), limits = c(150,250))+
   labs(x = "Scale Radius (mm)", y =  "Capture Length (mm)")-> A6 
