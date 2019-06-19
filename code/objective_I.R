@@ -47,8 +47,8 @@ increment %>%
 merge1<-merge(increment, data_clean, all.y=T)
 merge1 %>% 
   filter(!(Increment1 %in% c("", NA))) %>% 
-  filter(!(scale_region%in% c("OOA (OUT OF AREA)")))-> clean_dataset #n=568 useable samples
-  #filter(!(scale_region%in% c("OOA (OUT OF AREA)", "A", "C", "D", "E", "G", "H")))-> clean_dataset #n=568 useable samples
+  #filter(!(scale_region%in% c("OOA (OUT OF AREA)")))-> clean_dataset #n=568 useable samples
+  filter(!(scale_region%in% c("OOA (OUT OF AREA)", "A", "C", "D", "E", "G", "H")))-> clean_dataset #n=568 useable samples
 
 clean_dataset %>% 
   dplyr::select(age,maturity_state_histology, scale_region, sex_histology) %>% 
@@ -184,7 +184,7 @@ merge %>%
 ggplot(age2, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))+
-  ggtitle("Age 2; n=215") + theme(legend.position="none") +
+  ggtitle("Age 2; n=126") + theme(legend.position="none") +
   scale_color_manual(values=c("#999999", "#E69F00")) +
   scale_fill_manual(values=c("#999999", "#E69F00" )) -> plot1
 
@@ -197,7 +197,7 @@ ggplot(age2, aes(x=outer_prop, color=mature, fill=mature)) +
 ggplot(age3, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))+
-  ggtitle("Age 3; n=243") + theme(legend.position="none") +
+  ggtitle("Age 3; n=72") + theme(legend.position="none") +
   scale_color_manual(values=c("#999999", "#E69F00")) +
   scale_fill_manual(values=c("#999999", "#E69F00" )) -> plot3
 
@@ -210,7 +210,7 @@ ggplot(age3, aes(x=outer_prop, color=mature, fill=mature)) +
 ggplot(age4, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) +
-  ggtitle("Age 4; n=93") + theme(legend.position="none") +
+  ggtitle("Age 4; n=41") + theme(legend.position="none") +
   scale_color_manual(values=c("#999999", "#E69F00")) +
   scale_fill_manual(values=c("#999999", "#E69F00" )) -> plot5
 
@@ -223,7 +223,7 @@ ggplot(age4, aes(x=outer_prop, color=mature, fill=mature)) +
 ggplot(age5, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) +
-  ggtitle("Age 5; n=47") + theme(legend.position="none") +
+  ggtitle("Age 5; n=24") + theme(legend.position="none") +
   scale_color_manual(values=c("#999999", "#E69F00")) +
   scale_fill_manual(values=c("#999999", "#E69F00" )) -> plot7
 
@@ -236,7 +236,7 @@ ggplot(age5, aes(x=outer_prop, color=mature, fill=mature)) +
 ggplot(age6, aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) +
-  ggtitle("Age 6; n=68") + theme(legend.position="none") +
+  ggtitle("Age 6; n=33") + theme(legend.position="none") +
   scale_color_manual(values=c("#999999", "#E69F00")) +
   scale_fill_manual(values=c("#999999", "#E69F00" )) -> plot9
 
@@ -505,8 +505,8 @@ lm_out %>% #Pearson residuals against fitted
          fit = (.fitted)) %>% 
   ggplot(aes(x = fit, y = resid)) +
   geom_point(color ="grey50") + 
-  scale_x_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4,0.5), limits = c(0, 0.5))+
-  scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
+  #scale_x_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4,0.5), limits = c(0, 0.5))+
+  #scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
   geom_smooth(aes(colour = fit, fill = fit)) +
   geom_hline(yintercept = 0, lty=2) + 
   labs(y = "Pearson residuals", x =  "Fitted values")-> plot2
@@ -534,8 +534,8 @@ ggplot(aes(x=outer_prop, y=maturity)) +
 lm_out %>% #Cook's distance plot
   augment(A2) %>% 
   mutate(cooksd = (.cooksd),
-         count = 1:143,
-         name= ifelse(cooksd >0.05, count, "")) %>% 
+         count = 1:72,
+         name= ifelse(cooksd >0.05, count, ""))->x %>% 
   ggplot(aes(x = count, y = cooksd, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
@@ -547,7 +547,7 @@ lm_out %>% #Cook's distance plot
 lm_out %>% #leverage plot
   augment(A2) %>% 
   mutate(hat= (.hat),
-         count = 1:143,
+         count = 1:72,
          name= ifelse(hat >0.05, count, "")) %>% 
   ggplot(aes(x = count, y = hat, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
@@ -560,7 +560,7 @@ lm_out %>% #leverage plot
 lm_out %>% #Pearson by index
   augment(A2) %>% 
   mutate(resid = (.resid),
-         count = 1:143) %>% 
+         count = 1:72) %>% 
   ggplot(aes(x = count, y = resid)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
