@@ -490,7 +490,7 @@ write_csv(A2, "output/lm_R2.csv")
 
 lm_out %>% # Pearson residuals against covariate
   augment(A2) %>% 
-  mutate(resid = (.resid)) %>% 
+  mutate(resid = (.resid))%>% 
   ggplot(aes(x = outer_prop, y = resid)) +
   geom_hline(yintercept = 0, lty=2) + 
   geom_point(color ="grey50") + 
@@ -505,8 +505,8 @@ lm_out %>% #Pearson residuals against fitted
          fit = (.fitted)) %>% 
   ggplot(aes(x = fit, y = resid)) +
   geom_point(color ="grey50") + 
-  #scale_x_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4,0.5), limits = c(0, 0.5))+
-  #scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
+  scale_x_continuous(breaks = c(-1.0, -0.5, 0, 0.5), limits = c(-1, 0.5))+
+  scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
   geom_smooth(aes(colour = fit, fill = fit)) +
   geom_hline(yintercept = 0, lty=2) + 
   labs(y = "Pearson residuals", x =  "Fitted values")-> plot2
@@ -535,7 +535,7 @@ lm_out %>% #Cook's distance plot
   augment(A2) %>% 
   mutate(cooksd = (.cooksd),
          count = 1:72,
-         name= ifelse(cooksd >0.05, count, ""))->x %>% 
+         name= ifelse(cooksd >0.05, count, ""))%>% 
   ggplot(aes(x = count, y = cooksd, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
