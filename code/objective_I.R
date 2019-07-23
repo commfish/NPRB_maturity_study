@@ -14,19 +14,19 @@ library(FNGr)
 library(broom)
 library(cowplot)
 library(mixtools)
-#library(mixdist)
-#library(fitdistrplus)
-#library(gam)
 library(car)
+library(modEvA) #pseudo-R squared
+library(MASS)
+library(digest)
 #library(lmtest)
 #library(mgcv)
 #library(visreg)
 #library(boot)
 #library(AICcmodavg) #AICc
 #library(rms)
-library(modEvA) #pseudo-R squared
-library(MASS)
-library(digest)
+#library(mixdist)
+#library(fitdistrplus)
+#library(gam)
 theme_set(theme_sleek())
 
 # load data ---- 
@@ -124,11 +124,8 @@ merge %>%
   mutate(age=as.factor(age),
          maturity = ifelse(mature == "mature", 1, 0)) -> merge
 
-merge %>%
-  filter(age == 3) -> dataset
-
-#Exploratory Plots
-#A) Histograms of outer ring 
+#Exploratory Plots----
+#A) Histograms of outer ring---- 
 merge %>%
   filter(age == 2 & mature == "mature")-> age2mature
 merge %>%
@@ -166,14 +163,14 @@ ggplot(., aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0
   ylab("Frequency")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))+
   ggtitle("Age 2; n=126") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) -> plot1
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) -> plot1
 
 merge %>%
   filter(age == 2) %>%
 ggplot(., aes(x=outer_prop, color=mature, fill=mature)) +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) + 
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) + 
   ylab("Density")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot2
 
@@ -183,14 +180,14 @@ ggplot(., aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0
   ylab("Frequency")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))+
   ggtitle("Age 3; n=72") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) -> plot3
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) -> plot3
 
 merge %>%
   filter(age == 3) %>%
   ggplot(., aes(x=outer_prop, color=mature, fill=mature)) +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
   ylab("Density")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot4
 
@@ -200,14 +197,14 @@ merge %>%
   ylab("Frequency")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) +
   ggtitle("Age 4; n=41") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) -> plot5
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) -> plot5
 
 merge %>%
   filter(age == 4) %>%
   ggplot(., aes(x=outer_prop, color=mature, fill=mature)) +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
   ylab("Density")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot6
 
@@ -217,14 +214,14 @@ merge %>%
   ylab("Frequency")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) +
   ggtitle("Age 5; n=24") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) -> plot7
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) -> plot7
 
 merge %>%
   filter(age == 5) %>%
   ggplot(., aes(x=outer_prop, color=mature, fill=mature)) +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
   ylab("Density")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) -> plot8
 
@@ -234,20 +231,20 @@ merge %>%
   ylab("Frequency")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) +
   ggtitle("Age 6; n=33") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) -> plot9
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) -> plot9
 
 merge %>%
   filter(age == 6) %>%
   ggplot(., aes(x=outer_prop, color=mature, fill=mature)) +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
   ylab("Density")+ xlab("Outer increment proportion") +
   scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot10
 cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, plot10, align = "vh", nrow = 5, ncol=2)
 ggsave("figs/histogram.png", dpi = 500, height = 10, width =8, units = "in")
 
-#B) Fit gaussian mixture models
+#B) Fit gaussian mixture models----
 #datasets by ages
 merge %>%
   filter(age == 2) -> age2
@@ -260,7 +257,7 @@ merge %>%
 merge %>%
   filter(age == 6) -> age6  
 
-png(file='figs/Mixture_Models.png', res=200, width=13, height=10, units ="in") 
+png(file='figs/mixture_models.png', res=200, width=13, height=10, units ="in") 
 par(mfrow=c(3,2)) 
 age2<-age2[,c(8)]
 mixmdl2 <- normalmixEM(age2)
@@ -308,18 +305,7 @@ x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=
 summary(mixmdl6)
 dev.off()
 
-merge %>%
-  filter(age == 2) -> age2
-merge %>%
-  filter(age == 3) -> age3
-merge %>%
-  filter(age == 4) -> age4
-merge %>%
-  filter(age == 5) -> age5
-merge %>%
-  filter(age == 6) -> age6 
-
-png(file='figs/Mixture_Models_Transform.png', res=200, width=13, height=10, units ="in") 
+png(file='figs/mixture_models_transform.png', res=200, width=13, height=10, units ="in") 
 par(mfrow=c(3,2)) 
 age2<-age2[,c(9)]
 mixmdl2 <- normalmixEM(age2)
@@ -367,18 +353,7 @@ x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=
 summary(mixmdl6)
 dev.off()
 
-merge %>%
-  filter(age == 2) -> age2
-merge %>%
-  filter(age == 3) -> age3
-merge %>%
-  filter(age == 4) -> age4
-merge %>%
-  filter(age == 5) -> age5
-merge %>%
-  filter(age == 6) -> age6
-
-png(file='figs/Mixture_Models_Measurement.png', res=200, width=13, height=10, units ="in") 
+png(file='figs/mixture_models_measurement.png', res=200, width=13, height=10, units ="in") 
 par(mfrow=c(3,2)) 
 age2<-age2[,c(10)]
 mixmdl2 <- normalmixEM(age2)
@@ -426,27 +401,33 @@ x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=
 summary(mixmdl6)
 dev.off()
 
-#C) Boxplot Figures 
+#C) Boxplot Figures---- 
 merge %>% 
-  ggplot(aes(x = age, y = outer_prop, color = mature)) +
-  geom_jitter(size = 1) + labs(x = "Age",y = "Outer Increment Proportion") + 
-  theme(legend.title=element_blank(), legend.position=c(.8,.9)) +
-  scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot1
+  ggplot(data=., aes(x = age, y = outer_prop, color = mature)) +
+  geom_jitter(size = 1) +
+  labs(x = "Age",y = "Outer Increment Proportion") + 
+  theme(legend.title=element_blank(), legend.position=c(.9,.9)) +
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) +
+  scale_y_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6), limits = c(0, 0.6)) +
+  geom_text(aes(x = 1, y = 0.6, label="a)", hjust = 1),family="Times New Roman", colour="black", size=5)-> plot1
 
 merge %>% 
- ggplot(aes(x = age, y = outer_prop, color = mature)) + labs(x = "Age",
-                                                              y = "Outer Increment Proportion")  +
+ ggplot(data=., aes(x = age, y = outer_prop, color = mature)) + labs(x = "Age",
+  y = "Outer Increment Proportion")  +
   geom_boxplot() + theme(legend.position= "none") +
-  scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot2
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" ))-> plot2
 
-dataset %>% 
-  ggplot(aes(x = mature, y = outer_prop, color=mature)) + labs(x = "",
-                                                               y = "Outer Increment Proportion (Age 3)")  +
+merge %>%
+  filter(age == 3) %>% 
+  ggplot(data=.,aes(x = mature, y = outer_prop, color=mature)) + labs(x = "",
+  y = "Outer Increment Proportion (Age 3)")  +
   geom_boxplot() + theme(legend.position= "none") +
-  scale_color_manual(values=c("#999999", "#E69F00")) +
-  scale_fill_manual(values=c("#999999", "#E69F00" ))-> plot3
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) +
+  scale_y_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6), limits = c(0, 0.6)) +
+  geom_text(aes(x = 1, y = 0.6, label="b)", hjust = 4),family="Times New Roman", colour="black", size=5)-> plot3
 
 cowplot::plot_grid(plot1, plot3, align = "vh", nrow = 1, ncol=2)
 ggsave("figs/boxplot.png", dpi = 500, height = 6, width = 8, units = "in")
@@ -455,27 +436,24 @@ ggsave("figs/boxplot.png", dpi = 500, height = 6, width = 8, units = "in")
 #test for difference in proportions for mature/immature outer ring
 res <- t.test(age3mature$aprop, age3immature$aprop) 
 
-#Generalized Linear models (age-3 only)
-#merge %>% 
-#  do(A1 = glm(maturity ~ outer_prop, data = merge, family = binomial(link=logit)),
-#     A2 = glm(maturity ~ outer_prop, data = merge[merge$age==3,], family= binomial(link=logit))) -> lm_out
+#Generalized Linear models (age-3 only)----
+merge %>%
+  filter(age == 3) -> age3
+fit <- glm(maturity ~ (outer_prop) , family = binomial, data = age3) 
+Anova(fit)
+RsqGLM(fit)#peudo R2 
+summary(fit)
 
-fit3 <- glm(maturity ~ (outer_prop) , family = binomial, data = dataset) 
-AICc(fit3)
-Anova(fit3)
-RsqGLM(fit3)#peudo R2 
-summary(fit3)
-
-dataset %>% 
-  do(A2 = glm(maturity ~ outer_prop, data = dataset, family = binomial(link=logit))) -> lm_out
-head(augment(lm_out,dataset, type.residuals="pearson"))
-outlierTest(fit3) #Bonferroni p-values
-residualPlots(fit3) #lack-of fit curvature test
-marginalModelPlots(fit3) #marginal model plots
-mmp(fit3, dataset$outer_prop, xlab="outer proportion", ylab="maturity" , family="A")
+age3 %>% 
+  do(A2 = glm(maturity ~ outer_prop, data = ., family = binomial(link=logit))) -> lm_out
+head(augment(lm_out, age3, type.residuals="pearson"))
+outlierTest(fit) #Bonferroni p-values
+residualPlots(fit) #lack-of fit curvature test
+marginalModelPlots(fit) #marginal model plots
+mmp(fit, age3$outer_prop, xlab="outer proportion", ylab="maturity" , family="A")
 #remove datapoint 92 to determine differnce in coefficients
-fit3outlier<-update(fit3, subset=-c(92))
-compareCoefs(fit3, fit3outlier)
+fitoutlier<-update(fit, subset=-c(92))
+compareCoefs(fit, fitoutlier)
 
 lm_out %>% 
   tidy(A2) %>% 
@@ -495,8 +473,9 @@ lm_out %>% # Pearson residuals against covariate
   geom_point(color ="grey50") + 
   scale_x_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4,0.5), limits = c(0, 0.5))+
   scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
-  geom_smooth(aes(colour = outer_prop, fill = outer_prop)) +
-  labs(y = "Pearson residuals", x =  "Outer proportion")-> plot1
+  geom_smooth(aes(colour = outer_prop, fill = outer_prop), colour="black") +
+  labs(y = "Pearson residuals", x =  "Outer proportion") +
+  geom_text(aes(x = 0, y = 1.9, label="a)"),family="Times New Roman", colour="black", size=5)-> plot1
 
 lm_out %>% #Pearson residuals against fitted
   augment(A2) %>% 
@@ -506,29 +485,29 @@ lm_out %>% #Pearson residuals against fitted
   geom_point(color ="grey50") + 
   scale_x_continuous(breaks = c(-1.0, -0.5, 0, 0.5), limits = c(-1, 0.5))+
   scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
-  geom_smooth(aes(colour = fit, fill = fit)) +
+  geom_smooth(aes(colour = fit, fill = fit),colour="black") +
   geom_hline(yintercept = 0, lty=2) + 
-  labs(y = "Pearson residuals", x =  "Fitted values")-> plot2
-
+  labs(y = "Pearson residuals", x =  "Fitted values") +
+  geom_text(aes(x = -0.95, y = 1.9, label="b)", hjust = 1),family="Times New Roman", colour="black", size=5)-> plot2
 
 outer.data <- data.frame(outer_prop = seq(0, 1, 0.1))# Create a temporary data frame of hypothetical values
-predicted.data <- as.data.frame(predict(fit3, newdata = outer.data, # Predict the fitted values given the model and hypothetical data
+predicted.data <- as.data.frame(predict(fit, newdata = outer.data, # Predict the fitted values given the model and hypothetical data
                                         type="link", se=TRUE))
 new.data <- cbind(outer.data, predicted.data)# Combine the hypothetical data and predicted values
 std <- qnorm(0.95 / 2 + 0.5)# Calculate confidence intervals
-new.data$ymin <- fit3$family$linkinv(new.data$fit - std * new.data$se)
-new.data$ymax <- fit3$family$linkinv(new.data$fit + std * new.data$se)
-new.data$fit <- fit3$family$linkinv(new.data$fit)  # Rescale to 0-1
+new.data$ymin <- fit$family$linkinv(new.data$fit - std * new.data$se)
+new.data$ymax <- fit$family$linkinv(new.data$fit + std * new.data$se)
+new.data$fit <- fit$family$linkinv(new.data$fit)  # Rescale to 0-1
 
-dataset %>% #outer verus maturity
+age3 %>% #outer verus maturity
 ggplot(aes(x=outer_prop, y=maturity)) +
   geom_point() + 
   geom_ribbon(data=new.data, aes(y=fit, ymin=ymin, ymax=ymax), alpha=0.5) + 
   geom_line(data=new.data, aes(y=fit)) + 
   labs(x="Outer proportions", y="Maturity") + 
   scale_x_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4,0.5), limits = c(0, 0.5)) +
-  scale_y_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8,1.0), limits = c(0, 1.0)) -> plot3
-
+  scale_y_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8,1.0), limits = c(0, 1.0)) +
+  geom_text(aes(x = 0, y = 0.98, label="c)"),family="Times New Roman", colour="black", size=5)-> plot3
 
 lm_out %>% #Cook's distance plot
   augment(A2) %>% 
@@ -541,7 +520,8 @@ lm_out %>% #Cook's distance plot
            width = 0.8, position = position_dodge(width = 0.2)) + 
   geom_text(size = 3, position = position_stack(vjust = 1.1)) + 
   scale_y_continuous(breaks = c(0, 0.05, 0.1, 0.15, .2), limits = c(0,0.2)) +
-  labs(y = "Cook's distance", x =  "Index") -> plot4
+  labs(y = "Cook's distance", x =  "Index") +
+  geom_text(aes(x = 0, y = 0.195, label="d)"),family="Times New Roman", colour="black", size=5)-> plot4
 
 lm_out %>% #leverage plot
   augment(A2) %>% 
@@ -553,8 +533,9 @@ lm_out %>% #leverage plot
            fill = "lightgrey",alpha=.7,
            width = 0.8, position = position_dodge(width = 0.2)) + 
   geom_text(size = 3, position = position_stack(vjust = 1.1)) + 
-  scale_y_continuous(breaks = c(0, 0.05, 0.1, 0.15, .2), limits = c(0,0.2)) +
-  labs(y = "hat-values", x =  "Index") -> plot5
+  scale_y_continuous(breaks = c(0, 0.05, 0.1, 0.15, .2, .25, .3), limits = c(0,0.3)) +
+  labs(y = "hat-values", x =  "Index") +
+  geom_text(aes(x = 1, y = 0.29, label="e)"),family="Times New Roman", colour="black", size=5)-> plot5
 
 lm_out %>% #Pearson by index
   augment(A2) %>% 
@@ -565,12 +546,23 @@ lm_out %>% #Pearson by index
            fill = "lightgrey",alpha=.7,
            width = 0.8, position = position_dodge(width = 0.2)) + 
   scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
-  labs(y = "Pearson residuals", x =  "Index") -> plot6
-
+  labs(y = "Pearson residuals", x =  "Index") +
+  geom_text(aes(x = 0, y = 1.9, label="f)"),family="Times New Roman", colour="black", size=5)-> plot6
 
 cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, plot6,  align = "vh", nrow = 3, ncol=2)
 ggsave("figs/glm_diagnostics.png", dpi = 500, height = 6, width = 8, units = "in")
 
+
+
+
+
+
+
+
+
+
+
+#EXTRA----
 par(mfrow=c(1,1))
 png(filename="figs/glm_diagnostics1.png", width = 6, height = 6, units = 'in', res = 400)
 windowsFonts(A = windowsFont("Times New Roman"))
@@ -657,3 +649,8 @@ abline(h=0, lty=2)
 plot(x=df$SYNTAXSCORE, y=E2, xlab="SYNTAXSCORE", ylab="Pearson residuals")
 abline(h=0, lty=2)
 #Zuur et al. (2013): A beginner's Guide to GLM and GLMM with R.
+
+
+#merge %>% 
+#  do(A1 = glm(maturity ~ outer_prop, data = merge, family = binomial(link=logit)),
+#     A2 = glm(maturity ~ outer_prop, data = merge[merge$age==3,], family= binomial(link=logit))) -> lm_out
