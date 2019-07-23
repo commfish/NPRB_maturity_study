@@ -432,7 +432,6 @@ merge %>%
 cowplot::plot_grid(plot1, plot3, align = "vh", nrow = 1, ncol=2)
 ggsave("figs/boxplot.png", dpi = 500, height = 6, width = 8, units = "in")
 
-
 #test for difference in proportions for mature/immature outer ring
 res <- t.test(age3mature$aprop, age3immature$aprop) 
 
