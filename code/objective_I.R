@@ -2,6 +2,8 @@
 #author: Sara E Miller 
 #contact: sara.miller@alaska.gov; 907-465-4245
 #Last edited: July, 2019
+#https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4885900/
+#https://stats.stackexchange.com/questions/82105/mcfaddens-pseudo-r2-interpretation
 
 # load libraries----
 # devtools::install_github("ben-williams/FNGr")
@@ -120,10 +122,14 @@ merge %>%
                                                       ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6>0 & anu7==0, anu6,anu7))))))) %>%
   mutate(maturity = ifelse(mature=='mature', 1, 0)) %>%
   dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, mature, max, outer_prop, aprop, anu_adj, maturity) -> merge
+#merge %>% 
+#  mutate(age=as.factor(age),
+#         maturity = ifelse(mature == "mature", 1, 0)) %>%
+#  filter(sex_histology == "Female") -> merge
+
 merge %>% 
   mutate(age=as.factor(age),
          maturity = ifelse(mature == "mature", 1, 0)) -> merge
-
 #Exploratory Plots----
 #A) Histograms of outer ring---- 
 merge %>%
@@ -248,6 +254,10 @@ ggsave("figs/histogram.png", dpi = 500, height = 10, width =8, units = "in")
 #datasets by ages
 merge %>%
   filter(age == 2) -> age2
+merge %>%
+  filter(age == 3) %>%
+  filter(sex_histology == 'Female')  -> age3
+
 merge %>%
   filter(age == 3) -> age3
 merge %>%
@@ -405,39 +415,50 @@ dev.off()
 merge %>% 
   ggplot(data=., aes(x = age, y = outer_prop, color = mature)) +
   geom_jitter(size = 1) +
-  labs(x = "Age",y = "Outer Increment Proportion") + 
-  theme(legend.title=element_blank(), legend.position=c(.9,.9)) +
+  labs(x = "Age",y = "outer increment proportion") + 
+  theme(legend.title=element_blank(), legend.position=c(.8,.9)) +
   scale_color_manual(values=c("#999999", "black")) +
   scale_fill_manual(values=c("#999999", "black" )) +
   scale_y_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6), limits = c(0, 0.6)) +
   geom_text(aes(x = 1, y = 0.6, label="a)", hjust = 1),family="Times New Roman", colour="black", size=5)-> plot1
 
-merge %>% 
- ggplot(data=., aes(x = age, y = outer_prop, color = mature)) + labs(x = "Age",
-  y = "Outer Increment Proportion")  +
-  geom_boxplot() + theme(legend.position= "none") +
-  scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" ))-> plot2
 
 merge %>%
   filter(age == 3) %>% 
   ggplot(data=.,aes(x = mature, y = outer_prop, color=mature)) + labs(x = "",
-  y = "Outer Increment Proportion (Age 3)")  +
+  y = "Outer increment proportion (age-3)")  +
   geom_boxplot() + theme(legend.position= "none") +
   scale_color_manual(values=c("#999999", "black")) +
   scale_fill_manual(values=c("#999999", "black" )) +
   scale_y_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6), limits = c(0, 0.6)) +
-  geom_text(aes(x = 1, y = 0.6, label="b)", hjust = 4),family="Times New Roman", colour="black", size=5)-> plot3
+  geom_text(aes(x = 1.2, y = 0.6, label="b)", hjust = 4),family="Times New Roman", colour="black", size=5)-> plot2
 
-cowplot::plot_grid(plot1, plot3, align = "vh", nrow = 1, ncol=2)
-ggsave("figs/boxplot.png", dpi = 500, height = 6, width = 8, units = "in")
+merge %>%
+  filter(age == 3) %>%
+  filter(sex_histology == 'Female') %>%
+  ggplot(data=.,aes(x = mature, y = outer_prop, color=mature)) + labs(x = "",
+                                                                      y = "Outer increment proportion (females age-3)")  +
+  geom_boxplot() +
+  scale_color_manual(values=c("#999999", "black")) + theme(legend.position= "none") +
+  
+  scale_fill_manual(values=c("#999999", "black" )) + 
+  scale_y_continuous(breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6), limits = c(0, 0.6)) +
+  geom_text(aes(x = 1.2, y = 0.6, label="c)", hjust = 4),family="Times New Roman", colour="black", size=5)-> plot3
+
+cowplot::plot_grid(plot1, plot2, plot3, align = "vh", nrow = 1, ncol=3)
+ggsave("figs/boxplot.png", dpi = 500, height = 4, width = 8, units = "in")
 
 #test for difference in proportions for mature/immature outer ring
 res <- t.test(age3mature$aprop, age3immature$aprop) 
 
 #Generalized Linear models (age-3 only)----
 merge %>%
+  filter(age == 3) %>%
+  filter(sex_histology == 'Female') -> age3
+
+merge %>%
   filter(age == 3) -> age3
+
 fit <- glm(maturity ~ (outer_prop) , family = binomial, data = age3) 
 Anova(fit)
 RsqGLM(fit)#peudo R2 
