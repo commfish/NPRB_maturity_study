@@ -51,17 +51,18 @@ increment %>%
 merge1<-merge(increment, data_clean, all.y=T)
 merge1 %>% 
   filter(!(Increment1 %in% c("", NA))) %>% 
-  filter(!(scale_region%in% c("OOA (OUT OF AREA)", "A", "C", "D", "E", "G", "H")))-> clean_dataset #n=296 useable samples
+  filter(!(scale_region%in% c("OOA (OUT OF AREA)", "A", "C", "D", "E", "G", "H"))) %>% 
+  mutate(maturity = ifelse(maturation_status_histology == 1, 'immature', 'mature')) -> clean_dataset #n=296 useable samples
 
 #sample sizes for study 
 clean_dataset %>% 
-  dplyr::select(age,maturity_state_histology, scale_region, sex_histology) %>% 
-  group_by(maturity_state_histology, age, sex_histology) %>% 
+  dplyr::select(age,maturity, scale_region, sex_histology) %>% 
+  group_by(maturity, age, sex_histology) %>% 
   summarize(n=n())-> table1 
 
 clean_dataset %>% 
-  dplyr::select(maturity_state_histology, maturation_status_histology) %>% 
-  group_by(maturity_state_histology,maturation_status_histology) %>% 
+  dplyr::select(maturity, maturation_status_histology) %>% 
+  group_by(maturity,maturation_status_histology) %>% 
   summarize(n=n())-> table2 
 
 clean_dataset %>% 
@@ -71,8 +72,7 @@ clean_dataset %>%
 
 #calculate proportion of outer scale ring
 clean_dataset %>% 
-  mutate(mature = ifelse(maturity_state_histology == 'I', 'immature', 'mature'),
-         anu1 = ifelse(is.na(Increment1), 0 , Increment1),
+  mutate(anu1 = ifelse(is.na(Increment1), 0 , Increment1),
          anu2 = ifelse(is.na(Increment2), 0 , Increment2),
          anu3 = ifelse(is.na(Increment3), 0 , Increment3),
          anu4 = ifelse(is.na(Increment4), 0 , Increment4),
@@ -122,135 +122,91 @@ merge %>%
                                         ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5==0 & anu6==0 & anu7==0, anu4,
                                                ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6==0 & anu7==0, anu5,
                                                       ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6>0 & anu7==0, anu6,anu7))))))) %>%
-  mutate(maturity = ifelse(mature=='mature', 1, 0)) %>%
-  dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, mature, max, outer_prop, aprop, anu_adj, maturity) -> merge
-#merge %>% 
-#  mutate(age=as.factor(age),
-#         maturity = ifelse(mature == "mature", 1, 0)) %>%
-#  filter(sex_histology == "Female") -> merge
-
-merge %>% 
-  mutate(age=as.factor(age),
-         maturity = ifelse(mature == "mature", 1, 0)) -> merge
+  filter(sex_histology == "Female") %>% 
+  mutate(age=as.factor(age) )%>% 
+  dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, maturity, max, outer_prop, aprop, anu_adj) -> merge
+write.csv(merge, "data/cpue_new_test.csv") 
 #Exploratory Plots----
 #A) Histograms of outer ring---- 
 merge %>%
-  filter(age == 2 & mature == "mature")-> age2mature
+  filter(age == 2 & maturity == "mature")-> age2mature
 merge %>%
-  filter(age == 2 & mature == "immature")-> age2immature
+  filter(age == 2 & maturity == "immature")-> age2immature
 merge %>%
-  filter(age == 3 & mature == "mature")-> age3mature
+  filter(age == 3 & maturity == "mature")-> age3mature
 merge %>%
-  filter(age == 3 & mature == "immature")-> age3immature
+  filter(age == 3 & maturity == "immature")-> age3immature
 merge %>%
-  filter(age == 4 & mature == "mature")-> age4mature
+  filter(age == 4 & maturity == "mature")-> age4mature
 merge %>%
-  filter(age == 4 & mature == "immature")-> age4immature
+  filter(age == 4 & maturity == "immature")-> age4immature
 merge %>%
-  filter(age == 5 & mature == "mature")-> age5mature
+  filter(age == 5 & maturity == "mature")-> age5mature
 merge %>%
-  filter(age == 5 & mature == "immature")-> age5immature
+  filter(age == 5 & maturity == "immature")-> age5immature
 merge %>%
-  filter(age == 6 & mature == "mature")-> age6mature
+  filter(age == 6 & maturity == "mature")-> age6mature
 merge %>%
-  filter(age == 6 & mature == "immature")-> age6immature
+  filter(age == 6 & maturity == "immature")-> age6immature
 
 #test each age/maturity for normality
 eda.norm(as.numeric(age2immature$aprop))
-#eda.norm(as.numeric(age2mature$aprop))
+eda.norm(as.numeric(age2mature$aprop))
 eda.norm(as.numeric(age3immature$aprop))
 eda.norm(as.numeric(age3mature$aprop))
-#eda.norm(as.numeric(age4immature$aprop))
+eda.norm(as.numeric(age4immature$aprop))
 eda.norm(as.numeric(age4mature$aprop))
 eda.norm(as.numeric(age5mature$aprop)) #normal
 eda.norm(as.numeric(age6mature$aprop)) #normal
 
+#histograms by age
 merge %>%
   filter(age == 2) %>%
-ggplot(., aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
-  ylab("Frequency")+ xlab("Outer increment proportion") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))+
-  ggtitle("Age 2; n=126") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "black")) +
+ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5,1, 1.5, 2), limits = c(0,2))+
+  ggtitle("Age 2; n=64") + theme(legend.position="none") +
+  scale_color_manual(values=c("#999999", "black")) +theme(legend.title=element_blank(), legend.position=c(.15,.85)) +
   scale_fill_manual(values=c("#999999", "black" )) -> plot1
 
 merge %>%
-  filter(age == 2) %>%
-ggplot(., aes(x=outer_prop, color=mature, fill=mature)) +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) + 
-  ylab("Density")+ xlab("Outer increment proportion") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot2
+  filter(age == 3) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1), limits = c(0,1))+
+  ggtitle("Age 3; n=51") + theme(legend.position="none") +
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) -> plot2
 
 merge %>%
-  filter(age == 3) %>%
-ggplot(., aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
-  ylab("Frequency")+ xlab("Outer increment proportion") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))+
-  ggtitle("Age 3; n=72") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "black")) +
+  filter(age == 4) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1), limits = c(0,1))+
+  ggtitle("Age 4; n=40") + theme(legend.position="none") +
+  scale_color_manual(values=c("#999999", "black")) + 
   scale_fill_manual(values=c("#999999", "black" )) -> plot3
 
 merge %>%
-  filter(age == 3) %>%
-  ggplot(., aes(x=outer_prop, color=mature, fill=mature)) +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
-  ylab("Density")+ xlab("Outer increment proportion") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot4
+  filter(age == 5) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1), limits = c(0,1))+
+  ggtitle("Age 5; n=23") + theme(legend.position="none") +
+  scale_color_manual(values=c("black")) + 
+  scale_fill_manual(values=c("black" )) -> plot4
 
 merge %>%
-  filter(age == 4) %>%
-  ggplot(., aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
-  ylab("Frequency")+ xlab("Outer increment proportion") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) +
-  ggtitle("Age 4; n=41") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "black")) +
+  filter(age == 6) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1), limits = c(0,1))+
+  ggtitle("Age 6; n=33") + theme(legend.position="none") +
+  scale_color_manual(values=c("#999999", "black")) + 
   scale_fill_manual(values=c("#999999", "black" )) -> plot5
 
-merge %>%
-  filter(age == 4) %>%
-  ggplot(., aes(x=outer_prop, color=mature, fill=mature)) +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
-  ylab("Density")+ xlab("Outer increment proportion") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot6
-
-merge %>%
-  filter(age == 5) %>%
-  ggplot(., aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
-  ylab("Frequency")+ xlab("Outer increment proportion") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) +
-  ggtitle("Age 5; n=24") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) -> plot7
-
-merge %>%
-  filter(age == 5) %>%
-  ggplot(., aes(x=outer_prop, color=mature, fill=mature)) +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
-  ylab("Density")+ xlab("Outer increment proportion") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) -> plot8
-
-merge %>%
-  filter(age == 6) %>%
-  ggplot(., aes(x=outer_prop, color=mature, fill=mature)) + geom_histogram(alpha=0.5, position = 'identity') +
-  ylab("Frequency")+ xlab("Outer increment proportion") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6)) +
-  ggtitle("Age 6; n=33") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) -> plot9
-
-merge %>%
-  filter(age == 6) %>%
-  ggplot(., aes(x=outer_prop, color=mature, fill=mature)) +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
-  ylab("Density")+ xlab("Outer increment proportion") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6), limits = c(0,0.6))-> plot10
-cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, plot10, align = "vh", nrow = 5, ncol=2)
-ggsave("figs/histogram.png", dpi = 500, height = 10, width =8, units = "in")
+cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, align = "vh", nrow = 2, ncol=3)
+ggsave("figs/histogram.png", dpi = 500, height = 8, width =10, units = "in")
 
 #B) Fit gaussian mixture models----
 #datasets by ages
