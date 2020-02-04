@@ -124,7 +124,7 @@ merge %>%
                                                ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6==0 & anu7==0, anu5,
                                                       ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6>0 & anu7==0, anu6,anu7))))))) %>%
   filter(sex_histology == "Female") %>% 
-  mutate(age=as.factor(age) )%>% 
+  #mutate(age=as.factor(age) )%>% 
   dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, maturity, max, outer_prop, aprop, anu_adj) -> merge
 write.csv(merge, "data/cpue_new_test.csv") 
 
@@ -291,11 +291,14 @@ lm_out %>% #Pearson residuals against fitted
   labs(y = "Pearson residuals", x =  "Fitted values") +
   geom_text(aes(x = 0, y = 2, label="b)", hjust = 1),family="Times New Roman", colour="black", size=5)-> plot2
 
+#pf(0.49, 3, 17) # to figure out influence of cook's distance; relate D to the F(p, n-p) distribution and accertain the corresponding percentile value; see Neter et al. book
+#qf(0.5, 6+1, 211-6-1) # see https://rpubs.com/mpfoley73/460943 and Das and Gogoi 2015 pg 80 
+
 lm_out %>% #Cook's distance plot
   augment(A2) %>% 
   mutate(cooksd = (.cooksd),
          count = 1:211,
-         name= ifelse(cooksd >0.79, count, ""))%>% 
+         name= ifelse(cooksd >0.91, count, ""))%>% 
   ggplot(aes(x = count, y = cooksd, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
@@ -305,11 +308,13 @@ lm_out %>% #Cook's distance plot
   labs(y = "Cook's distance", x =  "Index") +
   geom_text(aes(x = 0, y = 0.5, label="c)"),family="Times New Roman", colour="black", size=5)-> plot3
 
+# greater than 2 or three times p/n, it may be a concern (where p is the number of parameters (i.e., 2) and n is the number of observations (i.e., 51); p/n = 0.04 for this study; Dobson 2002). 
+# 6/211 = 0.03; 0.03 *3
 lm_out %>% #leverage plot
   augment(A2) %>% 
   mutate(hat= (.hat),
          count = 1:211,
-         name= ifelse(hat >0.08, count, "")) %>% 
+         name= ifelse(hat >0.09, count, ""))-> x %>% 
   ggplot(aes(x = count, y = hat, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
