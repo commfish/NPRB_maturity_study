@@ -1,9 +1,11 @@
-#notes---
 #author: Sara E Miller 
 #contact: sara.miller@alaska.gov; 907-465-4245
-#Last edited: July, 2019
+#Last edited: February, 2020
 #https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4885900/
 #https://stats.stackexchange.com/questions/82105/mcfaddens-pseudo-r2-interpretation
+#S:\Region1Shared-DCF\Research\Herring-Dive Fisheries\Herring\NPRB-Herring Maturity Study\datasheets\datasheets\MTA Lab Datasheets\fall field study-MTA lab measurements\remeasurements_corrected data\ MTA Lab data_length_weight_Jan_2019
+#matched to histology data sheet (S:\Region1Shared-DCF\Research\Herring-Dive Fisheries\Herring\NPRB-Herring Maturity Study\datasheets\datasheets\Histology-Pathologist report\Alaska Department of Fish and Game 10_17_2018_corrected)
+#the following code then takes the histology dataset data_11_26_2018 and matches it to the MTA lab increment data by image name
 
 # load libraries----
 # devtools::install_github("ben-williams/FNGr")
