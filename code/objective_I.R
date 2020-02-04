@@ -243,7 +243,7 @@ fit <- glm(maturity ~ (anu_adj + age) , family = binomial, data = merge)
 Anova(fit)
 RsqGLM(fit)#peudo R2 
 summary(fit)
-hoslem.test(merge$maturity, fitted(fit)) #goodness of fit test; https://www.theanalysisfactor.com/r-glm-model-fit/
+hoslem.test(merge$maturity, fitted(fit)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
 
 merge %>% 
   do(A2 = glm(maturity ~ anu_adj +age, data = ., family = binomial(link=logit))) -> lm_out
