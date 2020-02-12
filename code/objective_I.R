@@ -23,6 +23,7 @@ library(modEvA) #pseudo-R squared
 library(MASS)
 library(digest)
 library(ResourceSelection)
+library("ggpubr")
 #library(lmtest)
 #library(mgcv)
 #library(visreg)
@@ -100,7 +101,7 @@ sample1 %>%
                                                ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6==0 & anu7==0, anu5,
                                                       ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6>0 & anu7==0, anu6,anu7))))))) %>%
   filter(sex_histology == "Female") %>% 
-  dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, maturity, anu_adj, radcap) -> merge
+  dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, maturity, anu_adj, radcap, length_mm) -> merge
 write.csv(merge, "data/cpue_new_test.csv") 
 
 # Exploratory Plots----
@@ -187,8 +188,7 @@ ggsave("figs/histogram_obj1.png", dpi = 500, height = 8, width =10, units = "in"
 
 # Scatterplot Figures---- 
 merge %>% 
-  mutate (mature = ifelse(maturity==1, "Mature", "Immature")) %>% 
-  ggplot(data=., aes(x = age, y = anu_adj, color = mature, shape = mature)) +
+  ggplot(data=., aes(x = age, y = anu_adj, color = maturity, shape = maturity)) +
   geom_jitter(size = 1) +
   labs(x = "Age",y = "Outer increment measurement (mm)") + 
   theme(legend.title=element_blank(), legend.position=c(.8,.9), legend.text=element_text(size=12)) +
@@ -201,8 +201,7 @@ merge %>%
 
 
 merge %>% 
-  mutate (mature = ifelse(maturity==1, "Mature", "Immature")) %>% 
-  ggplot(data=., aes(x = age, y = radcap, color = mature, shape = mature)) +
+  ggplot(data=., aes(x = age, y = radcap, color = maturity, shape = maturity)) +
   geom_jitter(size = 1) +
   labs(x = "Age",y = "Cumulative growth (mm)") + 
   theme(legend.title=element_blank(), legend.position=c(.8,.9), legend.text=element_text(size=12)) +
@@ -215,6 +214,15 @@ merge %>%
 
 cowplot::plot_grid(plot1, plot2,  align = "vh", nrow = 1, ncol=2)
 ggsave("figs/scatterplot_obj1.png", dpi = 500, height = 4, width = 8, units = "in")
+# Correlation Analysis---
+# age versus length at capture
+cor.test(merge$age, merge$length_mm, method=c("pearson", "kendall", "spearman"))
+
+ggscatter(merge, x = "age", y = "length_mm", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Age", ylab = "Length at capture (mm)")
+ggsave("figs/correlation.png", dpi = 500, height = 6, width = 8, units = "in")
 
 # Generalized Linear models----
 ## Outer Increment Measurement
@@ -326,9 +334,6 @@ ggsave("figs/glm_diagnostics_outer_increment.png", dpi = 500, height = 6, width 
 
 # Generalized Linear models----
 ## Cumulative Growth
-merge %>%
-  mutate(maturity = ifelse(maturity == "mature", 1 , 0)) -> merge
-write.csv(merge, "data/cpue_new_test.csv")         
 fit <- glm(maturity ~ (radcap + age) , family = binomial, data = merge) 
 Anova(fit)
 RsqGLM(fit)#peudo R2 
