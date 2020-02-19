@@ -292,10 +292,10 @@ with(merge,interaction.plot(age, maturity, anu_adj, type="b", pch=c(1,16), ylab 
 # Generalized Linear models----
 ## Outer Increment Measurement
 merge %>%
-  mutate (age = as.factor(age)) %>%
+  mutate(age = as.factor(age)) %>%
   mutate(maturity = ifelse(maturity == "mature", 1 , 0))-> merge
 fit <- glm(maturity ~ (anu_adj) , family = binomial, data = merge) 
-fit1 <- glm(maturity ~ (anu_adj * age) , family = binomial, data = merge) 
+fit1 <- glm(maturity ~ (age*anu_adj) , family = binomial, data = merge) 
 fit2 <- glm(maturity ~ (age) , family = binomial, data = merge) 
 vif(fit)
 Anova(fit)
@@ -304,7 +304,7 @@ summary(fit)
 hoslem.test(merge$maturity, fitted(fit)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
 
 merge %>% 
-  do(A2 = glm(maturity ~ anu_adj +age, data = ., family = binomial(link=logit))) -> lm_out
+  do(A2 = glm(maturity ~ anu_adj *age, data = ., family = binomial(link=logit))) -> lm_out
 head(augment(lm_out, merge, type.residuals="pearson"))
 outlierTest(fit) #Bonferroni p-values
 residualPlot(fit, variable = "fitted", type = "pearson",
