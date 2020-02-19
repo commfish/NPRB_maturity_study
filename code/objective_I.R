@@ -137,12 +137,12 @@ eda.norm(as.numeric(age4mature$aprop))
 eda.norm(as.numeric(age5mature$aprop)) #normal
 eda.norm(as.numeric(age6mature$aprop)) #normal
 
-# Histograms by age----
+# Frequencies by age----
 merge %>%
   filter(age == 2) %>%
 ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.5,1, 1.5, 2), limits = c(0,2))+
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
   ggtitle("Age 2; n = 64") + theme(legend.position="none") +
   scale_color_manual(values=c("#999999", "black")) +theme(legend.title=element_blank(), legend.position=c(.15,.85)) +
   scale_fill_manual(values=c("#999999", "black" )) -> plot1
@@ -151,7 +151,7 @@ merge %>%
   filter(age == 3) %>%
   ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1), limits = c(0,1))+
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
   ggtitle("Age 3; n = 51") + theme(legend.position="none") +
   scale_color_manual(values=c("#999999", "black")) +
   scale_fill_manual(values=c("#999999", "black" )) -> plot2
@@ -160,7 +160,7 @@ merge %>%
   filter(age == 4) %>%
   ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1), limits = c(0,1))+
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
   ggtitle("Age 4; n = 40") + theme(legend.position="none") +
   scale_color_manual(values=c("#999999", "black")) + 
   scale_fill_manual(values=c("#999999", "black" )) -> plot3
@@ -169,7 +169,7 @@ merge %>%
   filter(age == 5) %>%
   ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1), limits = c(0,1))+
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
   ggtitle("Age 5; n = 23") + theme(legend.position="none") +
   scale_color_manual(values=c("black")) + 
   scale_fill_manual(values=c("black" )) -> plot4
@@ -178,13 +178,57 @@ merge %>%
   filter(age == 6) %>%
   ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
   ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1), limits = c(0,1))+
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
   ggtitle("Age 6; n = 33") + theme(legend.position="none") +
   scale_color_manual(values=c("#999999", "black")) + 
   scale_fill_manual(values=c("#999999", "black" )) -> plot5
 
 cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, align = "vh", nrow = 2, ncol=3)
-ggsave("figs/histogram_obj1.png", dpi = 500, height = 8, width =10, units = "in")
+ggsave("figs/frequency_obj1.png", dpi = 500, height = 8, width =10, units = "in")
+
+# Histogreams by age----
+merge %>%
+  filter(age == 2) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +ggtitle("Age 2; n = 64")+
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.19,.88)) + 
+  ylab("Density")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot1
+
+merge %>%
+  filter(age == 3) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +ggtitle("Age 3; n = 51") +
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.position="none") +
+  ylab("Density")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot2
+
+merge %>%
+  filter(age == 4) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +  ggtitle("Age 4; n = 40") + 
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.position="none") + 
+  ylab("Density")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot3
+
+merge %>%
+  filter(age == 5) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +ggtitle("Age 5; n = 23") +
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("black")) +
+  scale_fill_manual(values=c("black" )) + theme(legend.position="none") +
+  ylab("Density")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot4
+
+merge %>%
+  filter(age == 6) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) +  ggtitle("Age 6; n = 33")+
+  ylab("Density")+ xlab("Outer increment measurement (mm)") +theme(legend.position="none")+
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot5
+
+cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, align = "vh", nrow = 2, ncol=3)
+ggsave("figs/hist_obj1.png", dpi = 500, height = 8, width =10, units = "in")
 
 # Scatterplot Figures---- 
 merge %>% 
@@ -218,18 +262,34 @@ ggsave("figs/scatterplot_obj1.png", dpi = 500, height = 4, width = 8, units = "i
 # age versus length at capture
 cor.test(merge$age, merge$length_mm, method=c("pearson", "kendall", "spearman"))
 
-ggscatter(merge, x = "age", y = "length_mm", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "pearson",
-          xlab = "Age", ylab = "Length at capture (mm)")
-ggsave("figs/correlation.png", dpi = 500, height = 6, width = 8, units = "in")
+ggscatter(merge, x = "age", y = "length_mm",  add="loess",
+          conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "spearman",
+          xlab = "Age", ylab = "Length at capture (mm)") -> plot1
+#ggscatter(merge, x = "radcap", y = "length_mm", 
+#          add = "reg.line", conf.int = TRUE, 
+#          cor.coef = TRUE, cor.method = "spearman",
+#          xlab = "Total Scale Length", ylab = "Length at capture (mm)") -> plot2
+ggscatter(merge, x = "age", y = "radcap", 
+          conf.int = TRUE, add="loess", 
+          cor.coef = TRUE, cor.method = "spearman",
+          xlab = "Age", ylab = "Total Scale Length")+ annotate("text",x = 6, y=7, label="B)", family="Arial" ,size=4) -> plot3
+cowplot::plot_grid(plot1,   align = "vh", nrow = 1, ncol=1)
+ggsave("figs/correlation.png", dpi = 500, height = 4, width = 8, units = "in")
 
+par(mfrow=c(1,1))
+with(merge,interaction.plot(age, maturity, anu_adj, type="b", pch=c(1,16), ylab ="outer incremental length (mm)",
+                            xlab="Age"))
 # Generalized Linear models----
 ## Outer Increment Measurement
 merge %>%
-  mutate(maturity = ifelse(maturity == "mature", 1 , 0)) -> merge
+  mutate (age = as.factor(age)) %>%
+  mutate(maturity = ifelse(maturity == "mature", 1 , 0))-> merge
 write.csv(merge, "data/cpue_new_test.csv")         
-fit <- glm(maturity ~ (anu_adj + age) , family = binomial, data = merge) 
+fit <- glm(maturity ~ (anu_adj *age) , family = binomial, data = merge) 
+fit1 <- glm(maturity ~ (anu_adj +age) , family = binomial, data = merge) 
+fit2 <- glm(maturity ~ (age) , family = binomial, data = merge) 
+vif(fit)
 Anova(fit)
 RsqGLM(fit)#peudo R2 
 summary(fit)
@@ -334,7 +394,8 @@ ggsave("figs/glm_diagnostics_outer_increment.png", dpi = 500, height = 6, width 
 
 # Generalized Linear models----
 ## Cumulative Growth
-fit <- glm(maturity ~ (radcap + age) , family = binomial, data = merge) 
+fit <- glm(maturity ~ (anu_adj +radcap) , family = binomial, data = merge) 
+vif(fit)
 Anova(fit)
 RsqGLM(fit)#peudo R2 
 summary(fit)
