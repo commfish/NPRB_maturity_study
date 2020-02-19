@@ -292,7 +292,7 @@ with(merge,interaction.plot(age, maturity, anu_adj, type="b", pch=c(1,16), ylab 
 # Generalized Linear models----
 ## Outer Increment Measurement
 merge %>%
-  mutate(age = as.factor(age)) %>%
+  mutate(age = factor(as.character(age))) %>%
   mutate(maturity = ifelse(maturity == "mature", 1 , 0))-> merge
 fit <- glm(maturity ~ (anu_adj) , family = binomial, data = merge) 
 fit1 <- glm(maturity ~ (age*anu_adj) , family = binomial, data = merge) 
