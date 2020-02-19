@@ -243,6 +243,14 @@ merge %>%
   scale_y_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0), limits = c(0, 2.0)) +
   scale_x_continuous(breaks = c(2,3,4,5,6), limits = c(2,6))-> plot1
 
+merge %>%
+  mutate(age=as.factor(age))%>% 
+  ggplot(data=.,aes(x = age, y = anu_adj)) + labs(x = "Age",y = "Outer increment measurement (mm)") + 
+  geom_boxplot(aes(fill = maturity)) +
+  scale_color_manual(values=c("#999999", "black")) + theme(legend.title=element_blank(), legend.position=c(.8,.9), legend.text=element_text(size=12)) +
+  scale_fill_manual(values=c("#999999", "black" )) + 
+  scale_y_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0, 2)) +
+  annotate("text",x = 0.75, y=2, label="B)", family="Arial" ,size=4)-> plot2
 
 merge %>% 
   ggplot(data=., aes(x = age, y = radcap, color = maturity, shape = maturity)) +
@@ -252,12 +260,13 @@ merge %>%
   scale_color_manual(values=c("#999999", "black")) +
   scale_fill_manual(values=c("#999999", "black" )) +
   scale_shape_manual(values=c(8, 16)) +
-  annotate("text",x = 2, y=10, label="B)", family="Arial" ,size=4) +
+  annotate("text",x = 2, y=10, label="B)", family="Arial", colour="black", size=4) +
   scale_y_continuous(breaks = c(0, 1,2,3,4,5,6,7,8,9,10), limits = c(0, 10)) +
-  scale_x_continuous(breaks = c(2,3,4,5,6), limits = c(2,6))-> plot2
+  scale_x_continuous(breaks = c(2,3,4,5,6), limits = c(2,6))-> plot3
 
 cowplot::plot_grid(plot1, plot2,  align = "vh", nrow = 1, ncol=2)
 ggsave("figs/scatterplot_obj1.png", dpi = 500, height = 4, width = 8, units = "in")
+
 # Correlation Analysis---
 # age versus length at capture
 cor.test(merge$age, merge$length_mm, method=c("pearson", "kendall", "spearman"))
@@ -285,9 +294,8 @@ with(merge,interaction.plot(age, maturity, anu_adj, type="b", pch=c(1,16), ylab 
 merge %>%
   mutate (age = as.factor(age)) %>%
   mutate(maturity = ifelse(maturity == "mature", 1 , 0))-> merge
-write.csv(merge, "data/cpue_new_test.csv")         
-fit <- glm(maturity ~ (anu_adj *age) , family = binomial, data = merge) 
-fit1 <- glm(maturity ~ (anu_adj +age) , family = binomial, data = merge) 
+fit <- glm(maturity ~ (anu_adj) , family = binomial, data = merge) 
+fit1 <- glm(maturity ~ (anu_adj * age) , family = binomial, data = merge) 
 fit2 <- glm(maturity ~ (age) , family = binomial, data = merge) 
 vif(fit)
 Anova(fit)
