@@ -21,9 +21,9 @@ library(mixtools)
 library(car)
 library(modEvA) #pseudo-R squared
 library(MASS)
-library(digest)
-library(ResourceSelection)
-library("ggpubr")
+#library(digest)
+#library(ResourceSelection)
+#library("ggpubr")
 #library(lmtest)
 #library(mgcv)
 #library(visreg)
@@ -292,8 +292,8 @@ with(merge,interaction.plot(age, maturity, anu_adj, type="b", pch=c(1,16), ylab 
 # Generalized Linear models----
 ## Outer Increment Measurement
 merge %>%
-  mutate(age = factor(as.character(age))) %>%
-  mutate(maturity = ifelse(maturity == "mature", 1 , 0))-> merge
+  dplyr::mutate(age = as.factor(age)) %>%
+  dplyr::mutate(maturity = ifelse(maturity == "mature", 1 , 0))-> merge
 fit <- glm(maturity ~ (anu_adj) , family = binomial, data = merge) 
 fit1 <- glm(maturity ~ (age*anu_adj) , family = binomial, data = merge) 
 fit2 <- glm(maturity ~ (age) , family = binomial, data = merge) 
