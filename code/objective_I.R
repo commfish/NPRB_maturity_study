@@ -380,7 +380,7 @@ lm_out %>% #Cook's distance plot
   augment(A2) %>% 
   mutate(cooksd = (.cooksd),
          count = 1:211,
-         name= ifelse(cooksd >0.94, count, ""))%>% 
+         name= ifelse(cooksd >0.94, count, "")) %>% 
   ggplot(aes(x = count, y = cooksd, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
@@ -428,7 +428,7 @@ merge$age <- as.factor(merge$age)
 merge %>%
   dplyr::mutate(maturity = ifelse(maturity == "mature", 1 , 0) )%>%
   filter (age != "6" || maturity != 0) -> merge_dataset1
-#write.csv(merge_dataset1, "data/cpue_new_test.csv") 
+write.csv(merge_dataset1, "data/cpue_new_test.csv") 
 
 fit <- glm(maturity ~ (anu_adj) , family = binomial, data = merge_dataset1) 
 fit1 <- glm(maturity ~ (age*anu_adj) , family = binomial, data =merge_dataset1) 
