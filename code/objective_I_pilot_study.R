@@ -4,14 +4,14 @@
 #Last edited: February, 2019
 
 # load libraries----
-# devtools::install_github("ben-williams/FNGr")
+ devtools::install_github("commfish/fngr")
 # devtools::install_github('droglenc/RFishBC')
 # devtools::install_github('droglenc/FSA')
 
 library(extrafont)
 windowsFonts(Times=windowsFont("Times New Roman"))
 library(tidyverse)
-library(FNGr)
+library(fngr)
 library(broom)
 library(gridExtra)
 library(cowplot)

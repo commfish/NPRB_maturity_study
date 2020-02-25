@@ -38,3 +38,7 @@ theme_sleek <- function(base_size = 12, base_family = "Arial") {
       legend.background = element_rect(colour = NA, fill = NA)
     )
 }
+
+fun_length <- function(x){
+  return(data.frame(y=median(x),label= paste0("n=", length(x))))
+}
