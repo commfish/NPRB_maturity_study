@@ -1,7 +1,6 @@
-#notes---
 #author: Sara E Miller 
 #contact: sara.miller@alaska.gov; 907-465-4245
-#Last edited: May, 2019
+#Last edited: March, 2020
 
 # load ----
 #font_import() #only do this one time - it takes a while
