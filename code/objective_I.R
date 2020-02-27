@@ -272,7 +272,7 @@ ggsave("figs/scatterplot_obj1.png", dpi = 500, height = 4, width = 8, units = "i
 # Correlation Analysis---
 # age versus length at capture
 merge$age<-as.numeric(merge$age)
-ggscatter(merge, x = "age", y = "length_mm",  add="loess",
+ggscatter(merge, x = "age", y = "length_mm",  
           conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "spearman",
           xlab = "Age", ylab = "Length at capture (mm)") -> plot1
