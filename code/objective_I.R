@@ -438,7 +438,7 @@ Anova(fit1)
 anova(fit,fit1, test = "Chisq")
 anova(fit1, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
 RsqGLM(fit)#peudo R2 
-summary(fit)
+summary(fit1)
 hoslem.test(merge_dataset1$maturity, fitted(fit1)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
 
 merge_dataset1_dataset %>% 
