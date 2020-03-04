@@ -169,12 +169,29 @@ ggplot() +
   geom_smooth(method= 'lm', data=data2, aes(length, gsi), col = "black") +
   geom_hline(yintercept = 0.014, linetype="dotted", color = "grey50", size=1) +
   geom_hline(yintercept = 0.006, linetype="dotted", color = "grey50", size=1) +
-  geom_text(aes(x =135, y= 0.10, label="Females"),family="Times New Roman", colour="black", size=5) +
+  geom_text(aes(x =135, y= 0.10, label="A)"),family="Times New Roman", colour="black", size=5) +
   geom_text(aes(x =225, y= 0.055, label="mature"),family="Times New Roman", colour="black") +
   geom_text(aes(x =200, y= 0.005, label="immature"),family="Times New Roman", colour="black") +
   geom_text(aes(x =136, y= 0.017, label="cut-off = 1.4%"),family="Times New Roman", colour="black", size=3) +
-  geom_text(aes(x =136, y= 0.009, label="cut-off = 0.6%"),family="Times New Roman", colour="black", size=3)
-ggsave(file="figs/cut_off.png", dpi=500, width=6, height=4)
+  geom_text(aes(x =136, y= 0.009, label="cut-off = 0.6%"),family="Times New Roman", colour="black", size=3) ->plot1
+
+data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
+  filter(!(sex_histology %in% c("Male"))) %>%
+  dplyr::mutate(maturity_histology = ifelse(maturation_status_histology == 1, "immature" , "mature")) %>%
+  mutate(GSI=as.numeric(GSI))-> data_clean
+
+cdat<- ddply(data_clean, "maturity_histology", summarise, rating.mean=mean(GSI))
+ggplot(data_clean, aes(x=GSI, color=maturity_histology, fill=maturity_histology)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("GSI") +
+  geom_text(aes(x =0, y= 100, label="B)"),family="Times New Roman", colour="black", size=5) +
+  #scale_x_continuous(breaks = c(0, 0.02, 0.04, 0.06, 0.08, 0.10), limits = c(0,0.10))+
+  #ggtitle("Females; n = 567") + 
+  scale_color_manual(values=c("#999999", "black")) +theme(legend.title=element_blank(), legend.position=c(.85,.85)) +
+  scale_fill_manual(values=c("#999999", "black" )) +geom_vline(data=cdat, aes(xintercept=rating.mean,  colour=maturity_histology),
+                                                               linetype="dashed", size=1) -> plot2
+
+cowplot::plot_grid(plot1, plot2, nrow = 1, ncol=2)
+ggsave("figs/freq.png", dpi = 500, height = 6, width =10, units = "in")
 
 #bubble plot of age versus histology
 spawn  %>%
@@ -199,6 +216,15 @@ ggplot(data=data1, aes(x = year, y = julian, size = spawn1)) +
   scale_y_continuous(breaks = axisy$breaks, labels = axisy$labels) 
 ggsave(filename = 'figs/bubbleplot.png', dpi =200, width=8, height=6, units = "in")
 
+
+merge %>%
+  filter(age == 2) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
+  ggtitle("Age 2; n = 64") + theme(legend.position="none") +
+  scale_color_manual(values=c("#999999", "black")) +theme(legend.title=element_blank(), legend.position=c(.15,.85)) +
+  scale_fill_manual(values=c("#999999", "black" )) -> plot1
 
 #Two proportions z-test with continuity correction
 #The function returns:
