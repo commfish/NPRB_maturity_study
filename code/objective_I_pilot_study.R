@@ -19,15 +19,23 @@ library(FSA)
 library(RFishBC)
 library(magrittr)
 library(ggpmisc)
-# library(stringr)
-# library(arm)
-# library(nlme)
-# library(multcomp)
-# library(FinCal)
-# library(msmtools)
-# library(psych)
-# library(WRS2)
-#library(lme4)
+
+theme_sleek <- function(base_size = 12, base_family = "Arial") {
+  half_line <- base_size/2
+  theme_light(base_size = 12, base_family = "Arial") +
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.ticks.length = unit(half_line / 2.2, "pt"),
+      strip.background = element_rect(fill = NA, colour = NA),
+      strip.text.x = element_text(colour = "black"),
+      strip.text.y = element_text(colour = "black"),
+      panel.border = element_rect(fill = NA),
+      legend.key.size = unit(0.9, "lines"),
+      legend.key = element_rect(colour = NA, fill = NA),
+      legend.background = element_rect(colour = NA, fill = NA)
+    )
+}
 
 
 theme_set(theme_sleek())
@@ -95,8 +103,8 @@ ggplot(data = data, aes(x = lencap, y = aprop1, colour = zone)) +
          "Transformed prop (focus to first annulus)")-> y
 
 
-#Test #1: Back Calculation of Length by BPH and SPH Methods Compared to Preferred Area
-#http://derekogle.com/IFAR/supplements/backcalculation/
+# Test #1: Back Calculation of Length by BPH and SPH Methods Compared to Preferred Area
+# source: http://derekogle.com/IFAR/supplements/backcalculation/
 set.seed(167) 
 
 data %>% 
@@ -110,11 +118,12 @@ data %>%
   mutate(agei = as.numeric(stringr::str_sub(agei, 4, 4))) %>% 
   filter(!is.na(radi), agei<=agecap) -> sample1
 
-#calculate starting values for back-calculation methods based on just zone A1 "preferred area"
-#back-calculation methods with ratios
-#Francis 1990 pg. 897 recommends the SPH and BPH methods; the difference btw the back-calculated lengths be taken as a 
-#minimum meaure of imprecision of back-calculation
-#calculate a, b, c, d for each zone
+# calculate starting values for back-calculation methods based on just zone A1 "preferred area"
+# back-calculation methods with ratios
+# Francis 1990 pg. 897 recommends the SPH and BPH methods; the difference btw the back-calculated lengths be taken as a 
+# minimum meaure of imprecision of back-calculation
+# calculate a, b, c, d for each zone
+
 sample1 %>%
   filter(zone == "A1" & agei == 1)-> lm_data
 sample1 %>%
@@ -269,10 +278,10 @@ x %>% dplyr::select(fish, agei, zone, SPH_age) %>%
   spread(key = zone, value = SPH_age) %>%
   as.data.frame() -> data_wide_sph_age
 
-#calculate difference in back-calculated zones in percents from zone A1
-#http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
+# calculate difference in back-calculated zones in percents from zone A1
+# source: http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
 
-#SCALE PROPOTIONAL HYPOTHESIS
+# SCALE PROPOTIONAL HYPOTHESIS
 data_wide_sph %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
@@ -288,7 +297,7 @@ data_wide_sph %>%
   mutate(age = as.factor(agei),
          zone=as.factor(variable)) -> data_wide_sph
 
-#BODY PROPOTIONAL HYPOTHESIS
+# BODY PROPOTIONAL HYPOTHESIS
 data_wide_bph %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
@@ -304,7 +313,7 @@ data_wide_bph %>%
   mutate(age = as.factor(agei),
          zone=as.factor(variable)) -> data_wide_bph 
 
-#AGE SPH
+# AGE SPH
 data_wide_sph_age %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
@@ -320,7 +329,7 @@ data_wide_sph_age %>%
   mutate(age = as.factor(agei),
          zone=as.factor(variable)) -> data_wide_sph_age 
 
-#plots by SPH
+# plots by SPH
 data_wide_sph %>% 
   group_by(age) %>% 
   summarise(labels = mean(n_SPH)) -> labels
