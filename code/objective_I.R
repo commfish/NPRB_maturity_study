@@ -276,16 +276,19 @@ ggscatter(merge, x = "age", y = "length_mm",
           conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "spearman",
           xlab = "Age", ylab = "Length at capture (mm)") -> plot1
-#ggscatter(merge, x = "radcap", y = "length_mm", 
-#          add = "reg.line", conf.int = TRUE, 
-#          cor.coef = TRUE, cor.method = "spearman",
-#          xlab = "Total Scale Length", ylab = "Length at capture (mm)") -> plot2
+ggscatter(merge, y = "length_mm", x = "radcap", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "spearman",
+          xlab = "Total Scale Length", ylab = "Length at capture (mm)") -> plot2
 ggscatter(merge, x = "age", y = "radcap", 
           conf.int = TRUE, add="loess", 
           cor.coef = TRUE, cor.method = "spearman",
           xlab = "Age", ylab = "Total Scale Length")+ annotate("text",x = 6, y=7, label="B)", family="Arial" ,size=4) -> plot3
 cowplot::plot_grid(plot1,   align = "vh", nrow = 1, ncol=1)
 ggsave("figs/correlation.png", dpi = 500, height = 4, width = 8, units = "in")
+
+fit <- lm(length_mm ~ (radcap), data = merge) 
+fit1 <- lm(length_mm ~ poly(radcap,3), data = merge) 
 
 merge %>%
   filter (age =="3") %>%
