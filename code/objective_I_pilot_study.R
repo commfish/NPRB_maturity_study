@@ -899,6 +899,19 @@ data <- data_wide[,2:length(data_wide)]
 round((cor(data, use = "complete.obs")),2)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 #Test #3: ANOVA with repeated treatments (between and within group variability) with multilevels 
 #(a regression that allows for the errors to be dependent on eachother (as our conditions of Valence were repeated within each participant). 
 #https://sapa-project.org/blog/2013/06/28/repeated-measures-anova-in-r/
