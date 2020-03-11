@@ -234,7 +234,7 @@ x<- rbind(sample_A1, sample_A2) #combine data for all zones
 x<- rbind(x, sample_A3)
 x<- rbind(x, sample_A4)
 x<- rbind(x, sample_A6)
-
+write.csv(x, "output/test.csv")
 x %>%
   group_by(agei, zone) %>%
   summarize(n = n(),
@@ -264,7 +264,7 @@ x %>%
             upper_SPH_age = mn_SPH_age + error_SPH_age,
             lower_SPH_age = mn_SPH_age - error_SPH_age) %>%
   as.data.frame() -> sample2
-write.csv(sample2, "output/table_summary_obj1.csv") 
+write.csv(sample2, "output/table_summary_obj1.csv") # summary output for table 2
 
 x %>% dplyr::select(fish, agei, zone, SPH_len) %>%
              spread(key = zone, value = SPH_len)  %>%
@@ -277,11 +277,12 @@ x %>% dplyr::select(fish, agei, zone, BPH_len) %>%
 x %>% dplyr::select(fish, agei, zone, SPH_age) %>%
   spread(key = zone, value = SPH_age) %>%
   as.data.frame() -> data_wide_sph_age
+# figure 4 output found in data_wide_sph, data_wide_bph, and data_wide_sph_age
 
 # calculate difference in back-calculated zones in percents from zone A1
 # source: http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
 
-# SCALE PROPOTIONAL HYPOTHESIS
+# SCALE PROPORTIONAL HYPOTHESIS
 data_wide_sph %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
@@ -297,7 +298,7 @@ data_wide_sph %>%
   mutate(age = as.factor(agei),
          zone=as.factor(variable)) -> data_wide_sph
 
-# BODY PROPOTIONAL HYPOTHESIS
+# BODY PROPORTIONAL HYPOTHESIS
 data_wide_bph %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
@@ -313,7 +314,7 @@ data_wide_bph %>%
   mutate(age = as.factor(agei),
          zone=as.factor(variable)) -> data_wide_bph 
 
-# AGE SPH
+# AGE EFFECT SPH
 data_wide_sph_age %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
