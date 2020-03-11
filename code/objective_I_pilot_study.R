@@ -817,6 +817,18 @@ lm_out_BPH %>%
 cowplot::plot_grid(A1, A2, A3, A4, A6,  align = "vh", nrow = 2, ncol=3)
 ggsave("figs/BPH_SPH_regression.png", dpi = 500, height = 6, width =8, units = "in") 
 
+
+
+
+
+
+
+
+
+
+
+
+# ANCOVA MODELS
 # ANCOVA Models (SPH)
 lm_data_zone %>% 
   do(taggingr = lm(radcap~lencap + zone, data = sample1)) -> lm_out
@@ -839,7 +851,7 @@ lm_out %>%
   labs(y = "Scale Radius (mm)", x =  "Capture Length (mm)")-> SPH3
 ggsave("figs/SPH_ANCOVA.png", dpi = 500, height = 6, width = 8, units = "in")
 
-#ANCOVA Models (BPH)
+# ANCOVA Models (BPH)
 lm_data_zone %>% 
   do(taggingr = lm(lencap ~ radcap + zone, data = .)) -> lm_out
 
@@ -897,20 +909,6 @@ sample1 %>% dplyr::select(fish, aprop1, zone) %>%
   spread(key = zone, value = aprop1) -> data_wide
 data <- data_wide[,2:length(data_wide)]
 round((cor(data, use = "complete.obs")),2)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #Test #3: ANOVA with repeated treatments (between and within group variability) with multilevels 
 #(a regression that allows for the errors to be dependent on eachother (as our conditions of Valence were repeated within each participant). 
