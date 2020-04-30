@@ -118,6 +118,7 @@ data %>%
   mutate(agei = as.numeric(stringr::str_sub(agei, 4, 4))) %>% 
   filter(!is.na(radi), agei<=agecap) -> sample1
 
+<<<<<<< HEAD
 set.seed(167) 
 
 data %>% 
@@ -131,6 +132,8 @@ data %>%
   mutate(agei = as.numeric(stringr::str_sub(agei, 4, 4))) %>% 
   filter(!is.na(radi), agei<=agecap) -> sample1a
 
+=======
+>>>>>>> 3da4495b1f221bc659391e52368866c27b5dbe66
 # calculate starting values for back-calculation methods based on just zone A1 "preferred area"
 # back-calculation methods with ratios
 # Francis 1990 pg. 897 recommends the SPH and BPH methods; the difference btw the back-calculated lengths be taken as a 

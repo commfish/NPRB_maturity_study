@@ -31,6 +31,9 @@ write.csv(data_clean, "data/cpue_new_test.csv") #dataset for GSI/histology
 data_clean %>%
   group_by(maturity_state_field, maturation_status_histology) %>%
   summarise(count = n()) -> table3 
+data_clean %>%
+  group_by(age, maturation_status_histology) %>%
+  summarise(count = n()) -> table4 
 write.csv(data_clean, "data/cpue_new_test.csv") 
 
 #Macroscopic versus Histology (all stages)
