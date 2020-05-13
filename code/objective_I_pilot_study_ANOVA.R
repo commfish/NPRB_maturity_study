@@ -1,10 +1,10 @@
 #notes---
 #author: Sara E Miller 
 #contact: sara.miller@alaska.gov; 907-465-4245
-#Last edited: May, 2020
+#Last edited: February, 2019
 
 # load libraries----
-devtools::install_github("commfish/fngr")
+# devtools::install_github("commfish/fngr")
 # devtools::install_github('droglenc/RFishBC')
 # devtools::install_github('droglenc/FSA')
 
@@ -103,64 +103,49 @@ data %>%
 
 # ANOVA
 sample1 %>% 
-  filter(agecap ==4) %>%
-  group_by(fish) %>%
-  filter(radcap >0) %>%
-  #filter(!fish %in% c(143,166)) %>% #age5
-  filter(!fish %in% c(28,47,77,205)) %>% #age4
-  summarize(n = n()) -> table1 #sample sicze of age-4 fish
-
+  filter(agecap == 4) %>%
+  group_by(fish)  %>%
+  filter(radcap > 0) %>%
+  filter(!fish %in% c(28, 47,77,205)) %>%
+ summarize (n=n()) -> table1 # sample size for age-4
+ 
 sample1 %>% 
   filter(agecap == 4) %>%
-  filter(radcap >0) %>%
-  #filter(!fish %in% c(143,166)) %>%
-  filter(!fish %in% c(28,47,77,205)) %>% #age4
-  mutate(prop_age2 = rad2/radcap, 
-         prop_age3 = rad3/radcap) -> sample_data
+  group_by(fish)  %>%
+  filter(radcap > 0) %>%
+  filter(!fish %in% c(28, 47,77,205)) %>%
+  mutate(prop_age2 =rad2/radcap) -> sample_data
 
-
-write.csv(sample_data, "output/x.csv") 
-delivery.mod1 = aov(radcap ~ zone*fish, data = sample_data)
-delivery.mod2 = aov(prop_age2 ~ zone*fish, data = sample_data)
-delivery.mod3 = aov(prop_age3 ~ zone*fish, data = sample_data)
-delivery.mod4 = aov(radcap ~ zone*fish, data = sample_data)
-
-# diagnostic plots of mod 1
+# Model 1
+delivery.mod1 = aov(radcap ~ zone * fish, data = sample_data)
+summary(delivery.mod1)
 delivery.res = sample_data
-delivery.res$M1.Fit = fitted(delivery.mod1)
+delivery.res$M1.fit = fitted(delivery.mod1)
 delivery.res$M1.Resid = resid(delivery.mod1)
 
-ggplot(delivery.res, aes(M1.Fit, M1.Resid, colour = fish)) + geom_point() +
-  xlab("Fitted Values") + ylab("Residuals")
+ggplot(delivery.res, aes(M1.fit, M1.resid, colour = fish)) + geom_point() +
+  xlab("Fitted values") + ylab("Residuals")
 
-ggplot(delivery.res, aes(M1.Fit, M1.Resid, colour = fish)) +
-  geom_point() + xlab("Fitted Values") + ylab("Residuals") +
-  facet_wrap( ~ zone)
+ggplot(delivery.res, aes(M1.fit, M1.resid, colour = fish)) + geom_point() +
+  xlab("Fitted values") + ylab("Residuals") + facet_wrap (~zone)
 
-ggplot(delivery.res, aes(M1.Fit, M1.Resid, colour = fish)) +
-  geom_point() + xlab("Fitted Values") + ylab("Residuals") +
-  facet_wrap( ~ zone)
+ggplot(delivery.res, aes(sample = M1.resid)) + stat_qq()
 
-ggplot(delivery.res, aes(sample = M1.Resid)) + stat_qq()
+TukeyHSD(delivery.mod1, which = "zone")
 
-TukeyHSD(delivery.mod4, which = "zone")
-
-# diagnostic plots of mod 2
+# Model 2
+delivery.mod2 = aov(prop_age2 ~ zone * fish, data = sample_data)
+summary(delivery.mod2)
 delivery.res = sample_data
-delivery.res$M2.Fit = fitted(delivery.mod2)
+delivery.res$M2.fit = fitted(delivery.mod2)
 delivery.res$M2.Resid = resid(delivery.mod2)
 
-ggplot(delivery.res, aes(M2.Fit, M2.Resid, colour = fish)) + geom_point() +
-  xlab("Fitted Values") + ylab("Residuals")
+ggplot(delivery.res, aes(M2.fit, M2.resid, colour = fish)) + geom_point() +
+  xlab("Fitted values") + ylab("Residuals")
 
-ggplot(delivery.res, aes(M2.Fit, M2.Resid, colour = fish)) +
-  geom_point() + xlab("Fitted Values") + ylab("Residuals") +
-  facet_wrap( ~ zone)
+ggplot(delivery.res, aes(M2.fit, M2.resid, colour = fish)) + geom_point() +
+  xlab("Fitted values") + ylab("Residuals") + facet_wrap (~zone)
 
-ggplot(delivery.res, aes(M2.Fit, M2.Resid, colour = fish)) +
-  geom_point() + xlab("Fitted Values") + ylab("Residuals") +
-  facet_wrap( ~ zone)
-
-ggplot(delivery.res, aes(sample = M2.Resid)) + stat_qq()
+ggplot(delivery.res, aes(sample = M2.resid)) + stat_qq()
 
 TukeyHSD(delivery.mod2, which = "zone")

@@ -33,14 +33,16 @@ write.csv(data_clean, "data/cpue_new_test.csv") #dataset for GSI/histology by ag
 
 # Macroscopic versus Histology (all stages)
 # cohen kappa evaluation 
-data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
+data %>% 
+  filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   filter(!(sex_histology %in% c("Male"))) %>%
   filter(!(sample_no %in% c("743", "629", "334", "289"))) %>%
   dplyr::mutate(maturity_histology = ifelse(maturation_status_histology == 1, "immature" , "mature")) -> data_clean
 data_clean %>%
   dplyr::select(maturation_status_histology,maturity_state_field) %>%
-  group_by(maturity_state_field, maturation_status_histology) %>%
-  summarise(count = n()) -> table1
+  as.data.frame() %>%
+  dplyr::group_by(maturity_state_field, maturation_status_histology) %>%
+  dplyr::summarise(count = n()) -> table1
 data_clean %>%
   dplyr::select(maturation_status_histology,maturity_state_field) %>%
   cohen.kappa(.) # all stages (psych package)
@@ -57,7 +59,8 @@ data_clean %>%
 
 # Macroscopic versus Histology (mature/immature)
 # cohen kappa evaluation 
-data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
+data %>% 
+  filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
   filter(!(sex_histology %in% c("Male"))) %>%
   filter(!(sample_no %in% c("743", "629", "334", "289"))) %>%
   dplyr::mutate(maturity_histology = ifelse(maturation_status_histology == 1, "immature" , "mature")) %>%
@@ -80,8 +83,8 @@ data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no sco
 cohen.kappa(data_clean) # all stages
 data_clean %>%
   dplyr::select(maturity_histology, maturity_GSI) %>%
-  group_by(maturity_histology, maturity_GSI) %>%
-  summarise(count = n()) -> table4 
+  dplyr::group_by(maturity_histology, maturity_GSI) %>%
+  dplyr::summarise(count = n()) -> table4 
 
 ## filter GSI = 0
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
@@ -94,8 +97,8 @@ data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no sco
 
 data_clean %>%
   dplyr::select(maturity_histology, GSI, sex_histology) %>%
-  group_by(maturity_histology, sex_histology) %>%
-  summarise(n = n(),
+  dplyr::group_by(maturity_histology, sex_histology) %>%
+  dplyr::summarise(n = n(),
             median = median(GSI, na.rm=T), mean =mean(GSI),sd=sd(GSI),se=sd(GSI)/sqrt(n()), min = min(GSI), max =max(GSI))%>%
   as.data.frame() -> table5  #average, se, min, max of GSI
 
@@ -127,8 +130,8 @@ data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no sco
 data_clean %>%
   filter(!(maturity_histology %in% c(0))) %>%
   mutate(value_I = ifelse(GSI>0.014,1,0)) %>%
-  group_by(maturity_histology) %>%
-  summarise(n = n(),
+  dplyr::group_by(maturity_histology) %>%
+  dplyr::summarise(n = n(),
             value1 = sum(value_I)/n(),
             sumv=sum(value_I),
             min=min(GSI))-> cutoff_1.4_mature
@@ -137,8 +140,8 @@ data_clean %>%
 data_clean %>%
   filter(!(maturity_histology %in% c(1))) %>%
   mutate(value_I = ifelse(GSI>0.014,1,0)) %>%
-  group_by(maturity_histology) %>%
-  summarise(n = n(),
+  dplyr::group_by(maturity_histology) %>%
+  dplyr::summarise(n = n(),
             value1 = sum(value_I)/n(),
             sumv=sum(value_I),
             min=min(GSI))-> cutoff_1.4_immature
@@ -147,8 +150,8 @@ data_clean %>%
 data_clean %>%
   filter(!(maturity_histology %in% c(0))) %>%
   mutate(value_I = ifelse(GSI>0.006,1,0)) %>%
-  group_by(maturity_histology) %>%
-  summarise(n = n(),
+  dplyr::group_by(maturity_histology) %>%
+  dplyr::summarise(n = n(),
             value1 = sum(value_I)/n(),
             sumv=sum(value_I),
             min=min(GSI))-> cutoff_0.6_mature
@@ -157,8 +160,8 @@ data_clean %>%
 data_clean %>%
   filter(!(maturity_histology %in% c(1))) %>%
   mutate(value_I = ifelse(GSI>0.006,1,0)) %>%
-  group_by(maturity_histology) %>%
-  summarise(n = n(),
+  dplyr::group_by(maturity_histology) %>%
+  dplyr::summarise(n = n(),
             value1 = sum(value_I)/n(),
             sumv=sum(value_I),
             min=min(GSI))-> cutoff_0.6_immature

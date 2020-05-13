@@ -670,7 +670,6 @@ x<- rbind(x, A4)
 x<- rbind(x, A6)
 write_csv(x, "output/SPH_age_lm.csv")
 
-
 lm_out_SPH_age %>% 
   glance(A1) %>% 
   mutate(zone = "A1") -> A1

@@ -24,15 +24,6 @@ library(MASS)
 library(digest)
 library(ResourceSelection)
 library("ggpubr")
-#library(lmtest)
-#library(mgcv)
-#library(visreg)
-#library(boot)
-#library(AICcmodavg) #AICc
-#library(rms)
-#library(mixdist)
-#library(fitdistrplus)
-#library(gam)
 theme_set(theme_sleek())
 
 # load data ---- 
