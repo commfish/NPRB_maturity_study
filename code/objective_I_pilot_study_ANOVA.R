@@ -1,7 +1,7 @@
 #notes---
 #author: Sara E Miller 
 #contact: sara.miller@alaska.gov; 907-465-4245
-#Last edited: February, 2019
+#Last edited: May, 2020
 
 # load libraries----
 # devtools::install_github("commfish/fngr")
