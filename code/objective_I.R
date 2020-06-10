@@ -84,7 +84,7 @@ clean_dataset %>%
          rad7 = sum(anu1, anu2, anu3, anu4, anu5, anu6, anu7))-> sample1
  
 # anu_adj is measurement of outer ring
-# radcap is cumulative rowth
+# radcap is cumulative growth
 sample1 %>%
   mutate(anu_adj = ifelse(anu1>0 & anu2==0 & anu3 ==0 & anu4 ==0 & anu5==0 & anu6==0 & anu7==0, anu1,
                           ifelse(anu1>0 & anu2>0& anu3 ==0 & anu4 ==0 & anu5==0 & anu6==0 & anu7==0, anu2,
@@ -94,8 +94,14 @@ sample1 %>%
                                                       ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6>0 & anu7==0, anu6,anu7))))))) %>%
   filter(sex_histology == "Female") %>% 
   mutate(age = as.factor(age)) %>% 
-  dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, maturity, anu_adj, radcap, length_mm, GSI) -> merge
-write.csv(merge, "data/cpue_new_test.csv") 
+  filter(sample_no != 743) %>% 
+  dplyr::select(sample_no, image_name,year, age, sex_histology, maturation_status_histology, maturity, anu_adj, radcap, length_mm, Increment1, Increment2, 
+                Increment3, Increment4, Increment5, Increment6, Increment7, anu1, anu2, anu3, anu4, anu5, anu6, anu7) -> merge
+write.csv(merge, "data/obj1_data.csv") 
+
+merge %>% 
+  mutate (scale_length_prior = radcap - anu_adj) %>% 
+dplyr::select(sample_no, age, maturation_status_histology, maturity, anu_adj, radcap, length_mm, scale_length_prior) -> merge
 
 # Exploratory Plots----
 # Histograms of outer ring---- 
@@ -233,7 +239,6 @@ merge %>%
   scale_fill_manual(values=c("#999999", "black" )) +
   scale_shape_manual(values=c(8, 16)) +
   annotate("text",x = 0.75, y=2, label="A)", family="Arial" ,size=4) +
-  annotate("text",x = 4.8, y=0, label="outlier", family="Arial" ,size=3) +
   scale_y_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0), limits = c(0, 2.0))-> plot1
   
 merge %>%
@@ -303,40 +308,45 @@ ggsave("figs/GSI_corr.png", dpi = 500, height = 4, width = 8, units = "in")
 par(mfrow=c(1,1))
 with(merge,interaction.plot(age, maturity, anu_adj, type="b", pch=c(1,16), ylab ="outer incremental length (mm)",
                             xlab="Age"))
-# Generalized Linear models----
+# Generalized Linear models (age two)----
 ## Outer Increment Measurement
 merge$age <- as.factor(merge$age)
+
 merge %>%
   dplyr::mutate(maturity = ifelse(maturity == "mature", 1 , 0))-> merge_dataset
-fit <- glm(maturity ~ (anu_adj) , family = binomial, data = merge_dataset) 
-fit1 <- glm(maturity ~ (age*anu_adj) , family = binomial, data =merge_dataset) 
-fit2 <- glm(maturity ~ (age) , family = binomial, data = merge_dataset) 
-#vif(fit)
-Anova(fit1)
-anova(fit2,fit1, test = "Chisq")
-anova(fit1, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
-RsqGLM(fit1)#peudo R2 
-summary(fit1)
-hoslem.test(merge_dataset$maturity, fitted(fit1)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
 
-merge_dataset %>% 
-  do(A2 = glm(maturity ~ anu_adj * age, data = merge_dataset, family = binomial(link=logit))) -> lm_out
-head(augment(lm_out, merge_dataset, type.residuals="pearson"))
-outlierTest(fit1) #Bonferroni p-values
-residualPlot(fit1, variable = "fitted", type = "pearson",
+merge_dataset %>%
+  filter(age == 2)-> merge_dataset_two
+
+merge_dataset %>%
+  filter(age == 3)-> merge_dataset_three
+
+fit <- glm(maturity ~ (anu_adj + scale_length_prior) , family = binomial, data = merge_dataset_two) 
+vif(fit)
+Anova(fit)
+anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
+RsqGLM(fit)#peudo R2 
+summary(fit)
+hoslem.test(merge_dataset_two$maturity, fitted(fit)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
+
+merge_dataset_two %>% 
+  do(A2 = glm(maturity ~ anu_adj + scale_length_prior, data = merge_dataset_two, family = binomial(link=logit))) -> lm_out
+head(augment(lm_out, merge_dataset_two, type.residuals="pearson"))
+outlierTest(fit) #Bonferroni p-values
+residualPlot(fit, variable = "fitted", type = "pearson",
              plot = TRUE, quadratic = FALSE, smooth=TRUE) #curvature test
-marginalModelPlots(fit1) #marginal model plots
-mmp(fit1, merge_dataset$anu_adj, xlab="outer proportion", ylab="maturity" , family="A")
+marginalModelPlots(fit) #marginal model plots
+mmp(fit, merge_dataset_two$anu_adj, xlab="outer proportion", ylab="maturity" , family="A")
 
 
 lm_out %>% 
   tidy(A2) %>% 
-  mutate(model = "fit_age3") -> A2
+  mutate(model = "fit_age2") -> A2
 write_csv(A2, "output/lm.csv")
 
 lm_out %>% 
   glance(A2) %>% 
-  mutate(model = "fit_age3") -> A2
+  mutate(model = "fit_age2") -> A2
 write_csv(A2, "output/lm_R2.csv")
 
 
@@ -358,91 +368,82 @@ lm_out %>% #Pearson residuals against fitted
          fit = (.fitted)) %>% 
   ggplot(aes(x = fit, y = resid)) +
   geom_point(color ="grey50") + 
-  scale_x_continuous(breaks = c(0,0.5, 1, 1.5, 2), limits = c(0, 2))+
+  scale_x_continuous(breaks = c(-4, -3, -2, -1, 0, 1), limits = c(-4, 1))+
   scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
   geom_smooth(aes(colour = fit, fill = fit),colour="black") +
   geom_hline(yintercept = 0, lty=2) + 
   labs(y = "Pearson residuals", x =  "Fitted values") +
-  geom_text(aes(x = 0.2, y = 2, label="b)", hjust = 1),family="Times New Roman", colour="black", size=5)-> plot2
+  geom_text(aes(x = -4, y = 2, label="b)", hjust = 1),family="Times New Roman", colour="black", size=5)-> plot2
 
 #pf(0.49, 3, 17) # to figure out influence of cook's distance; relate D to the F(p, n-p) distribution and accertain the corresponding percentile value; see Neter et al. book
-qf(0.5, 10+1, 211-10-1) # see https://rpubs.com/mpfoley73/460943 and Das and Gogoi 2015 pg 80 
-qf(0.5, 11, 200) # p+1; n-p-1
+qf(0.5, 3, 64-3-1) # see https://rpubs.com/mpfoley73/460943 and Das and Gogoi 2015 pg 80 
+qf(0.5, 3, 200) # p+1; n-p-1
 
 
 lm_out %>% #Cook's distance plot
   augment(A2) %>% 
   mutate(cooksd = (.cooksd),
-         count = 1:211,
-         name= ifelse(cooksd >0.94, count, "")) %>% 
+         count = 1:64,
+         name= ifelse(cooksd >0.79, count, "")) %>% 
   ggplot(aes(x = count, y = cooksd, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
            width = 0.8, position = position_dodge(width = 0.2)) + 
   geom_text(size = 3, position = position_stack(vjust = 1.1)) + 
-  scale_y_continuous(breaks = c(0,250,500,750,1000,1250, 1500), limits = c(0,1500)) +
+  scale_y_continuous(breaks = c(0,0.05, 0.10, 0.15,0.20), limits = c(0,0.20)) +
   labs(y = "Cook's distance", x =  "Index") +
-  geom_text(aes(x = 0, y = 1500, label="c)"),family="Times New Roman", colour="black", size=5)-> plot3
+  geom_text(aes(x = 0, y = 0.19, label="c)"),family="Times New Roman", colour="black", size=5)-> plot3
 
 # greater than 2 or three times p/n, it may be a concern (where p is the number of parameters (i.e., 2) and n is the number of observations (i.e., 51); p/n = 0.04 for this study; Dobson 2002). 
-# 10/211 = 0.05; 0.05 *3 =0.14
+# 3/64 = 0.05; 0.05 *3 =0.14
 lm_out %>% #leverage plot
   augment(A2) %>% 
   mutate(hat= (.hat),
-         count = 1:211,
+         count = 1:64,
          name= ifelse(hat >0.14, count, "")) %>% 
   ggplot(aes(x = count, y = hat, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
            width = 0.8, position = position_dodge(width = 0.2)) + 
   geom_text(size = 3, position = position_stack(vjust = 1.2)) + 
-  scale_y_continuous(breaks = c(0, 0.25, 0.50, 0.75, 1, 1.25, 1.5), limits = c(0,1.5)) +
+  scale_y_continuous(breaks = c(0, 0.05, 0.10, 0.15, 0.20, 0.25), limits = c(0, 0.25)) +
   labs(y = "hat-values", x =  "Index") +
-  geom_text(aes(x = 1, y = 1.5, label="d)"),family="Times New Roman", colour="black", size=5)-> plot4
+  geom_text(aes(x = 1, y = 0.25, label="d)"),family="Times New Roman", colour="black", size=5)-> plot4
 
 lm_out %>% #Pearson by index
   augment(A2) %>% 
   mutate(resid = (.resid),
-         count = 1:211) %>% 
+         count = 1:64) %>% 
   ggplot(aes(x = count, y = resid)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
            width = 0.8, position = position_dodge(width = 0.2)) + 
-  scale_y_continuous(breaks = c(-3, -2.5,-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3), limits = c(-3,3)) +
+  scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5), limits = c(-2, 2.5)) +
   labs(y = "Pearson residuals", x =  "Index") +
-  geom_text(aes(x = 0, y = 3, label="e)"),family="Times New Roman", colour="black", size=5)-> plot5
+  geom_text(aes(x = 0, y = 2.5, label="e)"),family="Times New Roman", colour="black", size=5)-> plot5
 
 cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5,  align = "vh", nrow = 3, ncol=2)
-ggsave("figs/glm_diagnostics_outer_increment.png", dpi = 500, height = 6, width = 8, units = "in")
+ggsave("figs/glm_diagnostics_outer_increment_age2.png", dpi = 500, height = 6, width = 8, units = "in")
 
 
-# Generalized Linear models (removal of outlier)----
+# Generalized Linear models (age three)----
 ## Outer Increment Measurement
-merge$age <- as.factor(merge$age)
-merge %>%
-  dplyr::mutate(maturity = ifelse(maturity == "mature", 1 , 0) )%>%
-  filter (age != "6" || maturity != 0) -> merge_dataset1
-write.csv(merge_dataset1, "data/cpue_new_test.csv") 
-
-fit <- glm(maturity ~ (anu_adj) , family = binomial, data = merge_dataset1) 
-fit1 <- glm(maturity ~ (age*anu_adj) , family = binomial, data =merge_dataset1) 
-fit2 <- glm(maturity ~ (age) , family = binomial, data = merge_dataset1) 
-#vif(fit)
-Anova(fit1)
-anova(fit,fit1, test = "Chisq")
-anova(fit1, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
+fit <- glm(maturity ~ (anu_adj + scale_length_prior) , family = binomial, data = merge_dataset_three) 
+vif(fit)
+Anova(fit)
+anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
 RsqGLM(fit)#peudo R2 
-summary(fit1)
-hoslem.test(merge_dataset1$maturity, fitted(fit1)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
+summary(fit)
+hoslem.test(merge_dataset_three$maturity, fitted(fit)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
 
-merge_dataset1_dataset %>% 
-  do(A2 = glm(maturity ~ anu_adj * age, data = merge_dataset1, family = binomial(link=logit))) -> lm_out
-head(augment(lm_out, merge_dataset1_dataset, type.residuals="pearson"))
-outlierTest(fit1) #Bonferroni p-values
-residualPlot(fit1, variable = "fitted", type = "pearson",
+merge_dataset_three %>% 
+  do(A2 = glm(maturity ~ anu_adj + scale_length_prior, data = merge_dataset_three, family = binomial(link=logit))) -> lm_out
+head(augment(lm_out, merge_dataset_three, type.residuals="pearson"))
+outlierTest(fit) #Bonferroni p-values
+residualPlot(fit, variable = "fitted", type = "pearson",
              plot = TRUE, quadratic = FALSE, smooth=TRUE) #curvature test
-marginalModelPlots(fit1) #marginal model plots
-mmp(fit1, merge_dataset1_dataset$anu_adj, xlab="outer proportion", ylab="maturity" , family="A")
+marginalModelPlots(fit) #marginal model plots
+mmp(fit, merge_dataset_three$anu_adj, xlab="outer proportion", ylab="maturity" , family="A")
 
 
 lm_out %>% 
@@ -474,61 +475,61 @@ lm_out %>% #Pearson residuals against fitted
          fit = (.fitted)) %>% 
   ggplot(aes(x = fit, y = resid)) +
   geom_point(color ="grey50") + 
-  scale_x_continuous(breaks = c(0,0.5, 1, 1.5, 2), limits = c(0, 2))+
+  scale_x_continuous(breaks = c(-1, 0, 1), limits = c(-1, 1))+
   scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2), limits = c(-2,2)) +
   geom_smooth(aes(colour = fit, fill = fit),colour="black") +
   geom_hline(yintercept = 0, lty=2) + 
   labs(y = "Pearson residuals", x =  "Fitted values") +
-  geom_text(aes(x = 0, y = 2, label="b)", hjust = 1),family="Times New Roman", colour="black", size=5)-> plot2
+  geom_text(aes(x = -4, y = 2, label="b)", hjust = 1),family="Times New Roman", colour="black", size=5)-> plot2
 
 #pf(0.49, 3, 17) # to figure out influence of cook's distance; relate D to the F(p, n-p) distribution and accertain the corresponding percentile value; see Neter et al. book
-qf(0.5, 10+1, 211-10-1) # see https://rpubs.com/mpfoley73/460943 and Das and Gogoi 2015 pg 80 
-qf(0.5, 11, 200) # p+1; n-p-1
+qf(0.5, 3, 64-3-1) # see https://rpubs.com/mpfoley73/460943 and Das and Gogoi 2015 pg 80 
+qf(0.5, 3, 200) # p+1; n-p-1
 
 
 lm_out %>% #Cook's distance plot
   augment(A2) %>% 
   mutate(cooksd = (.cooksd),
-         count = 1:211,
-         name= ifelse(cooksd >0.94, count, ""))-> x%>% 
+         count = 1:51,
+         name= ifelse(cooksd >0.79, count, "")) %>% 
   ggplot(aes(x = count, y = cooksd, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
            width = 0.8, position = position_dodge(width = 0.2)) + 
   geom_text(size = 3, position = position_stack(vjust = 1.1)) + 
-  scale_y_continuous(breaks = c(0,250,500,750,1000,1250, 1500), limits = c(0,1500)) +
+  scale_y_continuous(breaks = c(0,0.05, 0.10, 0.15,0.20), limits = c(0,0.20)) +
   labs(y = "Cook's distance", x =  "Index") +
-  geom_text(aes(x = 0, y = 1500, label="c)"),family="Times New Roman", colour="black", size=5)-> plot3
+  geom_text(aes(x = 0, y = 0.19, label="c)"),family="Times New Roman", colour="black", size=5)-> plot3
 
 # greater than 2 or three times p/n, it may be a concern (where p is the number of parameters (i.e., 2) and n is the number of observations (i.e., 51); p/n = 0.04 for this study; Dobson 2002). 
-# 10/211 = 0.05; 0.05 *3 =0.14
+# 3/64 = 0.05; 0.05 *3 =0.14
 lm_out %>% #leverage plot
   augment(A2) %>% 
   mutate(hat= (.hat),
-         count = 1:211,
-         name= ifelse(hat >0.14, count, "")) -> x%>% 
+         count = 1:51,
+         name= ifelse(hat >0.14, count, "")) %>% 
   ggplot(aes(x = count, y = hat, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
            width = 0.8, position = position_dodge(width = 0.2)) + 
   geom_text(size = 3, position = position_stack(vjust = 1.2)) + 
-  scale_y_continuous(breaks = c(0, 0.25, 0.50, 0.75, 1, 1.25, 1.5), limits = c(0,1.5)) +
+  scale_y_continuous(breaks = c(0, 0.05, 0.10, 0.15, 0.20, 0.25), limits = c(0, 0.25)) +
   labs(y = "hat-values", x =  "Index") +
-  geom_text(aes(x = 1, y = 1.5, label="d)"),family="Times New Roman", colour="black", size=5)-> plot4
+  geom_text(aes(x = 1, y = 0.25, label="d)"),family="Times New Roman", colour="black", size=5)-> plot4
 
 lm_out %>% #Pearson by index
   augment(A2) %>% 
   mutate(resid = (.resid),
-         count = 1:211) %>% 
+         count = 1:51) %>% 
   ggplot(aes(x = count, y = resid)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
            width = 0.8, position = position_dodge(width = 0.2)) + 
-  scale_y_continuous(breaks = c(-3, -2.5,-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3), limits = c(-3,3)) +
+  scale_y_continuous(breaks = c(-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5), limits = c(-2, 2.5)) +
   labs(y = "Pearson residuals", x =  "Index") +
-  geom_text(aes(x = 0, y = 3, label="e)"),family="Times New Roman", colour="black", size=5)-> plot5
+  geom_text(aes(x = 0, y = 2.5, label="e)"),family="Times New Roman", colour="black", size=5)-> plot5
 
 cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5,  align = "vh", nrow = 3, ncol=2)
-ggsave("figs/glm_diagnostics_outer_increment.png", dpi = 500, height = 6, width = 8, units = "in")
+ggsave("figs/glm_diagnostics_outer_increment_age3.png", dpi = 500, height = 6, width = 8, units = "in")
 
 
