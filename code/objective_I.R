@@ -42,13 +42,10 @@ increment %>%
 
 # match increments to awl data
 merge <-merge(increment, data_clean, all.y=T)
-
-#sample sizes for study 
 merge %>% 
   filter(!(Increment1 %in% c("", NA))) %>% 
   filter(!(scale_region%in% c("OOA (OUT OF AREA)", "A", "C", "D", "E", "G", "H"))) %>% 
-  filter(!(sex_histology %in% c("Male")))  %>% 
-  filter(!(image_name %in% c("17NPRB074306S52S1"))) %>%
+  filter(!(sex_histology %in% c("Male"))) %>% 
   mutate(maturity = ifelse(maturation_status_histology == 1, 'immature', 'mature')) -> clean_dataset #n=211 useable samples
 
 #sample sizes for study 
@@ -95,16 +92,13 @@ sample1 %>%
                                         ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5==0 & anu6==0 & anu7==0, anu4,
                                                ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6==0 & anu7==0, anu5,
                                                       ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6>0 & anu7==0, anu6,anu7))))))) %>%
-  mutate(age = as.factor(age),
-         length_prior = radcap - anu_adj) %>%
-  dplyr::select(sample_no, image_name,year, age, sex_histology, maturation_status_histology, maturity, anu_adj, radcap, length_mm, length_prior,
-                Increment1, Increment2, Increment3, Increment4, Increment5, Increment6, Increment7, anu1, anu2, anu3, anu4, anu5, anu6, anu7, rad1, rad2, rad3, rad4, rad5, rad6, rad7) -> merge
-write.csv(merge, "data/ob1_merge_dataset.csv") 
+  filter(sex_histology == "Female") %>% 
+  mutate(age = as.factor(age)) %>% 
+  dplyr::select(image_name,year, age, sex_histology, maturation_status_histology, maturity, anu_adj, radcap, length_mm, GSI) -> merge
+write.csv(merge, "data/cpue_new_test.csv") 
 
 # Exploratory Plots----
 # Histograms of outer ring---- 
-merge %>%
-  dplyr::select(sample_no, image_name,year, age, sex_histology, maturation_status_histology, maturity, anu_adj, radcap, length_mm, length_prior) -> merge
 merge %>%
   filter(age == 2 & maturity == "mature")-> age2mature
 merge %>%
