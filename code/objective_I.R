@@ -103,6 +103,18 @@ merge %>%
   mutate (scale_length_prior = radcap - anu_adj) %>% 
 dplyr::select(sample_no, age, maturation_status_histology, maturity, anu_adj, radcap, length_mm, scale_length_prior) -> merge
 write.csv(merge, "data/obj1_data2.csv") 
+
+merge %>% 
+  dplyr::select(maturity, age, length_mm, anu_adj) %>% 
+  group_by(maturity,age) %>% 
+  summarize(n=n(),
+            mean_anu_adj =mean(anu_adj),
+            stdv_anu_adj = sd(anu_adj),
+            min_anu_adj =min(anu_adj),
+            max_anu_adj = max(anu_adj),
+            mean_length =mean(length_mm),
+            stdv_length = sd(length_mm)) -> summary_table 
+
 # Exploratory Plots----
 # Histograms of outer ring---- 
 merge %>%
