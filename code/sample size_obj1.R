@@ -453,7 +453,7 @@ ggsave("figs/density_samplesize_obj1.png", dpi = 500, height = 8, width =10, uni
 
 # Fit gaussian mixture models to age ring data and plot (AGE 3)
 # mixtools package
-png(file='Mixture_Models.png', res=200, width=13, height=10, units ="in") 
+png(file='figs/Mixture_Models.png', res=200, width=13, height=10, units ="in") 
 par(mfrow=c(5,2)) 
 Data_Age3<- subset(Dataset_Age3, Dataset_Age3$Ring=='Age Ring') 
 Data_Age3<-Data_Age3[,c(6)]
@@ -614,7 +614,7 @@ summaryBy(value ~ Year, data = Age8LR,
           FUN = function(x) { c(mean = mean(x), sd = sd(x), n=length(x), se=sd(x)/sqrt(length(x))) })
           C<-subset(FIGDATA, select=c(Year, tot_obs_egg,tot_est_egg)) 
 
-Dataset <- read.csv("scale_incrementsCI.csv", sep=",", header = TRUE, check.names = FALSE)  #Read in csv file, subset the spawning stock
+Dataset <- read.csv("data/scale_incrementsCI.csv", sep=",", header = TRUE, check.names = FALSE)  #Read in csv file, subset the spawning stock
 Dataset$Year <- factor(Dataset$Year)
 Dataset$Age <- factor(Dataset$Age)
 prepanel.ci <- function(x, y, ly, uy, subscripts, ...){
@@ -638,7 +638,7 @@ panel.ci <- function(x, y, ly, uy, subscripts, pch = c(15,22), col.line =
   }
 
 library(lattice)  
-tiff(file="Mean_CI.tiff", width=7,height=4,units="in", res=600)                             
+tiff(file="figs/Mean_CI.tiff", width=7,height=4,units="in", res=600)                             
 xyplot(Mean~ Year|Age,  data=Dataset,                                    
        groups=Age, col=1, pch=c(16), ylim=c(0,1.2),font.lab=3, font.axis=3,                                                    
        ylab=list("Mean increment length (mm)",font=6, cex=1.2), xlab=list("Year",font=6, cex=1.2),
@@ -655,16 +655,11 @@ update(trellis.last.object(),strip=strip.custom(strip.levels=TRUE,bg=8))
 update(trellis.last.object(),scales=list(cex=0.75, font=6))
 dev.off()
 
-
-
-          
-          
-########################################################################################################
 help(hist)
 boxplot(Age_3$value~Age_3$variable, Data=Age_3, ylab="Scale increment length (mm)", xlab="Scale increment")
 boxplot(Age_4$value~Age_4$variable, Data=Age_4, ylab="Scale increment length (mm)", xlab="Scale increment")
 
-#Power Test values (pg. 208 Cohen 1977; Chapter 6.5; example 6.8])
+# Power Test values (pg. 208 Cohen 1977; Chapter 6.5; example 6.8])
 cohen.ES(test = c("p", "t", "r", "anov", "chisq", "f2"),
          size = c("small", "medium", "large"))
 cohen.ES(test="p", size="small")
@@ -697,4 +692,3 @@ pwr.p.test(h=0.142,n=100,sig.level=0.20,alternative="two.sided")
 p.p.two <- pwr.p.test(h=0.3, power = 0.99, alternative = "two.sided")
 x<-plot(p.p.two, xlab="Sample Size", xlim=c(0,500), ylim=c(0,100) )
 citation(package = "pwr")
-readCitationFile(file, meta = NULL)
