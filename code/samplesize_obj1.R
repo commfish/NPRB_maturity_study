@@ -198,6 +198,7 @@ ggsave("figs/histograms_obj1_samplesize.png", dpi = 500, height = 8, width =10, 
 # Micture Models (matching age-3 2011 with age-8 2016) 
 data <- read.csv("data/scale.csv", check.names = FALSE)
 Dataset <- melt(data, id=c("Year", "AGE", "SEX","LENGTH"), na.rm=TRUE)
+
 #create dataset for 2011 with the last ring
 #age 3
 Age_3LRa<-subset(Dataset, Dataset$AGE==3& Dataset$Year==2011&Dataset$variable=='CSW3') 
@@ -205,6 +206,7 @@ Age_8_3RING<-subset(Dataset, Dataset$AGE==8& Dataset$Year==2016&Dataset$variable
 Age_3LRa["Ring"] <- "Last Ring"
 Age_8_3RING["Ring"] <- "Age Ring"
 Dataset_Age3<- rbind(Age_3LRa,Age_8_3RING) 
+
 # age 4
 Age_4LRa<-subset(Dataset, Dataset$AGE==4& Dataset$Year==2011&Dataset$variable=='CSW4') 
 Age_4LRb<-subset(Dataset, Dataset$AGE==4& Dataset$Year==2012&Dataset$variable=='CSW4') 
@@ -218,6 +220,7 @@ Age_8_4RINGb["Ring"]<-"Age Ring"
 Age_9_4RINGa["Ring"]<-"Age Ring"
 Dataset_Age4<- rbind(Age_4LRa,Age_4LRb,Age_8_4RINGa, Age_8_4RINGb, 
                      Age_9_4RINGa) 
+
 # age5
 Age_5LRa<-subset(Dataset, Dataset$AGE==5& Dataset$Year==2011&Dataset$variable=='CSW5') 
 Age_5LRb<-subset(Dataset, Dataset$AGE==5& Dataset$Year==2012&Dataset$variable=='CSW5') 
@@ -239,6 +242,7 @@ Age_9_5RINGb["Ring"]<-"Age Ring"
 Age_10_5RINGa["Ring"]<-"Age Ring"
 Dataset_Age5<- rbind(Age_5LRa,Age_5LRb,Age_5LRc,
                      Age_8_5RINGa,Age_8_5RINGb,Age_8_5RINGc,Age_9_5RINGa,Age_9_5RINGb,Age_10_5RINGa)
+
 # age 6
 Age_6LRa<-subset(Dataset, Dataset$AGE==6& Dataset$Year==2011&Dataset$variable=='CSW6') 
 Age_6LRb<-subset(Dataset, Dataset$AGE==6& Dataset$Year==2012&Dataset$variable=='CSW6') 
@@ -464,6 +468,7 @@ x3<-lines(density(Data_Age3), lty=2, lwd=2)
 x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
        merge = TRUE, bty = "n")
 summary(mixmdl3)
+
 # Fit normal distr to Last Ring data (AGE 3)
 # fitdistrplus package
 Data_Age3<- subset(Dataset_Age3, Dataset_Age3$Ring=='Last Ring') 
@@ -476,6 +481,7 @@ Measurement<-Data_Age3$Measurement
 x<-fitdist(Measurement, "norm")
 x3a<-denscomp(x, main="Age 3 (Outer Ring)", xlab="Scale increments (mm)", xlim = c(0.2,1.5),addlegend=T,
          legendtext=c("mature (n=37)"),lwd=2)
+
 #Fit gaussian mixture models to age ring data and plot (AGE 4)
 Data_Age4<- subset(Dataset_Age4, Dataset_Age4$Ring=='Age Ring') 
 Data_Age4<-Data_Age4[,c(6)]
@@ -486,6 +492,7 @@ x4<-lines(density(Data_Age4), lty=2, lwd=2)
 x4<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
        merge = TRUE, bty = "n")
 summary(mixmdl4)
+
 #Age 4 did not converge
 ## Fit normal distr to Last Ring data (AGE 4)
 Data_Age4<- subset(Dataset_Age4, Dataset_Age4$Ring=='Last Ring') 
@@ -498,6 +505,7 @@ Measurement<-Data_Age4$Measurement
 x<-fitdist(Measurement, "norm")
 x4a<-denscomp(x, main="Age 4 (Outer Ring)", xlab="Scale increments (mm)", xlim = c(0.2,1.0),addlegend=T,
          legendtext=c("mature (n=230)"), lwd=2)
+
 #Fit gaussian mixture models to age ring data and plot (AGE 5)
 Data_Age5<- subset(Dataset_Age5, Dataset_Age5$Ring=='Age Ring') 
 Data_Age5<-Data_Age5[,c(6)]
@@ -508,7 +516,8 @@ x5<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=
        merge = TRUE, bty = "n")
 x5<-lines(density(Data_Age5), lty=2, lwd=2)
 summary(mixmdl5)
-## Fit normal distr to Last Ring data (AGE 5)
+
+# Fit normal distr to Last Ring data (AGE 5)
 Data_Age5<- subset(Dataset_Age5, Dataset_Age5$Ring=='Last Ring') 
 Data_Age5<-as.data.frame(Data_Age5[,c(6)])
 f <- apply(Data_Age5, 2, fitdist, "norm")
@@ -519,7 +528,8 @@ Measurement<-Data_Age5$Measurement
 x<-fitdist(Measurement, "norm")
 x5a<-denscomp(x, main="Age 5 (Outer Ring)", xlab="Scale increments (mm)", xlim = c(0.1,0.8),addlegend=T,
          legendtext=c("mature (n=252)"),lwd=2)
-#Fit gaussian mixture models to age ring data and plot (AGE 6)
+
+# Fit gaussian mixture models to age ring data and plot (AGE 6)
 Data_Age6<- subset(Dataset_Age6, Dataset_Age6$Ring=='Age Ring') 
 Data_Age6<-Data_Age6[,c(6)]
 mixmdl6 <- normalmixEM(Data_Age6)
@@ -529,7 +539,8 @@ x6<-lines(density(Data_Age6), lty=2, lwd=2)
 x6<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
            merge = TRUE, bty = "n")
 summary(mixmdl6)
-## Fit normal distr to Last Ring data (AGE 6)
+
+# Fit normal distr to Last Ring data (AGE 6)
 Data_Age6<- subset(Dataset_Age6, Dataset_Age6$Ring=='Last Ring') 
 Data_Age6<-as.data.frame(Data_Age6[,c(6)])
 f <- apply(Data_Age6, 2, fitdist, "norm")
@@ -541,7 +552,7 @@ x<-fitdist(Measurement, "norm")
 x6a<-denscomp(x, main="Age 6 (Outer Ring)", xlab="Scale increments (mm)", addlegend=T,
          legendtext=c("mature (n=375)"),lwd=2,xlim = c(0,0.7))
 
-#Fit gaussian mixture models to age ring data and plot (AGE 7)
+# Fit gaussian mixture models to age ring data and plot (AGE 7)
 Data_Age7<- subset(Dataset_Age7, Dataset_Age7$Ring=='Age Ring') 
 Data_Age7<-Data_Age7[,c(6)]
 mixmdl7 <- normalmixEM(Data_Age7)
@@ -551,7 +562,7 @@ x7<-lines(density(Data_Age7), lty=2, lwd=2)
 x7<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
            merge = TRUE, bty = "n")
 summary(mixmdl7)
-## Fit normal distr to Last Ring data (AGE 6)
+# Fit normal distr to Last Ring data (AGE 6)
 Data_Age7<- subset(Dataset_Age7, Dataset_Age7$Ring=='Last Ring') 
 Data_Age7<-as.data.frame(Data_Age7[,c(6)])
 f <- apply(Data_Age7, 2, fitdist, "norm")

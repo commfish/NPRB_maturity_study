@@ -102,7 +102,7 @@ write.csv(merge, "data/obj1_data.csv")
 merge %>% 
   mutate (scale_length_prior = radcap - anu_adj) %>% 
 dplyr::select(sample_no, age, maturation_status_histology, maturity, anu_adj, radcap, length_mm, scale_length_prior) -> merge
-
+write.csv(merge, "data/obj1_data2.csv") 
 # Exploratory Plots----
 # Histograms of outer ring---- 
 merge %>%
