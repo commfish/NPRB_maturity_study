@@ -1,4 +1,6 @@
-rm(list=ls(all=T))#Remove previous variables.
+# sample size determination for objective one in NPRB study
+# ouput of mixture models stored in output/ SitkaSclaeMeasurementsWithLengths(prelim_data)
+# load libraries----
 library(plyr)
 library(reshape2)
 library(lattice)
@@ -20,25 +22,24 @@ library(mixtools)
 library(doBy)
 library(Hmisc)
 library(mixdist)
-wd1="H:/Herring/Proposals/NPRB/Preliminary Data" #set working directory
-setwd(wd1)
+
 options(scipen=999)
-#Figure 1 (Age comp)
-Data <- read.csv("Age_Comp.csv", sep=",", header = TRUE, check.names = FALSE)  #Read in csv file, subset the spawning stock
+
+# age comp figure
+data <- read.csv("data/age_comp.csv", check.names = FALSE)  
 windowsFonts(Times=windowsFont("TT Times New Roman"))
 theme_set(theme_bw(base_size=12,base_family='Times New Roman')+
             theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()))
 
-Data$Age <- factor(Data$Age)
+data$Age <- factor(data$Age)
 
-Fig<-ggplot(Data, aes(x=Age, y=Percentage*100, fill=Age)) + 
+ggplot(data, aes(x=Age, y=Percentage*100, fill=Age)) + 
   ylab("Forecasted Percentage")+xlab("Age")+
   theme(text=element_text(family="Times New Roman", size=12))+
-  geom_bar(stat="identity",position="dodge")
-
-Fig<-Fig+scale_fill_manual(values=c("grey50","grey50","grey50","grey50","grey50","grey50"))
-Fig<-Fig+coord_cartesian(ylim=c(0,100))+
-  geom_text(data=Data,aes(label=paste(Data$Percentage*100, "%", sep=""),cex=1),
+  geom_bar(stat="identity",position="dodge") +
+  scale_fill_manual(values=c("grey50","grey50","grey50","grey50","grey50","grey50")) +
+  coord_cartesian(ylim=c(0,100)) +
+  geom_text(data=data,aes(label=paste(data$Percentage*100, "%", sep=""),cex=1),
             vjust=-1, family="Times New Roman") + #add prop. on top of bars
   theme(axis.text.x = element_text(size=14,colour="black",family="Times New Roman"),
         axis.title.x = element_text(size=14, colour="black",family="Times New Roman"))+
@@ -49,36 +50,12 @@ Fig<-Fig+coord_cartesian(ylim=c(0,100))+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
-png(file='Age_Comp.png', res=200, width=6, height=4, units ="in")
-pushViewport(viewport(layout=grid.layout(1,1)))
-vplayout<-function(x,y) viewport (layout.pos.row=x, layout.pos.col=y)
-print(Fig,vp=vplayout(1,1:1))
-dev.off()
+ggsave("figs/age_comps.png", dpi = 500, height = 8, width =10, units = "in")
 
-#FIGURE 2
-#Data <- read.csv("Sample_Size.csv", sep=",", header = TRUE, check.names = FALSE)  #Read in csv file, subset the spawning stock
-#windowsFonts(Times=windowsFont("TT Times New Roman"))
-#theme_set(theme_bw(base_size=12,base_family='Times New Roman')+
-#            theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()))
-#Fig<-ggplot(Data, aes(x=sample_size, y=power, group=variable, shape=variable))+geom_line()+geom_point(size=3.5)+
-#  ylab("Test Power=1-??")+xlab("Sample Size (n)")+scale_shape_manual(values=c(1,16))+theme(legend.position=c(.8, .1))+
-#  theme(legend.title=element_blank(),legend.key = element_blank(), legend.text=element_text(size=12))
-#Fig<-Fig+coord_cartesian(ylim=c(0,1))+coord_cartesian(xlim=c(0,500))
-#Fig<-Fig + geom_text(aes(label = paste(sample_size),angle=45,vjust = 1.5, nudge_y = 3),
-                     parse = TRUE, size=3)
-#Fig
-#png(file='Plot.png', res=200, width=6, height=4, units ="in")  
-#grid.newpage()
-#pushViewport(viewport(layout=grid.layout(1,1)))
-#vplayout<-function(x,y) viewport (layout.pos.row=x, layout.pos.col=y)
-#print(Fig,vp=vplayout(1,1:1)) 
-#dev.off()
-
-#FIGURE 3; Histograms of outer ring all years (1995-2016 data)
-Data <- read.csv("scale_increments.csv", sep=",", header = TRUE, check.names = FALSE)  #Read in csv file, subset the spawning stock
-Dataset <- melt(Data, id=c("Year", "AGE", "SEX","LENGTH"), na.rm=TRUE)
+# histograms of outer ring all years (1995-2016 data)
+data <- read.csv("data/scale.csv", check.names = FALSE)    
+Dataset <- melt(data, id=c("Year", "AGE", "SEX","LENGTH"), na.rm=TRUE)
 Age_3<-subset(Dataset, Dataset$AGE==3&Dataset$variable=='CSW3')
-Age_3<-subset(Age_3, select=c(value))
 Age_4<-subset(Dataset, Dataset$AGE==4&Dataset$variable=='CSW4') 
 Age_5<-subset(Dataset, Dataset$AGE==5&Dataset$variable=='CSW5') 
 Age_6<-subset(Dataset, Dataset$AGE==6&Dataset$variable=='CSW6') 
@@ -101,133 +78,134 @@ eda.norm <- function(x, ...)
   lines(y, pnorm(y, mean(x), sqrt(var(x))))
   shapiro.test(x)
 }
-attach(Age_3)
-eda.norm(Age_3)
+
 eda.norm(as.numeric(Age_3$value))
 eda.norm(as.numeric(Age_4$value))
 
 Age_3$Year<-as.factor(Age_3$Year)
 cdat <- ddply(Age_3, "Year", summarise, mean.Year=mean(value))
-png(file='Histograms1.png', res=200, width=13, height=10, units ="in") 
-x<-ggplot(Age_3, aes(x=value,)) + geom_histogram(alpha=0.5, position = 'identity')+
-  ylab("Frequency")+ xlab("Scale increment length (mm)")+
-  scale_x_continuous(breaks=seq(0,max(Age_3$value, na.rm=TRUE),0.5) )
-x<-x+geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
-          linetype="dashed", size=1)
-x<-x+ggtitle("Age 3; n=663")+theme_set(theme_bw(base_size=14,base_family=
-                                             'Times New Roman')+
-                                    theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
 
-x3<-ggplot(Age_3, aes(x=value, color=variable, fill=variable)) +
-  geom_density(alpha=0.5, adjust=1)+
-  labs(x="Scale increment length (mm)", y="Density")
-x3<-x3+ggtitle("Age 3")+theme_set(theme_bw(base_size=14,base_family=
+ggplot(Age_3, aes(x=value)) + geom_histogram(alpha=0.5, position = 'identity')+
+  ylab("Frequency")+ xlab("Scale increment length (mm)")+
+  scale_x_continuous(breaks=seq(0,max(Age_3$value, na.rm=TRUE),0.5)) +
+geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
+          linetype="dashed", size=1) +
+ggtitle("Age 3; n=663")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x3<-x3 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_3$value+0.1, na.rm=TRUE),0.2))
+                                          panel.grid.minor = element_blank())) -> plot1
+
+ggplot(Age_3, aes(x=value, color=variable, fill=variable)) +
+  geom_density(alpha=0.5, adjust=1)+
+  labs(x="Scale increment length (mm)", y="Density") + 
+  ggtitle("Age 3")+theme_set(theme_bw(base_size=14,base_family=
+                                             'Times New Roman')+
+                                    theme(panel.grid.major = element_blank(),
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_3$value+0.1, na.rm=TRUE),0.2)) -> plot2
 
 
 Age_4$Year<-as.factor(Age_4$Year)
 cdat <- ddply(Age_4, "Year", summarise, mean.Year=mean(value))
-y<-ggplot(Age_4, aes(x=value)) + geom_histogram(alpha=0.5, position = 'identity')+
+
+ggplot(Age_4, aes(x=value)) + geom_histogram(alpha=0.5, position = 'identity')+
   ylab("Frequency")+ xlab("Scale increment length (mm)")+
-  scale_x_continuous(breaks=seq(0,max(Age_4$value, na.rm=TRUE),0.2) )                       
-y<-y+geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
-                linetype="dashed", size=1)
-y<-y+ggtitle("Age 4; n=1229")+theme_set(theme_bw(base_size=14,base_family=
+  scale_x_continuous(breaks=seq(0,max(Age_4$value, na.rm=TRUE),0.2)) +
+  geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
+                linetype="dashed", size=1) +
+ggtitle("Age 4; n=1229")+theme_set(theme_bw(base_size=14,base_family=
                                                   'Times New Roman')+
                                          theme(panel.grid.major = element_blank(),
-                                               panel.grid.minor = element_blank()))
+                                               panel.grid.minor = element_blank())) -> plot3
 
-x4<-ggplot(Age_4, aes(x=value, color=variable, fill=variable)) +
+ggplot(Age_4, aes(x=value, color=variable, fill=variable)) +
   geom_density(alpha=0.5, adjust=1)+
-  labs(x="Scale increment length (mm)", y="Density")
-x4<-x4+ggtitle("Age 4")+theme_set(theme_bw(base_size=14,base_family=
+  labs(x="Scale increment length (mm)", y="Density") +
+  ggtitle("Age 4")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x4<-x4 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_4$value+0.1, na.rm=TRUE),0.2))
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_4$value+0.1, na.rm=TRUE),0.2)) -> plot4
 
 
 
 Age_5$Year<-as.factor(Age_5$Year)
 cdat <- ddply(Age_5, "Year", summarise, mean.Year=mean(value))
-z<-ggplot(Age_5, aes(value)) + geom_histogram(alpha=0.5, position = 'identity')+
+ggplot(Age_5, aes(value)) + geom_histogram(alpha=0.5, position = 'identity')+
   ylab("Frequency")+ xlab("Scale increment length (mm)")+
-  scale_x_continuous(breaks=seq(0,max(Age_5$value, na.rm=TRUE),0.1) )                       
-z<-z+geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
-                linetype="dashed", size=1)
-z<-z+ggtitle("Age 5; n=469")+theme_set(theme_bw(base_size=14,base_family=
+  scale_x_continuous(breaks=seq(0,max(Age_5$value, na.rm=TRUE),0.1) ) +
+  geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
+                linetype="dashed", size=1) +
+  ggtitle("Age 5; n=469")+theme_set(theme_bw(base_size=14,base_family=
                                                    'Times New Roman')+
                                           theme(panel.grid.major = element_blank(),
-                                                panel.grid.minor = element_blank()))
-x5<-ggplot(Age_5, aes(x=value, color=variable, fill=variable)) +
+                                                panel.grid.minor = element_blank())) -> plot5
+
+ggplot(Age_5, aes(x=value, color=variable, fill=variable)) +
   geom_density(alpha=0.5, adjust=1)+
-  labs(x="Scale increment length (mm)", y="Density")
-x5<-x5+ggtitle("Age 5")+theme_set(theme_bw(base_size=14,base_family=
+  labs(x="Scale increment length (mm)", y="Density") +
+  ggtitle("Age 5")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x5<-x5 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_6$value+0.1, na.rm=TRUE),0.2))
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_6$value+0.1, na.rm=TRUE),0.2)) -> plot6
 
 Age_6$Year<-as.factor(Age_6$Year)
 cdat <- ddply(Age_6, "Year", summarise, mean.Year=mean(value))
-a<-ggplot(Age_6, aes(value)) + geom_histogram(alpha=0.5, position = 'identity')+
+ggplot(Age_6, aes(value)) + geom_histogram(alpha=0.5, position = 'identity')+
   ylab("Frequency")+ xlab("Scale increment length (mm)")+
-  scale_x_continuous(breaks=seq(0,max(Age_6$value, na.rm=TRUE),0.1) )                       
-a<-a+geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
-                linetype="dashed", size=1)
-a<-a+ggtitle("Age 6; n=447")+theme_set(theme_bw(base_size=14,base_family=
+  scale_x_continuous(breaks=seq(0,max(Age_6$value, na.rm=TRUE),0.1) )+
+  geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
+                linetype="dashed", size=1) + ggtitle("Age 6; n=447")+theme_set(theme_bw(base_size=14,base_family=
                                                   'Times New Roman')+
                                          theme(panel.grid.major = element_blank(),
-                                               panel.grid.minor = element_blank()))
-x6<-ggplot(Age_6, aes(x=value, color=variable, fill=variable)) +
+                                               panel.grid.minor = element_blank())) -> plot7
+
+ggplot(Age_6, aes(x=value, color=variable, fill=variable)) +
   geom_density(alpha=0.5, adjust=1)+
-  labs(x="Scale increment length (mm)", y="Density")
-x6<-x6+ggtitle("Age 6")+theme_set(theme_bw(base_size=14,base_family=
+  labs(x="Scale increment length (mm)", y="Density") +
+  ggtitle("Age 6")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x6<-x6 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_6$value+0.1, na.rm=TRUE),0.2))
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_6$value+0.1, na.rm=TRUE),0.2)) -> plot8
 
 
 Age_7$Year<-as.factor(Age_7$Year)
 cdat <- ddply(Age_7, "Year", summarise, mean.Year=mean(value))
-b<-ggplot(Age_7, aes(value)) + geom_histogram(alpha=0.5, position = 'identity')+
+ggplot(Age_7, aes(value)) + geom_histogram(alpha=0.5, position = 'identity')+
   ylab("Frequency")+ xlab("Scale increment length (mm)")+
-  scale_x_continuous(breaks=seq(0,max(Age_7$value, na.rm=TRUE),0.1) ) 
-b<-b+geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
-                linetype="dashed", size=1)
-b<-b+ggtitle("Age 7; n=446")+theme_set(theme_bw(base_size=14,base_family=
+  scale_x_continuous(breaks=seq(0,max(Age_7$value, na.rm=TRUE),0.1) ) +
+  geom_vline(data=cdat, aes(xintercept=mean.Year, colour=Year),   # Ignore NA values for mean
+                linetype="dashed", size=1) +
+  ggtitle("Age 7; n=446")+theme_set(theme_bw(base_size=14,base_family=
                                                   'Times New Roman')+
                                          theme(panel.grid.major = element_blank(),
-                                               panel.grid.minor = element_blank()))
-x7<-ggplot(Age_7, aes(x=value, color=variable, fill=variable)) +
+                                               panel.grid.minor = element_blank()))-> plot9
+
+ggplot(Age_7, aes(x=value, color=variable, fill=variable)) +
   geom_density(alpha=0.5, adjust=1)+
-  labs(x="Scale increment length (mm)", y="Density")
-x7<-x7+ggtitle("Age 7")+theme_set(theme_bw(base_size=14,base_family=
+  labs(x="Scale increment length (mm)", y="Density") +
+  ggtitle("Age 7")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x7<-x7 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_7$value+0.1, na.rm=TRUE),0.2))
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Age_7$value+0.1, na.rm=TRUE),0.2)) -> plot10
 
-library(grid)
-g6<-grid.arrange(x,x3,y,x4,z,x5,a,x6,b,x7, ncol=2)
-dev.off()
+cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, plot10, align = "vh", nrow = 5, ncol=2)
+ggsave("figs/histograms_obj1_samplesize.png", dpi = 500, height = 8, width =10, units = "in")
 
-#FIGURE 4 (matching age-3 2011 with age-8 2016) #mixture models
-Data <- read.csv("scale.csv", sep=",", header = TRUE, check.names = FALSE)  #Read in csv file, subset the spawning stock
-Dataset <- melt(Data, id=c("Year", "AGE", "SEX","LENGTH"), na.rm=TRUE)
+# Micture Models (matching age-3 2011 with age-8 2016) 
+data <- read.csv("data/scale.csv", check.names = FALSE)
+Dataset <- melt(data, id=c("Year", "AGE", "SEX","LENGTH"), na.rm=TRUE)
 #create dataset for 2011 with the last ring
-#AGE 3 DATASET
+#age 3
 Age_3LRa<-subset(Dataset, Dataset$AGE==3& Dataset$Year==2011&Dataset$variable=='CSW3') 
 Age_8_3RING<-subset(Dataset, Dataset$AGE==8& Dataset$Year==2016&Dataset$variable=='CSW3') 
 Age_3LRa["Ring"] <- "Last Ring"
 Age_8_3RING["Ring"] <- "Age Ring"
 Dataset_Age3<- rbind(Age_3LRa,Age_8_3RING) 
-#AGE 4 DATASET
+# age 4
 Age_4LRa<-subset(Dataset, Dataset$AGE==4& Dataset$Year==2011&Dataset$variable=='CSW4') 
 Age_4LRb<-subset(Dataset, Dataset$AGE==4& Dataset$Year==2012&Dataset$variable=='CSW4') 
 Age_8_4RINGa<-subset(Dataset, Dataset$AGE==8& Dataset$Year==2015&Dataset$variable=='CSW4')
@@ -240,7 +218,7 @@ Age_8_4RINGb["Ring"]<-"Age Ring"
 Age_9_4RINGa["Ring"]<-"Age Ring"
 Dataset_Age4<- rbind(Age_4LRa,Age_4LRb,Age_8_4RINGa, Age_8_4RINGb, 
                      Age_9_4RINGa) 
-#AGE 5 DATASET
+# age5
 Age_5LRa<-subset(Dataset, Dataset$AGE==5& Dataset$Year==2011&Dataset$variable=='CSW5') 
 Age_5LRb<-subset(Dataset, Dataset$AGE==5& Dataset$Year==2012&Dataset$variable=='CSW5') 
 Age_5LRc<-subset(Dataset, Dataset$AGE==5& Dataset$Year==2013&Dataset$variable=='CSW5') 
@@ -261,7 +239,7 @@ Age_9_5RINGb["Ring"]<-"Age Ring"
 Age_10_5RINGa["Ring"]<-"Age Ring"
 Dataset_Age5<- rbind(Age_5LRa,Age_5LRb,Age_5LRc,
                      Age_8_5RINGa,Age_8_5RINGb,Age_8_5RINGc,Age_9_5RINGa,Age_9_5RINGb,Age_10_5RINGa)
-#AGE 6 DATASET
+# age 6
 Age_6LRa<-subset(Dataset, Dataset$AGE==6& Dataset$Year==2011&Dataset$variable=='CSW6') 
 Age_6LRb<-subset(Dataset, Dataset$AGE==6& Dataset$Year==2012&Dataset$variable=='CSW6') 
 Age_6LRc<-subset(Dataset, Dataset$AGE==6& Dataset$Year==2013&Dataset$variable=='CSW6') 
@@ -294,7 +272,7 @@ Dataset_Age6<- rbind(Age_6LRa,Age_6LRb,Age_6LRc,Age_6LRd,
                      Age_8_6RINGa,Age_8_6RINGb, Age_8_6RINGc,Age_8_6RINGd,Age_9_6RINGa,Age_9_6RINGb,
                      Age_9_6RINGc,Age_10_6RINGa,Age_10_6RINGb,Age_11_6RINGa)
 
-#AGE 7 DATASET
+# age 7
 Age_7LRa<-subset(Dataset, Dataset$AGE==7& Dataset$Year==2011&Dataset$variable=='CSW7') 
 Age_7LRb<-subset(Dataset, Dataset$AGE==7& Dataset$Year==2012&Dataset$variable=='CSW7') 
 Age_7LRc<-subset(Dataset, Dataset$AGE==7& Dataset$Year==2013&Dataset$variable=='CSW7') 
@@ -337,151 +315,144 @@ Dataset_Age7<- rbind(Age_7LRa,Age_7LRb,Age_7LRc,Age_7LRd,Age_7LRe,Age_8_7RINGa,A
                      Age_8_7RINGe,Age_9_7RINGa,Age_9_7RINGb,Age_9_7RINGc,Age_9_7RINGd,Age_10_7RINGa,Age_10_7RINGb,Age_10_7RINGc,
                      Age_11_7RINGa,Age_11_7RINGb)
 
-
-png(file='Histograms.png', res=200, width=13, height=10, units ="in") #default adjust=1 for density curve
-x3<-ggplot(Dataset_Age3, aes(x=value, color=Ring, fill=Ring)) +
+ggplot(Dataset_Age3, aes(x=value, color=Ring, fill=Ring)) +
   geom_histogram(position="identity", alpha=0.2)+
   geom_density(alpha=0.5, adjust=1)+
   scale_color_manual(values=c("#999999", "#E69F00"))+
   scale_fill_manual(values=c("#999999", "#E69F00" ))+
   labs(title="Age 3",x="Scale increment length (mm)", y="Count")+
-  theme_classic()
-x3<-x3+ggtitle("Age 3")+theme_set(theme_bw(base_size=14,base_family=
+  theme_classic()+ ggtitle("Age 3")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x3<-x3 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age3$value+0.1, na.rm=TRUE),0.1))
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age3$value+0.1, na.rm=TRUE),0.1)) -> plot1
 
 
-x4<-ggplot(Dataset_Age4, aes(x=value, color=Ring, fill=Ring)) +
+ggplot(Dataset_Age4, aes(x=value, color=Ring, fill=Ring)) +
   geom_histogram(position="identity", alpha=0.2)+
   geom_density(alpha=0.5,adjust=1)+
   scale_color_manual(values=c("#999999", "#E69F00"))+
   scale_fill_manual(values=c("#999999", "#E69F00" ))+
   labs(title="Age 4",x="Scale increment length (mm)", y="Count")+
-  theme_classic()
-x4<-x4+ggtitle("Age 4")+theme_set(theme_bw(base_size=14,base_family=
+  theme_classic() + 
+  ggtitle("Age 4")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x4<-x4 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age4$value+0.1, na.rm=TRUE),0.1)) 
+                                          panel.grid.minor = element_blank())) + 
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age4$value+0.1, na.rm=TRUE),0.1)) ->plot2
 
-x5<-ggplot(Dataset_Age5, aes(x=value, color=Ring, fill=Ring)) +
+ggplot(Dataset_Age5, aes(x=value, color=Ring, fill=Ring)) +
   geom_histogram(position="identity", alpha=0.2)+
   geom_density(alpha=0.5,adjust=1)+
   scale_color_manual(values=c("#999999", "#E69F00"))+
   scale_fill_manual(values=c("#999999", "#E69F00" ))+
   labs(title="Age 5",x="Scale increment length (mm)", y="Count")+
-  theme_classic()
-x5<-x5+ggtitle("Age 5")+theme_set(theme_bw(base_size=14,base_family=
+  theme_classic() +ggtitle("Age 5")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x5<-x5 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age5$value+0.1, na.rm=TRUE),0.1)) 
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age5$value+0.1, na.rm=TRUE),0.1)) ->plot3
 
-x6<-ggplot(Dataset_Age6, aes(x=value, color=Ring, fill=Ring)) +
+ggplot(Dataset_Age6, aes(x=value, color=Ring, fill=Ring)) +
   geom_histogram(position="identity", alpha=0.2)+
   geom_density(alpha=0.5,adjust=1)+
   scale_color_manual(values=c("#999999", "#E69F00"))+
   scale_fill_manual(values=c("#999999", "#E69F00" ))+
   labs(title="Age 6",x="Scale increment length (mm)", y="Count")+
-  theme_classic()
-x6<-x6+ggtitle("Age 6")+theme_set(theme_bw(base_size=14,base_family=
+  theme_classic() +
+  ggtitle("Age 6")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x6<-x6 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age6$value+0.1, na.rm=TRUE),0.1)) 
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age6$value+0.1, na.rm=TRUE),0.1))-> plot4 
 
-x7<-ggplot(Dataset_Age7, aes(x=value, color=Ring, fill=Ring)) +
+ggplot(Dataset_Age7, aes(x=value, color=Ring, fill=Ring)) +
   geom_histogram(position="identity", alpha=0.2)+
   geom_density(alpha=0.5,adjust=1)+
   scale_color_manual(values=c("#999999", "#E69F00"))+
   scale_fill_manual(values=c("#999999", "#E69F00" ))+
   labs(title="Age 7",x="Scale increment length (mm)", y="Count")+
-  theme_classic()
-x7<-x7+ggtitle("Age 7")+theme_set(theme_bw(base_size=14,base_family=
+  theme_classic() +
+  ggtitle("Age 7")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x7<-x7 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age7$value+0.1, na.rm=TRUE),0.1))
-x7<-ggplot(Dataset_Age7, aes(value, fill = Ring)) + geom_histogram(alpha=0.5, position = 'identity')+
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age7$value+0.1, na.rm=TRUE),0.1)) ->plot5
+
+ggplot(Dataset_Age7, aes(value, fill = Ring)) + geom_histogram(alpha=0.5, position = 'identity')+
   ylab("Frequency")+ xlab("Scale increment length (mm)")+geom_line(stat="density")+
   scale_x_continuous(breaks=seq(0,max(Age_7$value, na.rm=TRUE),0.5) )                       
-x7<-x7 + theme(legend.title=element_blank())+ggtitle("Age 7")
-library(grid)
-g6<-grid.arrange(x3,x4,x5,x6,x7, ncol=2)
-dev.off()
-#######################################################################################################
-png(file='Density.png', res=200, width=13, height=10, units ="in") #default adjust=1 for density curve
-x3<-ggplot(Dataset_Age3, aes(x=value, color=Ring, fill=Ring)) +
+  theme(legend.title=element_blank())+ggtitle("Age 7") ->plot6
+
+cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, plot6, align = "vh", nrow = 2, ncol=3)
+ggsave("figs/obj1_samplesize_histograms.png", dpi = 500, height = 8, width =10, units = "in") 
+  
+# density plot
+ggplot(Dataset_Age3, aes(x=value, color=Ring, fill=Ring)) +
   geom_density(alpha=0.5, adjust=1)+
   scale_color_manual(values=c("#999999", "#E69F00"))+
   scale_fill_manual(values=c("#999999", "#E69F00" ))+
   labs(title="Age 3",x="Scale increment length (mm)",y="Density")+
-  theme_classic()
-x3<-x3+ggtitle("Age 3")+theme_set(theme_bw(base_size=14,base_family=
+  theme_classic() +
+  ggtitle("Age 3")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x3<-x3 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age3$value+0.1, na.rm=TRUE),0.1))
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age3$value+0.1, na.rm=TRUE),0.1)) -> plot1
 
 
-x4<-ggplot(Dataset_Age4, aes(x=value, color=Ring, fill=Ring)) +
+ggplot(Dataset_Age4, aes(x=value, color=Ring, fill=Ring)) +
   geom_density(alpha=0.5,adjust=1)+
   scale_color_manual(values=c("#999999", "#E69F00"))+
   scale_fill_manual(values=c("#999999", "#E69F00" ))+
   labs(title="Age 4",x="Scale increment length (mm)", y="Density")+
-  theme_classic()
-x4<-x4+ggtitle("Age 4")+theme_set(theme_bw(base_size=14,base_family=
+  theme_classic() +
+  ggtitle("Age 4")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x4<-x4 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age4$value+0.1, na.rm=TRUE),0.1)) 
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age4$value+0.1, na.rm=TRUE),0.1)) -> plot2
 
-x5<-ggplot(Dataset_Age5, aes(x=value, color=Ring, fill=Ring)) +
+ggplot(Dataset_Age5, aes(x=value, color=Ring, fill=Ring)) +
   geom_density(alpha=0.5,adjust=1)+
   scale_color_manual(values=c("#999999", "#E69F00"))+
   scale_fill_manual(values=c("#999999", "#E69F00" ))+
   labs(title="Age 5",x="Scale increment length (mm)", y="Density")+
-  theme_classic()
-x5<-x5+ggtitle("Age 5")+theme_set(theme_bw(base_size=14,base_family=
+  theme_classic() + ggtitle("Age 5")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x5<-x5 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age5$value+0.1, na.rm=TRUE),0.1)) 
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age5$value+0.1, na.rm=TRUE),0.1)) ->plot3 
 
-x6<-ggplot(Dataset_Age6, aes(x=value, color=Ring, fill=Ring)) +
+ggplot(Dataset_Age6, aes(x=value, color=Ring, fill=Ring)) +
   geom_density(alpha=0.5,adjust=1)+
   scale_color_manual(values=c("#999999", "#E69F00"))+
   scale_fill_manual(values=c("#999999", "#E69F00" ))+
   labs(title="Age 6",x="Scale increment length (mm)", y="Density")+
-  theme_classic()
-x6<-x6+ggtitle("Age 6")+theme_set(theme_bw(base_size=14,base_family=
+  theme_classic() +
+  ggtitle("Age 6")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x6<-x6 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age6$value+0.1, na.rm=TRUE),0.1)) 
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age6$value+0.1, na.rm=TRUE),0.1)) ->plot4
 
-x7<-ggplot(Dataset_Age7, aes(x=value, color=Ring, fill=Ring)) +
+ggplot(Dataset_Age7, aes(x=value, color=Ring, fill=Ring)) +
   geom_density(alpha=0.5,adjust=1)+
   scale_color_manual(values=c("#999999", "#E69F00"))+
   scale_fill_manual(values=c("#999999", "#E69F00" ))+
   labs(title="Age 7",x="Scale increment length (mm)", y="Density")+
-  theme_classic()
-x7<-x7+ggtitle("Age 7")+theme_set(theme_bw(base_size=14,base_family=
+  theme_classic() +ggtitle("Age 7")+theme_set(theme_bw(base_size=14,base_family=
                                              'Times New Roman')+
                                     theme(panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()))
-x7<-x7 + theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age7$value+0.1, na.rm=TRUE),0.1))
+                                          panel.grid.minor = element_blank())) +
+  theme(legend.position="none")+scale_x_continuous(breaks=seq(0,max(Dataset_Age7$value+0.1, na.rm=TRUE),0.1)) ->plot5
 
 
-g6<-grid.arrange(x3,x4,x5,x6,x7, ncol=2)
-dev.off()
-####################################################################################
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-###################################################################################
-#Fit gaussian mixture models to age ring data and plot (AGE 3)
-#mixtools package
+cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, align = "vh", nrow = 2, ncol=3)
+ggsave("figs/density_samplesize_obj1.png", dpi = 500, height = 8, width =10, units = "in")
+
+# Fit gaussian mixture models to age ring data and plot (AGE 3)
+# mixtools package
 png(file='Mixture_Models.png', res=200, width=13, height=10, units ="in") 
 par(mfrow=c(5,2)) 
 Data_Age3<- subset(Dataset_Age3, Dataset_Age3$Ring=='Age Ring') 
@@ -493,8 +464,8 @@ x3<-lines(density(Data_Age3), lty=2, lwd=2)
 x3<-legend("topright", c("mature", "immature"), col = c(2,3), lty = c(1,1), lwd=2,
        merge = TRUE, bty = "n")
 summary(mixmdl3)
-## Fit normal distr to Last Ring data (AGE 3)
-#fitdistrplus package
+# Fit normal distr to Last Ring data (AGE 3)
+# fitdistrplus package
 Data_Age3<- subset(Dataset_Age3, Dataset_Age3$Ring=='Last Ring') 
 Data_Age3<-as.data.frame(Data_Age3[,c(6)])
 f <- apply(Data_Age3, 2, fitdist, "norm")
@@ -595,9 +566,9 @@ dev.off()
 citation("mixtools")
 
 
-#ANOVA tests with different cohorts and years
-Data <- read.csv("scale_increments.csv", sep=",", header = TRUE, check.names = FALSE)  #Read in csv file, subset the spawning stock
-Dataset <- melt(Data, id=c("Year", "AGE", "SEX","LENGTH"), na.rm=TRUE)
+# ANOVA tests with different cohorts and years
+data <- read.csv("data/scale.csv", check.names = FALSE)    
+Dataset <- melt(data, id=c("Year", "AGE", "SEX","LENGTH"), na.rm=TRUE)
 #create dataset for 2011 with the last ring
 #AGE 3 DATASET
 Age3LR<-subset(Dataset, Dataset$AGE==3 & Dataset$variable=='CSW3') 
@@ -646,13 +617,11 @@ summaryBy(value ~ Year, data = Age8LR,
 Dataset <- read.csv("scale_incrementsCI.csv", sep=",", header = TRUE, check.names = FALSE)  #Read in csv file, subset the spawning stock
 Dataset$Year <- factor(Dataset$Year)
 Dataset$Age <- factor(Dataset$Age)
-prepanel.ci <- function(x, y, ly, uy, subscripts, ...)
-{
+prepanel.ci <- function(x, y, ly, uy, subscripts, ...){
   x <- as.numeric(x)
   ly <- as.numeric(ly[subscripts])
   uy <- as.numeric(uy[subscripts])
-  list(ylim = range(y, uy, ly, finite = TRUE)
-}
+  list(ylim = range(y, uy, ly, finite = TRUE))}
 
 panel.ci <- function(x, y, ly, uy, subscripts, pch = c(15,22), col.line =
                        c(1,2), ...)

@@ -327,8 +327,9 @@ merge_dataset %>%
 merge_dataset %>%
   filter(age == 3)-> merge_dataset_three
 
-fit <- glm(maturity ~ (anu_adj * scale_length_prior) , family = binomial, data = merge_dataset_three) 
-fit1 <- glm(maturity ~ (age*anu_adj), family = binomial, data = merge_dataset) 
+fit <- glm(maturity ~ (anu_adj + scale_length_prior +length_mm) , family = binomial, data = merge_dataset_three) 
+fit <- glm(maturity ~ (anu_adj + scale_length_prior) , family = binomial, data = merge_dataset_three) 
+fit <- glm(maturity ~ (length_mm) , family = binomial, data = merge_dataset_three)  
 vif(fit)
 Anova(fit)
 anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
