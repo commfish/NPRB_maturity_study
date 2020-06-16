@@ -127,14 +127,10 @@ merge %>%
   filter(age == 6 & maturity == "immature")-> age6immature
 
 # test each age/maturity for normality
-eda.norm(as.numeric(age2immature$aprop))
-eda.norm(as.numeric(age2mature$aprop))
-eda.norm(as.numeric(age3immature$aprop))
-eda.norm(as.numeric(age3mature$aprop))
-eda.norm(as.numeric(age4immature$aprop))
-eda.norm(as.numeric(age4mature$aprop))
-eda.norm(as.numeric(age5mature$aprop)) #normal
-eda.norm(as.numeric(age6mature$aprop)) #normal
+eda.norm(as.numeric(age2immature$anu_adj))
+eda.norm(as.numeric(age2mature$anu_adj))
+eda.norm(as.numeric(age3immature$anu_adj))
+eda.norm(as.numeric(age3mature$anu_adj))
 
 # Frequencies by age----
 merge %>%
@@ -263,8 +259,17 @@ merge %>%
 
 cowplot::plot_grid(plot1, plot2,  align = "vh", nrow = 1, ncol=2)
 ggsave("figs/scatterplot_obj1.png", dpi = 500, height = 4, width = 8, units = "in")
+
+merge %>%
+  mutate(age=as.factor(age))%>% 
+  ggplot(data=.,aes(x = age, y = length_mm)) + labs(x = "Age",y = "Length at capture (mm)") + 
+  geom_boxplot(aes(fill = maturity)) +
+  scale_color_manual(values=c("#999999", "black")) + theme(legend.title=element_blank(), legend.position=c(.15,.15), legend.text=element_text(size=12)) +
+  scale_fill_manual(values=c("#999999", "black" )) + 
+  scale_y_continuous(breaks = c(0,50,100,150,200,250), limits = c(0, 250))-> plot1
 cowplot::plot_grid(plot1,  align = "vh", nrow = 1, ncol=1)
-ggsave("figs/scatterplot_obj1.png", dpi = 500, height = 4, width = 8, units = "in")
+ggsave("figs/length_at_capture.png", dpi = 500, height = 4, width = 8, units = "in")
+
 # Correlation Analysis---
 # age versus length at capture
 merge$age<-as.numeric(merge$age)
@@ -286,16 +291,16 @@ ggsave("figs/correlation.png", dpi = 500, height = 4, width = 8, units = "in")
 fit <- lm(length_mm ~ (radcap), data = merge) 
 fit1 <- lm(length_mm ~ poly(radcap,3), data = merge) 
 
-merge %>%
+merge %>% #GSI data not in data set 
   filter (age =="3") %>%
 ggscatter(., x = "anu_adj", y = "GSI", shape= "maturity", color = "maturity",
           conf.int = TRUE, add="loess",  palette=c("#999999", "black"), 
           cor.coef = FALSE, cor.method = "spearman",
           xlab = "Outer increment measurement (mm)", ylab = "GSI")-> plot1
 cowplot::plot_grid(plot1,   align = "vh", nrow = 1, ncol=1)
-ggsave("figs/GSI_corr.png", dpi = 500, height = 4, width = 8, units = "in")
+#ggsave("figs/GSI_corr.png", dpi = 500, height = 4, width = 8, units = "in")
 
-merge %>%
+merge %>% #GSI data not in data set
   filter (age =="3") %>%
   filter (maturity =="mature") %>%
   ggscatter(., x = "anu_adj", y = "GSI", shape= "maturity", color = "maturity",
@@ -303,11 +308,12 @@ merge %>%
             cor.coef = TRUE, cor.method = "spearman",
             xlab = "Outer increment measurement (mm)", ylab = "GSI")-> plot1
 cowplot::plot_grid(plot1,   align = "vh", nrow = 1, ncol=1)
-ggsave("figs/GSI_corr.png", dpi = 500, height = 4, width = 8, units = "in")
+#ggsave("figs/GSI_corr.png", dpi = 500, height = 4, width = 8, units = "in")
 
 par(mfrow=c(1,1))
 with(merge,interaction.plot(age, maturity, anu_adj, type="b", pch=c(1,16), ylab ="outer incremental length (mm)",
                             xlab="Age"))
+
 # Generalized Linear models (age two)----
 ## Outer Increment Measurement
 merge$age <- as.factor(merge$age)
