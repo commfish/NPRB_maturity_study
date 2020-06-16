@@ -94,7 +94,7 @@ sample1 %>%
                                                       ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6>0 & anu7==0, anu6,anu7))))))) %>%
   filter(sex_histology == "Female") %>% 
   mutate(age = as.factor(age)) %>% 
-  #filter(sample_no != 743) %>% 
+  filter(sample_no != 743) %>% 
   dplyr::select(sample_no, image_name,year, age, sex_histology, maturation_status_histology, maturity, anu_adj, radcap, length_mm, Increment1, Increment2, 
                 Increment3, Increment4, Increment5, Increment6, Increment7, anu1, anu2, anu3, anu4, anu5, anu6, anu7) -> merge
 write.csv(merge, "data/obj1_data.csv") 
@@ -321,11 +321,11 @@ merge_dataset %>%
 merge_dataset %>%
   filter(age == 3)-> merge_dataset_three
 
-fit <- glm(maturity ~ (anu_adj + scale_length_prior) , family = binomial, data = merge_dataset_two) 
-fit1 <- glm(maturity ~ (anu_adj*age) , family = binomial, data = merge_dataset) 
+fit <- glm(maturity ~ (anu_adj * scale_length_prior) , family = binomial, data = merge_dataset_three) 
+fit1 <- glm(maturity ~ (age*anu_adj), family = binomial, data = merge_dataset) 
 vif(fit)
 Anova(fit)
-anova(fit1, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
+anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
 RsqGLM(fit)#peudo R2 
 summary(fit)
 hoslem.test(merge_dataset_two$maturity, fitted(fit)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
