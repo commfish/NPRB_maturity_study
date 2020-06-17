@@ -113,7 +113,9 @@ merge %>%
             min_anu_adj =min(anu_adj),
             max_anu_adj = max(anu_adj),
             mean_length =mean(length_mm),
-            stdv_length = sd(length_mm)) -> summary_table 
+            stdv_length = sd(length_mm),
+            min_length =min(length_mm),
+            max_length = max(length_mm)) -> summary_table 
 
 # Exploratory Plots----
 # Histograms of outer ring---- 
