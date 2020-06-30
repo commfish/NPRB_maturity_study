@@ -80,11 +80,22 @@ data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no sco
   mutate(GSI=as.numeric(GSI)) %>%
   dplyr::mutate(maturity_GSI = ifelse(GSI > 0.05, "mature" , "immature")) %>%
   dplyr::select(maturity_histology, maturity_GSI)  -> data_clean
+write.csv(data_clean, "data/cpue_new_test2.csv") #dataset for GSI/histology by age
 cohen.kappa(data_clean) # all stages
 data_clean %>%
   dplyr::select(maturity_histology, maturity_GSI) %>%
   dplyr::group_by(maturity_histology, maturity_GSI) %>%
   dplyr::summarise(count = n()) -> table4 
+
+# GSI versus histology dataset
+data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
+  filter(!(sex_histology %in% c("Male"))) %>%
+  filter(!(sample_no %in% c("743", "629", "334", "289"))) %>%
+  dplyr::mutate(maturity_histology = ifelse(maturation_status_histology == 1, "immature" , "mature")) %>%
+  mutate(GSI=as.numeric(GSI)) %>%
+  dplyr::mutate(maturity_GSI = ifelse(GSI > 0.05, "mature" , "immature")) %>%
+  dplyr::select(maturity_histology, maturity_GSI, GSI)  -> data_clean
+write.csv(data_clean, "data/cpue_new_test2.csv") #dataset for GSI/histology by age
 
 ## filter GSI = 0
 data %>% filter(!(maturation_status_histology %in% c("", NA, "no slide", "no score", "4-1", "3-4", "2-3", "1-2", "7", "6"))) %>%
