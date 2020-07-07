@@ -261,6 +261,7 @@ x %>%
 
 # SCALE PROPORTIONAL HYPOTHESIS
 # AGE EFFECT SPH
+## need to delete final annulus from average!!!
 data_wide_sph_age %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
