@@ -143,18 +143,18 @@ sample1 %>%
     filter(zone == "A1") %>%
     mutate(SPH_age=((-h)+(lencap+h+i*agecap)*(radi/radcap)-(i*agei)))-> sample_A1 #age effect (Morita & Matsuishi 2001)
 
-
 sample1 %>%
   filter(zone == "A2" & agei == 1)-> lm_data
 lm.age <- lm(radcap~lencap+agecap,data=lm_data)
 e <- coef(lm.age)[[1]] 
 f <- coef(lm.age)[[2]]
 g <- coef(lm.age)[[3]]
+h<-e/f
+i<-g/f
 
 sample1 %>%
   filter(zone == "A2") %>%
   mutate(SPH_age=((-h)+(lencap+h+i*agecap)*(radi/radcap)-(i*agei)))-> sample_A2 #age effect (Morita & Matsuishi 2001)
-
 
 sample1 %>%
   filter(zone == "A3" & agei == 1)-> lm_data #filter by agei so only one sample/region/fish
@@ -162,11 +162,12 @@ lm.age <- lm(radcap~lencap+agecap,data=lm_data)
 e <- coef(lm.age)[[1]] 
 f <- coef(lm.age)[[2]]
 g <- coef(lm.age)[[3]]
+h<-e/f
+i<-g/f
 
 sample1 %>%
   filter(zone == "A3") %>%
   mutate(SPH_age=((-h)+(lencap+h+i*agecap)*(radi/radcap)-(i*agei)))-> sample_A3 #age effect (Morita & Matsuishi 2001)
-
 
 sample1 %>%
   filter(zone == "A4" & agei == 1)-> lm_data
@@ -174,6 +175,8 @@ lm.age <- lm(radcap~lencap+agecap,data=lm_data)
 e <- coef(lm.age)[[1]] 
 f <- coef(lm.age)[[2]]
 g <- coef(lm.age)[[3]]
+h<-e/f
+i<-g/f
 
 sample1 %>%
   filter(zone == "A4") %>%
@@ -185,6 +188,8 @@ lm.age <- lm(radcap~lencap+agecap,data=lm_data)
 e <- coef(lm.age)[[1]] 
 f <- coef(lm.age)[[2]]
 g <- coef(lm.age)[[3]]
+h<-e/f
+i<-g/f
 
 sample1 %>%
   filter(zone == "A6") %>%
@@ -194,7 +199,39 @@ x<- rbind(sample_A1, sample_A2) #combine data for all zones
 x<- rbind(x, sample_A3)
 x<- rbind(x, sample_A4)
 x<- rbind(x, sample_A6)
-write.csv(x, "output/test.csv")
+write.csv(x, "output/test.csv") # separate constants used for each region
+
+# compare back calcaulted lengths for each region against region A1
+x %>%
+  filter(zone == "A1") %>%
+  dplyr::select(fish, agecap, lencap, radcap, agei, radi, zone, SPH_age) %>%
+  rename(zone_A1 = zone) %>%
+  rename(SPH_age_A1 = SPH_age) -> region_A1
+
+x %>%
+  dplyr::select(fish, agecap, lencap, radcap, agei, radi, zone, SPH_age) %>%
+  filter(zone == "A2") -> region_A2
+  
+merge(region_A1, region_A2, by = c('fish', 'agei', 'agecap', 'lencap')) -> A2_compare
+
+x %>%
+  dplyr::select(fish, agecap, lencap, radcap, agei, radi, zone, SPH_age) %>%
+  filter(zone == "A3") -> region_A3
+
+merge(region_A1, region_A3, by = c('fish', 'agei', 'agecap', 'lencap')) -> A3_compare
+
+x %>%
+  dplyr::select(fish, agecap, lencap, radcap, agei, radi, zone, SPH_age) %>%
+  filter(zone == "A4") -> region_A4
+
+merge(region_A1, region_A4, by = c('fish', 'agei', 'agecap', 'lencap')) -> A4_compare
+
+x %>%
+  dplyr::select(fish, agecap, lencap, radcap, agei, radi, zone, SPH_age) %>%
+  filter(zone == "A6") -> region_A6
+
+merge(region_A1, region_A6, by = c('fish', 'agei', 'agecap', 'lencap')) -> A6_compare  
+
 x %>%
   group_by(agei, zone) %>%
   summarize(n = n(),
@@ -212,10 +249,12 @@ x %>%
   as.data.frame() -> sample2
 write.csv(sample2, "output/table_summary_obj1.csv") # summary output for table 2
 
-x %>% dplyr::select(fish, agei, zone, SPH_age) %>%
+x %>% 
+  dplyr::select(fish, agei, zone, SPH_age,lencap, agecap) %>%
   spread(key = zone, value = SPH_age) %>%
-  as.data.frame() -> data_wide_sph_age
-# figure 4 output found in data_wide_sph, data_wide_bph, and data_wide_sph_age
+  as.data.frame() -> data_wide_sph_age # this does same as code above with merge
+
+# figure 4 output found in data_wide_sph_age
 
 # calculate difference in back-calculated zones in percents from zone A1
 # source: http://www2.phy.ilstu.edu/~wenning/slh/Percent%20Difference%20Error.pdf
