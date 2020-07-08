@@ -292,7 +292,6 @@ data_wide_sph_age %>%
   mutate(age = as.factor(agei),
          zone=as.factor(variable)) -> data_wide_sph_age 
 
-# plots by SPH
 # plots by age effect SPH
 data_wide_sph_age %>% 
   group_by(age) %>% 
@@ -308,8 +307,7 @@ data_wide_sph_age %>%
                 linetype = "solid",
                 position = position_dodge(width = 1),
                 color="black", size = 0.75)+
-  #annotate("text", x = 0.65, y=10, 
-  #         label="B)", family="Times New Roman") +
+  #annotate("text", x = 0.65, y=10, label="B)", family="Times New Roman") +
   geom_text(data = labels, aes(age, y = -1.2, label=paste ("n = " ,labels, sep =""), group=age),
             size = 2.5) +
   xlab("Age (annulus)") +
@@ -317,6 +315,7 @@ data_wide_sph_age %>%
 cowplot::plot_grid(SPH_age,   align = "hv", nrow = 1, ncol=1) 
 ggsave("figs/length_diff.png", dpi = 500, height = 4, width = 8, units = "in")
 
+# another figure?
 tickr_length <- data.frame(mean.SPH.age = 0:350)
 axisb <- tickr(tickr_length, mean.SPH.age, 50)
 ggplot(data = sample2, aes(x = as.factor(agei), y = mn_SPH_age)) +
