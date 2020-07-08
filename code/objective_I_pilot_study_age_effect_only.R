@@ -270,6 +270,7 @@ data_wide_sph_age %>%
   filter(!new_col %in% target) -> data_wide_sph_age
 write.csv(data_wide_sph_age, "output/data_wide_sph_age_test.csv") 
 
+alpha = 0.05
 data_wide_sph_age %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
@@ -278,10 +279,16 @@ data_wide_sph_age %>%
   dplyr::select(fish, agei,A2, A3, A4, A6) %>%  
   gather(variable, value, -agei, -fish) %>% 
   group_by(agei, variable) %>% 
-  summarise(mean_SPH_age=mean(value, na.rm=T),
+  summarise(n = n(),
+            mean_SPH_age=mean(value, na.rm=T),
             sd_SPH_age=sd(value, na.rm=T),
             n_SPH_age=n(),
-            se_SPH_age=sd(value, na.rm=T)/sqrt(n())) %>% 
+            cv_SPH_age = sd_SPH_age / mean_SPH_age,
+            se_SPH_age = sd(value, na.rm=T)/sqrt(n()),
+            t = qt((1-alpha)/2 + .5, df = n-1), #https://www.r-graph-gallery.com/4-barplot-with-error-bar.html
+            ci = t * se_SPH_age,
+            upper_SPH_age = mean_SPH_age + ci,
+            lower_SPH_age = mean_SPH_age - ci) %>% 
   mutate(age = as.factor(agei),
          zone=as.factor(variable)) -> data_wide_sph_age 
 
@@ -296,12 +303,17 @@ data_wide_sph_age %>%
   geom_bar(aes(fill=zone), stat="identity", position="dodge", alpha=0.9) +
   scale_fill_grey(start = 0, end = .8, guide = F) + 
   theme(legend.position=c(.9,.75)) +
+  geom_errorbar(aes(ymin = lower_SPH_age, ymax = upper_SPH_age, group=zone),
+                width = 0.2,
+                linetype = "solid",
+                position = position_dodge(width = 1),
+                color="black", size = 0.75)+
   #annotate("text", x = 0.65, y=10, 
   #         label="B)", family="Times New Roman") +
   geom_text(data = labels, aes(age, y = -1.2, label=paste ("n = " ,labels, sep =""), group=age),
             size = 2.5) +
-  xlab("Age(annulus)") +
-  ylab("Mean % Difference") -> SPH_age
+  xlab("Age (annulus)") +
+  ylab("Mean Percent Error") -> SPH_age
 cowplot::plot_grid(SPH_age,   align = "hv", nrow = 1, ncol=1) 
 ggsave("figs/length_diff.png", dpi = 500, height = 4, width = 8, units = "in")
 
@@ -372,7 +384,3 @@ x<- rbind(x, A3)
 x<- rbind(x, A4)
 x<- rbind(x, A6)
 write_csv(x, "output/SPH_age_lm_R2.csv")
-
-
-
-#
