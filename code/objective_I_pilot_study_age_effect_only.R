@@ -1,4 +1,4 @@
-#notes---
+# notes---
 # author: Sara E Miller 
 # contact: sara.miller@alaska.gov; 907-465-4245
 # Last edited: February, 2019
