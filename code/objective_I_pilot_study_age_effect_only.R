@@ -1,7 +1,7 @@
 # notes---
 # author: Sara E Miller 
 # contact: sara.miller@alaska.gov; 907-465-4245
-# Last edited: February, 2019
+# Last edited: July, 2020
 # Much of the regression code was orginally created by Ben Williams, and then adapted by Sara Miller.
 
 # load libraries----
