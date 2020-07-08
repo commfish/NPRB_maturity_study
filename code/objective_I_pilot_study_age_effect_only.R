@@ -200,7 +200,7 @@ x<- rbind(x, sample_A4)
 x<- rbind(x, sample_A6)
 write.csv(x, "output/test.csv") # separate constants used for each region
 
-# compare back calcaulted lengths for each region against region A1
+# compare back calculated lengths for each region against region A1
 x %>%
   filter(zone == "A1") %>%
   dplyr::select(fish, agecap, lencap, radcap, agei, radi, zone, SPH_age) %>%
@@ -231,27 +231,28 @@ x %>%
 
 merge(region_A1, region_A6, by = c('fish', 'agei', 'agecap', 'lencap')) -> A6_compare  
 
-x %>%
-  group_by(agei, zone) %>%
-  summarize(n = n(),
-             mn_radcap = mean(radcap),
-             sd_radcap = sd(radcap),
-             ss_radcap = sum(radcap^2),
-             cv_radcap = sd_radcap / mn_radcap,
-             mn_SPH_age = mean(SPH_age),
-             sd_SPH_age = sd(SPH_age), 
-             ss_SPH_age = sum(SPH_age^2),
-             cv_SPH_age = sd_SPH_age / mn_SPH_age,
-             error_SPH_age = qt(0.975,df = n - 1) * sd_SPH_age / sqrt(n),
-             upper_SPH_age = mn_SPH_age + error_SPH_age,
-            lower_SPH_age = mn_SPH_age - error_SPH_age) %>%
-  as.data.frame() -> sample2
-write.csv(sample2, "output/table_summary_obj1.csv") # summary output for table 2
+#x %>%
+#  group_by(agei, zone) %>%
+#  summarize(n = n(),
+#             mn_radcap = mean(radcap),
+#             sd_radcap = sd(radcap),
+#             ss_radcap = sum(radcap^2),
+#             cv_radcap = sd_radcap / mn_radcap,
+#             mn_SPH_age = mean(SPH_age),
+#             sd_SPH_age = sd(SPH_age), 
+#             ss_SPH_age = sum(SPH_age^2),
+#             cv_SPH_age = sd_SPH_age / mn_SPH_age,
+#             error_SPH_age = qt(0.975,df = n - 1) * sd_SPH_age / sqrt(n),
+#             upper_SPH_age = mn_SPH_age + error_SPH_age,
+#            lower_SPH_age = mn_SPH_age - error_SPH_age) %>%
+#  as.data.frame() -> sample2
+#write.csv(sample2, "output/table_summary_obj1.csv") # summary output for table 2
 
 x %>% 
   dplyr::select(fish, agei, zone, SPH_age,lencap, agecap) %>%
   spread(key = zone, value = SPH_age) %>%
   as.data.frame() -> data_wide_sph_age # this does same as code above with merge
+write.csv(data_wide_sph_age, "output/data_wide_sph_age.csv") 
 
 # figure 4 output found in data_wide_sph_age
 
@@ -267,6 +268,7 @@ data_wide_sph_age %>%
   dplyr::select(fish, agei, agecap, lencap, A1, A2, A3, A4, A6) %>%
   mutate(new_col = do.call(paste0, .[cols_to_concat])) %>%
   filter(!new_col %in% target) -> data_wide_sph_age
+write.csv(data_wide_sph_age, "output/data_wide_sph_age_test.csv") 
 
 data_wide_sph_age %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
@@ -294,15 +296,14 @@ data_wide_sph_age %>%
   geom_bar(aes(fill=zone), stat="identity", position="dodge", alpha=0.9) +
   scale_fill_grey(start = 0, end = .8, guide = F) + 
   theme(legend.position=c(.9,.75)) +
-  annotate("text", x = 0.65, y=10, 
-           label="B)", family="Times New Roman") +
+  #annotate("text", x = 0.65, y=10, 
+  #         label="B)", family="Times New Roman") +
   geom_text(data = labels, aes(age, y = -1.2, label=paste ("n = " ,labels, sep =""), group=age),
             size = 2.5) +
   xlab("Age(annulus)") +
   ylab("Mean % Difference") -> SPH_age
-
-cowplot::plot_grid(SPH_age,   align = "hv", nrow = 3, ncol=1) 
-ggsave("figs/length_diff.png", dpi = 500, height = 8, width = 8, units = "in")
+cowplot::plot_grid(SPH_age,   align = "hv", nrow = 1, ncol=1) 
+ggsave("figs/length_diff.png", dpi = 500, height = 4, width = 8, units = "in")
 
 tickr_length <- data.frame(mean.SPH.age = 0:350)
 axisb <- tickr(tickr_length, mean.SPH.age, 50)
