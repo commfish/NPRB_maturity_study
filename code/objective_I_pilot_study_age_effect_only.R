@@ -124,8 +124,7 @@ data %>%
 # back-calculation methods with ratios
 # Francis 1990 pg. 897 recommends the SPH and BPH methods; the difference btw the back-calculated lengths be taken as a 
 # minimum meaure of imprecision of back-calculation
-# calculate a, b, c, d for each zone
-
+# calculate e, f, g for each zone
 sample1 %>%
   filter(zone == "A1" & agei == 1)-> lm_data
 sample1 %>%
@@ -261,7 +260,14 @@ x %>%
 
 # SCALE PROPORTIONAL HYPOTHESIS
 # AGE EFFECT SPH
-## need to delete final annulus from average!!!
+# delete final annulus as it is the same for all regions
+target <- c(11,22,33,44,55,66,77,88,99)
+cols_to_concat <- c("agei", "agecap")
+data_wide_sph_age %>% 
+  dplyr::select(fish, agei, agecap, lencap, A1, A2, A3, A4, A6) %>%
+  mutate(new_col = do.call(paste0, .[cols_to_concat])) %>%
+  filter(!new_col %in% target) -> data_wide_sph_age
+
 data_wide_sph_age %>% 
   mutate(A2= abs((A1-A2)/A1)*100,
          A3= abs((A1-A3)/A1)*100,
