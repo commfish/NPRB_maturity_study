@@ -269,7 +269,7 @@ data_wide_sph_age %>%
             lower_SPH_age = mean_SPH_age - ci) %>% 
   mutate(age = as.factor(agei),
          zone=as.factor(variable)) -> data_wide_sph_age 
-
+write.csv(data_wide_sph_age, "output/data_wide_sph_age_ouput.csv") 
 # plots by age effect SPH
 data_wide_sph_age %>% 
   group_by(age) %>% 
@@ -279,8 +279,8 @@ data_wide_sph_age %>%
   ggplot(aes(age, mean_SPH_age)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge", alpha=0.9) +
   scale_y_continuous(breaks = c(0, 10, 20, 30, 40, 50, 60), limits = c(0,60))+
-  scale_fill_grey(start = 0, end = .8, guide = F) + 
-  theme(legend.position=c(.9,.75)) +
+  scale_fill_grey(start = 0, end = .8, name="")+
+  theme(legend.position=c(.9,.80)) +
   geom_errorbar(aes(ymin = lower_SPH_age, ymax = upper_SPH_age, group=zone),
                 width = 0.2,
                 linetype = "solid",
@@ -294,7 +294,7 @@ data_wide_sph_age %>%
 cowplot::plot_grid(SPH_age, align = "hv", nrow = 1, ncol=1) 
 ggsave("figs/length_diff.png", dpi = 500, height = 4, width = 8, units = "in")
 
-# another figure
+# radial figure
 data_wide_sph_age_radi %>% 
   group_by(age) %>% 
   summarise(labels = mean(n_SPH_age)) -> labels
@@ -302,19 +302,19 @@ data_wide_sph_age_radi %>%
 data_wide_sph_age_radi %>% 
   ggplot(aes(age, mean_SPH_age)) +
   geom_bar(aes(fill=zone), stat="identity", position="dodge", alpha=0.9) +
-  scale_y_continuous(breaks = c(0, 1, 2, 3, 4, 5, 6), limits = c(0,6))+
-  scale_fill_grey(start = 0, end = .8, guide = F) + 
-  theme(legend.position=c(.9,.75)) +
+  scale_y_continuous(breaks = c(0, 1, 2, 3, 4, 5, 6,7,8), limits = c(0,8))+
+  scale_fill_grey(start = 0, end = .8,name ="") + 
+  theme(legend.position=c(.08,.76)) +
   geom_errorbar(aes(ymin = lower_SPH_age, ymax = upper_SPH_age, group=zone),
                 width = 0.2,
                 linetype = "solid",
                 position = position_dodge(width = 1),
                 color="black", size = 0.75)+
   #annotate("text", x = 0.65, y=6, label="A)", family="Times New Roman") +
-  geom_text(data = labels, aes(age, y = 6, label=paste ("n = " ,labels, sep =""), group=age),
+  geom_text(data = labels, aes(age, y = 8, label=paste ("n = " ,labels, sep =""), group=age),
             size = 3) +
   xlab("Age (annulus)") +
-  ylab("Radial measurement") -> SPH_age2
+  ylab("Radial measurement (mm)") -> SPH_age2
 cowplot::plot_grid(SPH_age2, align = "hv", nrow = 1, ncol=1) 
 ggsave("figs/radi_diff.png", dpi = 500, height = 4, width = 8, units = "in")
 
