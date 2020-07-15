@@ -18,7 +18,7 @@ library(fngr)
 library(broom)
 library(cowplot)
 library(mixtools)
-library(car)
+#library(car)
 library(modEvA) #pseudo-R squared
 library(MASS)
 library(digest)
@@ -105,7 +105,7 @@ dplyr::select(sample_no, age, maturation_status_histology, maturity, anu_adj, ra
 write.csv(merge, "data/obj1_data2.csv") 
 
 merge %>% 
-  dplyr::select(maturity, age, length_mm, anu_adj) %>% 
+  dplyr::select(maturity, age, length_mm, anu_adj, scale_length_prior) %>% 
   group_by(maturity,age) %>% 
   summarize(n=n(),
             mean_anu_adj =mean(anu_adj),
@@ -115,7 +115,11 @@ merge %>%
             mean_length =mean(length_mm),
             stdv_length = sd(length_mm),
             min_length =min(length_mm),
-            max_length = max(length_mm)) -> summary_table 
+            max_length = max(length_mm),
+            mean_length_prior =mean(scale_length_prior),
+            stdv_length_prior = sd(scale_length_prior),
+            min_length_prior =min(scale_length_prior),
+            max_length_prior = max(scale_length_prior)) -> summary_table 
 
 # Exploratory Plots----
 # Histograms of outer ring---- 
