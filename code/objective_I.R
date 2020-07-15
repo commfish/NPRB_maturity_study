@@ -330,29 +330,31 @@ with(merge,interaction.plot(age, maturity, anu_adj, type="b", pch=c(1,16), ylab 
 
 # Generalized Linear models (age two)----
 ## Outer Increment Measurement
+## https://stackoverflow.com/questions/23826621/plotting-glm-interactions-newdata-structure-in-predict-function
 merge$age <- as.factor(merge$age)
 
 merge %>%
-  dplyr::mutate(maturity = ifelse(maturity == "mature", 1 , 0))-> merge_dataset
+  dplyr::mutate(maturity = ifelse(maturity == "mature", 1 , 0)) -> merge_dataset
 
 merge_dataset %>%
-  filter(age == 2)-> merge_dataset_two
+  filter(age == 2) -> merge_dataset_two
 
 merge_dataset %>%
-  filter(age == 3)-> merge_dataset_three
+  filter(age == 3) -> merge_dataset_three
 
-fit <- glm(maturity ~ (anu_adj + scale_length_prior +length_mm) , family = binomial, data = merge_dataset_three) 
-fit <- glm(maturity ~ (anu_adj + scale_length_prior) , family = binomial, data = merge_dataset_three) 
-fit <- glm(maturity ~ (length_mm) , family = binomial, data = merge_dataset_three)  
+fit <- glm(maturity ~ (anu_adj * scale_length_prior) , family = binomial(link=logit), data = merge_dataset_two) 
+summary(fit, center =TRUE)
 vif(fit)
 Anova(fit)
 anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
 RsqGLM(fit)#peudo R2 
 summary(fit)
 hoslem.test(merge_dataset_two$maturity, fitted(fit)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
+exp(coef(fit)) #https://stats.idre.ucla.edu/r/dae/logit-regression/ ; odds ratio
+exp(cbind(OR = coef(fit), confint(fit))) # odds ratio and 95% confidence intervals
 
 merge_dataset_two %>% 
-  do(A2 = glm(maturity ~ anu_adj + scale_length_prior, data = merge_dataset_two, family = binomial(link=logit))) -> lm_out
+  do(A2 = glm(maturity ~ anu_adj * scale_length_prior, data = merge_dataset_two, family = binomial(link=logit))) -> lm_out
 head(augment(lm_out, merge_dataset_two, type.residuals="pearson"))
 outlierTest(fit) #Bonferroni p-values
 residualPlot(fit, variable = "fitted", type = "pearson",
@@ -447,19 +449,35 @@ lm_out %>% #Pearson by index
 cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5,  align = "vh", nrow = 3, ncol=2)
 ggsave("figs/glm_diagnostics_outer_increment_age2.png", dpi = 500, height = 6, width = 8, units = "in")
 
+# prediction plot; example: https://www.theanalysisfactor.com/generalized-linear-models-r-graphs/
+fit_anu_adj <- glm(maturity ~ (anu_adj) , family = binomial, data = merge_dataset_two) 
+fit_scale_length_prior <- glm(maturity ~ (scale_length_prior) , family = binomial, data = merge_dataset_two) 
+range(merge_dataset_two$anu_adj)
+range(merge_dataset_two$scale_length_prior)
+xanu_adj <-seq(0,2,0.01)
+yanu_adj <- predict(fit_anu_adj, list(anu_adj=xanu_adj),type="response")
+plot(merge_dataset_two$anu_adj, merge_dataset_two$maturity, pch = 16, xlab = "ANU_ADJ", ylab = "MATURITY")
+lines(xanu_adj, yanu_adj, col = "red", lwd = 2)
+
+xscale_length_prior <-seq(0,3,0.01)
+yscale_length_prior <- predict(fit_scale_length_prior, list(scale_length_prior=xscale_length_prior),type="response")
+plot(merge_dataset_two$scale_length_prior, merge_dataset_two$maturity, pch = 16, xlab = "SCALE_LENGTH_PRIOR", ylab = "MATURITY")
+lines(xscale_length_prior, yscale_length_prior, col = "red", lwd = 2)
 
 # Generalized Linear models (age three)----
 ## Outer Increment Measurement
-fit <- glm(maturity ~ (anu_adj + scale_length_prior) , family = binomial, data = merge_dataset_three) 
+fit <- glm(maturity ~ (anu_adj * scale_length_prior) , family = binomial(link=logit), data = merge_dataset_three) 
 vif(fit)
 Anova(fit)
 anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
 RsqGLM(fit)#peudo R2 
 summary(fit)
 hoslem.test(merge_dataset_three$maturity, fitted(fit)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
+exp(coef(fit)) #https://stats.idre.ucla.edu/r/dae/logit-regression/ ; odds ratio
+exp(cbind(OR = coef(fit), confint(fit))) # odds ratio and 95% confidence intervals
 
 merge_dataset_three %>% 
-  do(A2 = glm(maturity ~ anu_adj + scale_length_prior, data = merge_dataset_three, family = binomial(link=logit))) -> lm_out
+  do(A2 = glm(maturity ~ anu_adj * scale_length_prior, data = merge_dataset_three, family = binomial(link=logit))) -> lm_out
 head(augment(lm_out, merge_dataset_three, type.residuals="pearson"))
 outlierTest(fit) #Bonferroni p-values
 residualPlot(fit, variable = "fitted", type = "pearson",
@@ -554,4 +572,17 @@ lm_out %>% #Pearson by index
 cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5,  align = "vh", nrow = 3, ncol=2)
 ggsave("figs/glm_diagnostics_outer_increment_age3.png", dpi = 500, height = 6, width = 8, units = "in")
 
+# prediction plot; example: https://www.theanalysisfactor.com/generalized-linear-models-r-graphs/
+fit_anu_adj <- glm(maturity ~ (anu_adj) , family = binomial, data = merge_dataset_three) 
+fit_scale_length_prior <- glm(maturity ~ (scale_length_prior) , family = binomial, data = merge_dataset_three) 
+range(merge_dataset_three$anu_adj)
+range(merge_dataset_three$scale_length_prior)
+xanu_adj <-seq(0,1,0.01)
+yanu_adj <- predict(fit_anu_adj, list(anu_adj=xanu_adj),type="response")
+plot(merge_dataset_three$anu_adj, merge_dataset_three$maturity, pch = 16, xlab = "ANU_ADJ", ylab = "MATURITY")
+lines(xanu_adj, yanu_adj, col = "red", lwd = 2)
 
+xscale_length_prior <-seq(0,5,0.01)
+yscale_length_prior <- predict(fit_scale_length_prior, list(scale_length_prior=xscale_length_prior),type="response")
+plot(merge_dataset_three$scale_length_prior, merge_dataset_three$maturity, pch = 16, xlab = "SCALE_LENGTH_PRIOR", ylab = "MATURITY")
+lines(xscale_length_prior, yscale_length_prior, col = "red", lwd = 2)
