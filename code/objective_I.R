@@ -24,7 +24,10 @@ library(MASS)
 library(digest)
 library(ResourceSelection)
 library("ggpubr")
-theme_set(theme_sleek())
+library("devtools")
+devtools::install_github("commfish/fngr")
+library(fngr)
+theme_set(theme_report(base_size = 12))
 
 # load data ---- 
 data <- read.csv("data/data_11_26_2018.csv", check.names = FALSE) 
@@ -40,10 +43,14 @@ increment %>%
   filter(n()>1) %>% 
   summarize(n=n())-> x
 
+# delete a or b at the end of the image name
+increment$image_name = gsub("a","",increment$image_name)
+
 # match increments to awl data
 merge <-merge(increment, data_clean, all.y=T)
+write.csv(merge, "data/check.csv") 
 merge %>% 
-  filter(!(Increment1 %in% c("", NA))) %>% 
+  filter(!(Increment1 %in% c("", NA)))%>% 
   filter(!(scale_region%in% c("OOA (OUT OF AREA)", "A", "C", "D", "E", "G", "H"))) %>% 
   filter(!(sex_histology %in% c("Male"))) %>% 
   mutate(maturity = ifelse(maturation_status_histology == 1, 'immature', 'mature')) -> clean_dataset #n=211 useable samples
@@ -252,7 +259,7 @@ merge %>%
   scale_color_manual(values=c("#999999", "black")) +
   scale_fill_manual(values=c("#999999", "black" )) +
   scale_shape_manual(values=c(8, 16)) +
-  annotate("text",x = 0.75, y=2, label="A)", family="Arial" ,size=4) +
+  annotate("text",x = 0.75, y=2, label="A)", family="Times" ,size=4) +
   scale_y_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0), limits = c(0, 2.0))-> plot1
   
 merge %>%
@@ -262,7 +269,7 @@ merge %>%
   scale_color_manual(values=c("#999999", "black")) + theme(legend.title=element_blank(), legend.position=c(.8,.9), legend.text=element_text(size=12)) +
   scale_fill_manual(values=c("#999999", "black" )) + 
   scale_y_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0, 2)) +
-  annotate("text",x = 0.75, y=2, label="B)", family="Arial" ,size=4)-> plot2
+  annotate("text",x = 0.75, y=2, label="B)", family="Times" ,size=4)-> plot2
 
 merge %>% 
   ggplot(data=., aes(x = age, y = radcap, color = maturity, shape = maturity)) +
