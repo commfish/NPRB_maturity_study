@@ -43,7 +43,7 @@ increment %>%
   filter(n()>1) %>% 
   summarize(n=n())-> x
 
-# delete a or b at the end of the image name
+# delete a or b at the end of the image name (this just depicts what image was used)
 increment$image_name = gsub("a","",increment$image_name)
 
 # match increments to awl data
