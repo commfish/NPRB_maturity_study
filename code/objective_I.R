@@ -12,16 +12,16 @@
 source("code/functions.R")
 library(extrafont)
 loadfonts(device="win")
-library(nlme)
+#library(nlme)
 library(tidyverse)
 library(fngr)
 library(broom)
 library(cowplot)
-library(mixtools)
-#library(car)
+#library(mixtools)
+library(car)
 library(modEvA) #pseudo-R squared
-library(MASS)
-library(digest)
+#library(MASS)
+#library(digest)
 library(ResourceSelection)
 library("ggpubr")
 library("devtools")
@@ -355,8 +355,7 @@ merge_dataset %>%
 
 fit <- glm(maturity ~ (anu_adj * scale_length_prior) , family = binomial(link=logit), data = merge_dataset_two) 
 summary(fit, center =TRUE)
-vif(fit)
-Anova(fit)
+vif(fit) # car package
 anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
 RsqGLM(fit)#peudo R2 
 summary(fit)
@@ -418,7 +417,7 @@ qf(0.5, 3, 200) # p+1; n-p-1
 lm_out %>% #Cook's distance plot
   augment(A2) %>% 
   mutate(cooksd = (.cooksd),
-         count = 1:64,
+         count = 1:68,
          name= ifelse(cooksd >0.79, count, "")) %>% 
   ggplot(aes(x = count, y = cooksd, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
@@ -434,7 +433,7 @@ lm_out %>% #Cook's distance plot
 lm_out %>% #leverage plot
   augment(A2) %>% 
   mutate(hat= (.hat),
-         count = 1:64,
+         count = 1:68,
          name= ifelse(hat >0.14, count, "")) %>% 
   ggplot(aes(x = count, y = hat, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
@@ -448,7 +447,7 @@ lm_out %>% #leverage plot
 lm_out %>% #Pearson by index
   augment(A2) %>% 
   mutate(resid = (.resid),
-         count = 1:64) %>% 
+         count = 1:68) %>% 
   ggplot(aes(x = count, y = resid)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
@@ -478,8 +477,7 @@ lines(xscale_length_prior, yscale_length_prior, col = "red", lwd = 2)
 # Generalized Linear models (age three)----
 ## Outer Increment Measurement
 fit <- glm(maturity ~ (anu_adj * scale_length_prior) , family = binomial(link=logit), data = merge_dataset_three) 
-vif(fit)
-Anova(fit)
+vif(fit) # car package
 anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
 RsqGLM(fit)#peudo R2 
 summary(fit)
@@ -541,7 +539,7 @@ qf(0.5, 3, 200) # p+1; n-p-1
 lm_out %>% #Cook's distance plot
   augment(A2) %>% 
   mutate(cooksd = (.cooksd),
-         count = 1:51,
+         count = 1:54,
          name= ifelse(cooksd >0.79, count, "")) %>% 
   ggplot(aes(x = count, y = cooksd, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
@@ -557,7 +555,7 @@ lm_out %>% #Cook's distance plot
 lm_out %>% #leverage plot
   augment(A2) %>% 
   mutate(hat= (.hat),
-         count = 1:51,
+         count = 1:54,
          name= ifelse(hat >0.14, count, "")) %>% 
   ggplot(aes(x = count, y = hat, label=name)) +
   geom_bar(stat = "identity", colour = "grey50", 
@@ -571,7 +569,7 @@ lm_out %>% #leverage plot
 lm_out %>% #Pearson by index
   augment(A2) %>% 
   mutate(resid = (.resid),
-         count = 1:51) %>% 
+         count = 1:54) %>% 
   ggplot(aes(x = count, y = resid)) +
   geom_bar(stat = "identity", colour = "grey50", 
            fill = "lightgrey",alpha=.7,
