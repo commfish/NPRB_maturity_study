@@ -348,13 +348,14 @@ merge %>%
   dplyr::mutate(maturity = ifelse(maturity == "mature", 1 , 0)) -> merge_dataset
 
 merge_dataset %>%
-  filter(age == 2) -> merge_dataset_two
+  filter(age == 2) %>%
+  as.data.frame()-> merge_dataset_two
 
 merge_dataset %>%
   filter(age == 3) -> merge_dataset_three
 
 fit <- glm(maturity ~ (anu_adj * scale_length_prior) , family = binomial(link=logit), data = merge_dataset_two) 
-summary(fit, center =TRUE)
+summary(fit)
 vif(fit) # car package
 anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
 RsqGLM(fit)#peudo R2 
