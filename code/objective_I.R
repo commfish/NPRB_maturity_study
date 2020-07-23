@@ -128,223 +128,12 @@ merge %>%
             min_length_prior =min(scale_length_prior),
             max_length_prior = max(scale_length_prior)) -> summary_table 
 
-# Exploratory Plots----
-# Histograms of outer ring---- 
-merge %>%
-  filter(age == 2 & maturity == "mature")-> age2mature
-merge %>%
-  filter(age == 2 & maturity == "immature")-> age2immature
-merge %>%
-  filter(age == 3 & maturity == "mature")-> age3mature
-merge %>%
-  filter(age == 3 & maturity == "immature")-> age3immature
-merge %>%
-  filter(age == 4 & maturity == "mature")-> age4mature
-merge %>%
-  filter(age == 4 & maturity == "immature")-> age4immature
-merge %>%
-  filter(age == 5 & maturity == "mature")-> age5mature
-merge %>%
-  filter(age == 5 & maturity == "immature")-> age5immature
-merge %>%
-  filter(age == 6 & maturity == "mature")-> age6mature
-merge %>%
-  filter(age == 6 & maturity == "immature")-> age6immature
-
-# test each age/maturity for normality
-eda.norm(as.numeric(age2immature$anu_adj))
-eda.norm(as.numeric(age2mature$anu_adj))
-eda.norm(as.numeric(age3immature$anu_adj))
-eda.norm(as.numeric(age3mature$anu_adj))
-
-# Frequencies by age----
-merge %>%
-  filter(age == 2) %>%
-ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
-  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
-  ggtitle("Age 2; n = 64") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "black")) +theme(legend.title=element_blank(), legend.position=c(.15,.85)) +
-  scale_fill_manual(values=c("#999999", "black" )) -> plot1
-
-merge %>%
-  filter(age == 3) %>%
-  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
-  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
-  ggtitle("Age 3; n = 51") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) -> plot2
-
-merge %>%
-  filter(age == 4) %>%
-  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
-  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
-  ggtitle("Age 4; n = 40") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "black")) + 
-  scale_fill_manual(values=c("#999999", "black" )) -> plot3
-
-merge %>%
-  filter(age == 5) %>%
-  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
-  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
-  ggtitle("Age 5; n = 23") + theme(legend.position="none") +
-  scale_color_manual(values=c("black")) + 
-  scale_fill_manual(values=c("black" )) -> plot4
-
-merge %>%
-  filter(age == 6) %>%
-  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
-  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
-  ggtitle("Age 6; n = 33") + theme(legend.position="none") +
-  scale_color_manual(values=c("#999999", "black")) + 
-  scale_fill_manual(values=c("#999999", "black" )) -> plot5
-
-cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, align = "vh", nrow = 2, ncol=3)
-ggsave("figs/frequency_obj1.png", dpi = 500, height = 8, width =10, units = "in")
-
-# Histograms by age----
-merge %>%
-  filter(age == 2) %>%
-  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +ggtitle("Age 2; n = 64")+
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.19,.88)) + 
-  ylab("Density")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot1
-
-merge %>%
-  filter(age == 3) %>%
-  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +ggtitle("Age 3; n = 51") +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.position="none") +
-  ylab("Density")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot2
-
-merge %>%
-  filter(age == 4) %>%
-  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +  ggtitle("Age 4; n = 40") + 
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.position="none") + 
-  ylab("Density")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot3
-
-merge %>%
-  filter(age == 5) %>%
-  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +ggtitle("Age 5; n = 23") +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("black")) +
-  scale_fill_manual(values=c("black" )) + theme(legend.position="none") +
-  ylab("Density")+ xlab("Outer increment measurement (mm)") +
-  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot4
-
-merge %>%
-  filter(age == 6) %>%
-  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +
-  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) +  ggtitle("Age 6; n = 33")+
-  ylab("Density")+ xlab("Outer increment measurement (mm)") +theme(legend.position="none")+
-  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot5
-
-cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, align = "vh", nrow = 2, ncol=3)
-ggsave("figs/hist_obj1.png", dpi = 500, height = 8, width =10, units = "in")
-
-# Scatterplot Figures---- 
-merge %>% 
-  ggplot(data=., aes(x = age, y = anu_adj, color = maturity, shape = maturity)) +
-  geom_jitter(size = 1) +
-  labs(x = "Age",y = "Outer increment measurement (mm)") + 
-  theme(legend.title=element_blank(), legend.position=c(.8,.9), legend.text=element_text(size=12)) +
-  scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) +
-  scale_shape_manual(values=c(8, 16)) +
-  annotate("text",x = 0.75, y=2, label="A)", family="Times" ,size=4) +
-  scale_y_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0), limits = c(0, 2.0))-> plot1
-  
-merge %>%
-  mutate(age=as.factor(age))%>% 
-  ggplot(data=.,aes(x = age, y = anu_adj)) + labs(x = "Age",y = "Outer increment measurement (mm)") + 
-  geom_boxplot(aes(fill = maturity)) +
-  scale_color_manual(values=c("#999999", "black")) + theme(legend.title=element_blank(), legend.position=c(.8,.9), legend.text=element_text(size=12)) +
-  scale_fill_manual(values=c("#999999", "black" )) + 
-  scale_y_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0, 2)) +
-  annotate("text",x = 0.75, y=2, label="B)", family="Times" ,size=4)-> plot2
-
-merge %>% 
-  ggplot(data=., aes(x = age, y = radcap, color = maturity, shape = maturity)) +
-  geom_jitter(size = 1) +
-  labs(x = "Age",y = "Cumulative growth (mm)") + 
-  theme(legend.title=element_blank(), legend.position=c(.8,.9), legend.text=element_text(size=12)) +
-  scale_color_manual(values=c("#999999", "black")) +
-  scale_fill_manual(values=c("#999999", "black" )) +
-  scale_shape_manual(values=c(8, 16)) +
-  annotate("text",x = 2, y=10, label="B)", family="Arial", colour="black", size=4) +
-  scale_y_continuous(breaks = c(0, 1,2,3,4,5,6,7,8,9,10), limits = c(0, 10))-> plot3
-
-cowplot::plot_grid(plot1, plot2,  align = "vh", nrow = 1, ncol=2)
-ggsave("figs/scatterplot_obj1.png", dpi = 500, height = 4, width = 8, units = "in")
-
-merge %>%
-  mutate(age=as.factor(age))%>% 
-  ggplot(data=.,aes(x = age, y = length_mm)) + labs(x = "Age",y = "Length at capture (mm)") + 
-  geom_boxplot(aes(fill = maturity)) +
-  scale_color_manual(values=c("#999999", "black")) + theme(legend.title=element_blank(), legend.position=c(.15,.15), legend.text=element_text(size=12)) +
-  scale_fill_manual(values=c("#999999", "black" )) + 
-  scale_y_continuous(breaks = c(0,50,100,150,200,250), limits = c(0, 250))-> plot1
-cowplot::plot_grid(plot1,  align = "vh", nrow = 1, ncol=1)
-ggsave("figs/length_at_capture.png", dpi = 500, height = 4, width = 8, units = "in")
-
-# Correlation Analysis---
-# age versus length at capture
-merge$age<-as.numeric(merge$age)
-ggscatter(merge, x = "age", y = "length_mm",  
-          conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "spearman",
-          xlab = "Age", ylab = "Length at capture (mm)") -> plot1
-ggscatter(merge, y = "length_mm", x = "radcap", 
-          add = "reg.line", conf.int = TRUE, 
-          cor.coef = TRUE, cor.method = "spearman",
-          xlab = "Total Scale Length", ylab = "Length at capture (mm)") -> plot2
-ggscatter(merge, x = "age", y = "radcap", 
-          conf.int = TRUE, add="loess", 
-          cor.coef = TRUE, cor.method = "spearman",
-          xlab = "Age", ylab = "Total Scale Length")+ annotate("text",x = 6, y=7, label="B)", family="Arial" ,size=4) -> plot3
-cowplot::plot_grid(plot1,   align = "vh", nrow = 1, ncol=1)
-ggsave("figs/correlation.png", dpi = 500, height = 4, width = 8, units = "in")
-
-fit <- lm(length_mm ~ (radcap), data = merge) 
-fit1 <- lm(length_mm ~ poly(radcap,3), data = merge) 
-
-merge %>% #GSI data not in data set 
-  filter (age =="3") %>%
-ggscatter(., x = "anu_adj", y = "GSI", shape= "maturity", color = "maturity",
-          conf.int = TRUE, add="loess",  palette=c("#999999", "black"), 
-          cor.coef = FALSE, cor.method = "spearman",
-          xlab = "Outer increment measurement (mm)", ylab = "GSI")-> plot1
-cowplot::plot_grid(plot1,   align = "vh", nrow = 1, ncol=1)
-#ggsave("figs/GSI_corr.png", dpi = 500, height = 4, width = 8, units = "in")
-
-merge %>% #GSI data not in data set
-  filter (age =="3") %>%
-  filter (maturity =="mature") %>%
-  ggscatter(., x = "anu_adj", y = "GSI", shape= "maturity", color = "maturity",
-            conf.int = TRUE, add="loess",  palette=c("#999999", "black"), 
-            cor.coef = TRUE, cor.method = "spearman",
-            xlab = "Outer increment measurement (mm)", ylab = "GSI")-> plot1
-cowplot::plot_grid(plot1,   align = "vh", nrow = 1, ncol=1)
-#ggsave("figs/GSI_corr.png", dpi = 500, height = 4, width = 8, units = "in")
-
-par(mfrow=c(1,1))
-with(merge,interaction.plot(age, maturity, anu_adj, type="b", pch=c(1,16), ylab ="outer incremental length (mm)",
-                            xlab="Age"))
 
 # Generalized Linear models (age two)----
 ## Outer Increment Measurement
 ## https://stackoverflow.com/questions/23826621/plotting-glm-interactions-newdata-structure-in-predict-function
-merge$age <- as.factor(merge$age)
-
 merge %>%
+  mutate(age = as.factor(age)) %>%
   dplyr::mutate(maturity = ifelse(maturity == "mature", 1 , 0)) -> merge_dataset
 
 merge_dataset %>%
@@ -596,3 +385,216 @@ xscale_length_prior <-seq(0,5,0.01)
 yscale_length_prior <- predict(fit_scale_length_prior, list(scale_length_prior=xscale_length_prior),type="response")
 plot(merge_dataset_three$scale_length_prior, merge_dataset_three$maturity, pch = 16, xlab = "SCALE_LENGTH_PRIOR", ylab = "MATURITY")
 lines(xscale_length_prior, yscale_length_prior, col = "red", lwd = 2)
+
+
+# Exploratory Plots----
+# NOTE: order of variables is wrong
+# Histograms of outer ring---- 
+merge %>%
+  filter(age == 2 & maturity == "mature")-> age2mature
+merge %>%
+  filter(age == 2 & maturity == "immature")-> age2immature
+merge %>%
+  filter(age == 3 & maturity == "mature")-> age3mature
+merge %>%
+  filter(age == 3 & maturity == "immature")-> age3immature
+merge %>%
+  filter(age == 4 & maturity == "mature")-> age4mature
+merge %>%
+  filter(age == 4 & maturity == "immature")-> age4immature
+merge %>%
+  filter(age == 5 & maturity == "mature")-> age5mature
+merge %>%
+  filter(age == 5 & maturity == "immature")-> age5immature
+merge %>%
+  filter(age == 6 & maturity == "mature")-> age6mature
+merge %>%
+  filter(age == 6 & maturity == "immature")-> age6immature
+
+# test each age/maturity for normality
+eda.norm(as.numeric(age2immature$anu_adj))
+eda.norm(as.numeric(age2mature$anu_adj))
+eda.norm(as.numeric(age3immature$anu_adj))
+eda.norm(as.numeric(age3mature$anu_adj))
+
+# Frequencies by age----
+merge %>%
+  filter(age == 2) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
+  ggtitle("Age 2; n = 64") + theme(legend.position="none") +
+  scale_color_manual(values=c("#999999", "black")) +theme(legend.title=element_blank(), legend.position=c(.15,.85)) +
+  scale_fill_manual(values=c("#999999", "black" )) -> plot1
+
+merge %>%
+  filter(age == 3) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
+  ggtitle("Age 3; n = 51") + theme(legend.position="none") +
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) -> plot2
+
+merge %>%
+  filter(age == 4) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
+  ggtitle("Age 4; n = 40") + theme(legend.position="none") +
+  scale_color_manual(values=c("#999999", "black")) + 
+  scale_fill_manual(values=c("#999999", "black" )) -> plot3
+
+merge %>%
+  filter(age == 5) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
+  ggtitle("Age 5; n = 23") + theme(legend.position="none") +
+  scale_color_manual(values=c("black")) + 
+  scale_fill_manual(values=c("black" )) -> plot4
+
+merge %>%
+  filter(age == 6) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) + geom_histogram(alpha=0.5, position = 'identity') +
+  ylab("Frequency")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))+
+  ggtitle("Age 6; n = 33") + theme(legend.position="none") +
+  scale_color_manual(values=c("#999999", "black")) + 
+  scale_fill_manual(values=c("#999999", "black" )) -> plot5
+
+cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, align = "vh", nrow = 2, ncol=3)
+ggsave("figs/frequency_obj1.png", dpi = 500, height = 8, width =10, units = "in")
+
+# Histograms by age----
+merge %>%
+  filter(age == 2) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +ggtitle("Age 2; n = 64")+
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.title=element_blank(), legend.position=c(.19,.88)) + 
+  ylab("Density")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot1
+
+merge %>%
+  filter(age == 3) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +ggtitle("Age 3; n = 51") +
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.position="none") +
+  ylab("Density")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot2
+
+merge %>%
+  filter(age == 4) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +  ggtitle("Age 4; n = 40") + 
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) + theme(legend.position="none") + 
+  ylab("Density")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot3
+
+merge %>%
+  filter(age == 5) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +ggtitle("Age 5; n = 23") +
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("black")) +
+  scale_fill_manual(values=c("black" )) + theme(legend.position="none") +
+  ylab("Density")+ xlab("Outer increment measurement (mm)") +
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot4
+
+merge %>%
+  filter(age == 6) %>%
+  ggplot(., aes(x=anu_adj, color=maturity, fill=maturity)) +
+  geom_density(alpha=0.5, adjust=1) +scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) +  ggtitle("Age 6; n = 33")+
+  ylab("Density")+ xlab("Outer increment measurement (mm)") +theme(legend.position="none")+
+  scale_x_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0,2))-> plot5
+
+cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, align = "vh", nrow = 2, ncol=3)
+ggsave("figs/hist_obj1.png", dpi = 500, height = 8, width =10, units = "in")
+
+# Scatterplot Figures---- 
+merge %>% 
+  #mutate(age=as.numeric(age))%>% 
+  ggplot(data=., aes(x = age, y = anu_adj, color = maturity, shape = maturity)) +
+  geom_jitter(size = 1) +
+  labs(x = "Age",y = "Outer increment measurement (mm)") + 
+  theme(legend.title=element_blank(), legend.position=c(.8,.9), legend.text=element_text(size=12)) +
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) +
+  scale_shape_manual(values=c(8, 16)) +
+  annotate("text",x = 0.75, y=2, label="A)", family="Times" ,size=4) +
+  scale_y_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0), limits = c(0, 2.0))-> plot1
+
+merge %>%
+  ggplot(data=.,aes(x = age, y = anu_adj)) + labs(x = "Age",y = "Outer increment measurement (mm)") + 
+  geom_boxplot(aes(fill = maturity)) +
+  scale_color_manual(values=c("#999999", "black")) + theme(legend.title=element_blank(), legend.position=c(.8,.9), legend.text=element_text(size=12)) +
+  scale_fill_manual(values=c("#999999", "black" )) + 
+  scale_y_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0, 2)) +
+  annotate("text",x = 0.75, y=2, label="B)", family="Times" ,size=4)-> plot2
+
+merge %>% 
+  ggplot(data=., aes(x = age, y = radcap, color = maturity, shape = maturity)) +
+  geom_jitter(size = 1) +
+  labs(x = "Age",y = "Cumulative growth (mm)") + 
+  theme(legend.title=element_blank(), legend.position=c(.8,.9), legend.text=element_text(size=12)) +
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) +
+  scale_shape_manual(values=c(8, 16)) +
+  annotate("text",x = 2, y=10, label="B)", family="Arial", colour="black", size=4) +
+  scale_y_continuous(breaks = c(0, 1,2,3,4,5,6,7,8,9,10), limits = c(0, 10))-> plot3
+
+cowplot::plot_grid(plot1, plot2,  align = "vh", nrow = 1, ncol=2)
+ggsave("figs/scatterplot_obj1.png", dpi = 500, height = 4, width = 8, units = "in")
+
+merge %>%
+  mutate(age=as.factor(age))%>% 
+  ggplot(data=.,aes(x = age, y = length_mm)) + labs(x = "Age",y = "Length at capture (mm)") + 
+  geom_boxplot(aes(fill = maturity)) +
+  scale_color_manual(values=c("#999999", "black")) + theme(legend.title=element_blank(), legend.position=c(.15,.15), legend.text=element_text(size=12)) +
+  scale_fill_manual(values=c("#999999", "black" )) + 
+  scale_y_continuous(breaks = c(0,50,100,150,200,250), limits = c(0, 250))-> plot1
+cowplot::plot_grid(plot1,  align = "vh", nrow = 1, ncol=1)
+ggsave("figs/length_at_capture.png", dpi = 500, height = 4, width = 8, units = "in")
+
+# Correlation Analysis---
+# age versus length at capture
+merge$age<-as.numeric(merge$age)
+ggscatter(merge, x = "age", y = "length_mm",  
+          conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "spearman",
+          xlab = "Age", ylab = "Length at capture (mm)") -> plot1
+ggscatter(merge, y = "length_mm", x = "radcap", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "spearman",
+          xlab = "Total Scale Length", ylab = "Length at capture (mm)") -> plot2
+ggscatter(merge, x = "age", y = "radcap", 
+          conf.int = TRUE, add="loess", 
+          cor.coef = TRUE, cor.method = "spearman",
+          xlab = "Age", ylab = "Total Scale Length")+ annotate("text",x = 6, y=7, label="B)", family="Arial" ,size=4) -> plot3
+cowplot::plot_grid(plot1,   align = "vh", nrow = 1, ncol=1)
+ggsave("figs/correlation.png", dpi = 500, height = 4, width = 8, units = "in")
+
+fit <- lm(length_mm ~ (radcap), data = merge) 
+fit1 <- lm(length_mm ~ poly(radcap,3), data = merge) 
+
+merge %>% #GSI data not in data set 
+  filter (age =="3") %>%
+  ggscatter(., x = "anu_adj", y = "GSI", shape= "maturity", color = "maturity",
+            conf.int = TRUE, add="loess",  palette=c("#999999", "black"), 
+            cor.coef = FALSE, cor.method = "spearman",
+            xlab = "Outer increment measurement (mm)", ylab = "GSI")-> plot1
+cowplot::plot_grid(plot1,   align = "vh", nrow = 1, ncol=1)
+#ggsave("figs/GSI_corr.png", dpi = 500, height = 4, width = 8, units = "in")
+
+merge %>% #GSI data not in data set
+  filter (age =="3") %>%
+  filter (maturity =="mature") %>%
+  ggscatter(., x = "anu_adj", y = "GSI", shape= "maturity", color = "maturity",
+            conf.int = TRUE, add="loess",  palette=c("#999999", "black"), 
+            cor.coef = TRUE, cor.method = "spearman",
+            xlab = "Outer increment measurement (mm)", ylab = "GSI")-> plot1
+cowplot::plot_grid(plot1,   align = "vh", nrow = 1, ncol=1)
+#ggsave("figs/GSI_corr.png", dpi = 500, height = 4, width = 8, units = "in")
+
+par(mfrow=c(1,1))
+with(merge,interaction.plot(age, maturity, anu_adj, type="b", pch=c(1,16), ylab ="outer incremental length (mm)",
+                            xlab="Age"))
