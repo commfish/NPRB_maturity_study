@@ -100,8 +100,8 @@ sample1 %>%
                                                ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6==0 & anu7==0, anu5,
                                                       ifelse(anu1>0 & anu2>0 & anu3>0 & anu4>0 & anu5>0 & anu6>0 & anu7==0, anu6,anu7))))))) %>%
   filter(sex_histology == "Female") %>% 
-  mutate(age = as.factor(age)) %>% 
-  filter(sample_no != 743) %>% 
+  #mutate(age = as.factor(age)) %>% 
+  #filter(sample_no != 743) %>% 
   dplyr::select(sample_no, image_name,year, age, sex_histology, maturation_status_histology, maturity, anu_adj, radcap, length_mm, Increment1, Increment2, 
                 Increment3, Increment4, Increment5, Increment6, Increment7, anu1, anu2, anu3, anu4, anu5, anu6, anu7) -> merge
 write.csv(merge, "data/obj1_data.csv") 
@@ -512,7 +512,7 @@ ggsave("figs/hist_obj1.png", dpi = 500, height = 8, width =10, units = "in")
 
 # Scatterplot Figures---- 
 merge %>% 
-  #mutate(age=as.numeric(age))%>% 
+  mutate(age=as.numeric(age))%>% 
   ggplot(data=., aes(x = age, y = anu_adj, color = maturity, shape = maturity)) +
   geom_jitter(size = 1) +
   labs(x = "Age",y = "Outer increment measurement (mm)") + 
@@ -520,15 +520,19 @@ merge %>%
   scale_color_manual(values=c("#999999", "black")) +
   scale_fill_manual(values=c("#999999", "black" )) +
   scale_shape_manual(values=c(8, 16)) +
-  annotate("text",x = 0.75, y=2, label="A)", family="Times" ,size=4) +
+  scale_x_continuous(breaks = c(2, 3, 4, 5, 6), limits = c(1.5,6.5)) +
+  annotate("text",x = 1.5, y=2, label="A)", family="Times" ,size=4) +
   scale_y_continuous(breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0), limits = c(0, 2.0))-> plot1
 
 merge %>%
+  as.data.frame()%>% 
+  mutate(age=as.factor(age)) %>% 
   ggplot(data=.,aes(x = age, y = anu_adj)) + labs(x = "Age",y = "Outer increment measurement (mm)") + 
   geom_boxplot(aes(fill = maturity)) +
   scale_color_manual(values=c("#999999", "black")) + theme(legend.title=element_blank(), legend.position=c(.8,.9), legend.text=element_text(size=12)) +
   scale_fill_manual(values=c("#999999", "black" )) + 
   scale_y_continuous(breaks = c(0, 0.5, 1, 1.5, 2), limits = c(0, 2)) +
+  #scale_x_continuous(breaks = c(2, 3, 4, 5, 6), limits = c(1.5,6.5)) +
   annotate("text",x = 0.75, y=2, label="B)", family="Times" ,size=4)-> plot2
 
 merge %>% 
@@ -546,7 +550,8 @@ cowplot::plot_grid(plot1, plot2,  align = "vh", nrow = 1, ncol=2)
 ggsave("figs/scatterplot_obj1.png", dpi = 500, height = 4, width = 8, units = "in")
 
 merge %>%
-  mutate(age=as.factor(age))%>% 
+  as.data.frame()%>% 
+  mutate(age=as.factor(age)) %>% 
   ggplot(data=.,aes(x = age, y = length_mm)) + labs(x = "Age",y = "Length at capture (mm)") + 
   geom_boxplot(aes(fill = maturity)) +
   scale_color_manual(values=c("#999999", "black")) + theme(legend.title=element_blank(), legend.position=c(.15,.15), legend.text=element_text(size=12)) +
