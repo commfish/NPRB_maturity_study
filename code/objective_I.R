@@ -103,7 +103,7 @@ sample1 %>%
   #mutate(age = as.factor(age)) %>% 
   #filter(sample_no != 743) %>% 
   dplyr::select(sample_no, image_name,year, age, sex_histology, maturation_status_histology, maturity, anu_adj, radcap, length_mm, Increment1, Increment2, 
-                Increment3, Increment4, Increment5, Increment6, Increment7, anu1, anu2, anu3, anu4, anu5, anu6, anu7) -> merge
+                Increment3, Increment4, Increment5, Increment6, Increment7, anu1, anu2, anu3, anu4, anu5, anu6, anu7, histology_notes) -> merge
 write.csv(merge, "data/obj1_data.csv") 
 
 merge %>% 
