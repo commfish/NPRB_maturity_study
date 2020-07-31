@@ -511,6 +511,7 @@ cowplot::plot_grid(plot1, plot2, plot3, plot4, plot5, align = "vh", nrow = 2, nc
 ggsave("figs/hist_obj1.png", dpi = 500, height = 8, width =10, units = "in")
 
 # Scatterplot Figures---- 
+## outer incremment growth
 merge %>% 
   mutate(age=as.numeric(age))%>% 
   ggplot(data=., aes(x = age, y = anu_adj, color = maturity, shape = maturity)) +
@@ -548,6 +549,36 @@ merge %>%
 
 cowplot::plot_grid(plot1, plot2,  align = "vh", nrow = 1, ncol=2)
 ggsave("figs/scatterplot_obj1.png", dpi = 500, height = 4, width = 8, units = "in")
+
+# Scatterplot Figures---- 
+## growth up into the summer 
+merge %>% 
+  mutate(age=as.numeric(age))%>% 
+  ggplot(data=., aes(x = age, y = scale_length_prior, color = maturity, shape = maturity)) +
+  geom_jitter(size = 1) +
+  labs(x = "Age",y = "Scale measurement up to the last increment (mm)") + 
+  theme(legend.title=element_blank(), legend.position=c(.86,.2), legend.text=element_text(size=12)) +
+  scale_color_manual(values=c("#999999", "black")) +
+  scale_fill_manual(values=c("#999999", "black" )) +
+  scale_shape_manual(values=c(8, 16)) +
+  scale_x_continuous(breaks = c(2, 3, 4, 5, 6), limits = c(1.5,6.5)) +
+  annotate("text",x = 1.5, y=6, label="A)", family="Times" ,size=4) +
+  scale_y_continuous(breaks = c(0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0), limits = c(0, 6.0)) -> plot1
+
+merge %>%
+  as.data.frame()%>% 
+  mutate(age=as.factor(age)) %>% 
+  ggplot(data=.,aes(x = age, y = scale_length_prior)) + labs(x = "Age",y = "Scale measurement up to the last increment (mm)") + 
+  geom_boxplot(aes(fill = maturity)) +
+  scale_color_manual(values=c("#999999", "black")) + theme(legend.title=element_blank(), legend.position=c(.86,.2), legend.text=element_text(size=12)) +
+  scale_fill_manual(values=c("#999999", "black" )) + 
+  scale_y_continuous(breaks = c(0, 1, 2, 3, 4, 5, 6), limits = c(0, 6)) +
+  #scale_x_continuous(breaks = c(2, 3, 4, 5, 6), limits = c(1.5,6.5)) +
+  annotate("text",x = 0.75, y=6, label="B)", family="Times" ,size=4) -> plot2
+
+cowplot::plot_grid(plot1, plot2,  align = "vh", nrow = 1, ncol=2)
+ggsave("figs/scatterplot__scale_length.png", dpi = 500, height = 4, width = 8, units = "in")
+
 
 merge %>%
   as.data.frame()%>% 
