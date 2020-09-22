@@ -6,6 +6,9 @@
 #S:\Region1Shared-DCF\Research\Herring-Dive Fisheries\Herring\NPRB-Herring Maturity Study\datasheets\datasheets\MTA Lab Datasheets\fall field study-MTA lab measurements\remeasurements_corrected data\ MTA Lab data_length_weight_Jan_2019
 #matched to histology data sheet (S:\Region1Shared-DCF\Research\Herring-Dive Fisheries\Herring\NPRB-Herring Maturity Study\datasheets\datasheets\Histology-Pathologist report\Alaska Department of Fish and Game 10_17_2018_corrected)
 #the following code then takes the histology dataset data_11_26_2018 and matches it to the MTA lab increment data by image name
+#https://stackoverflow.com/questions/44993844/how-to-report-likelihood-ratio-test-results
+#https://stats.stackexchange.com/questions/59879/logistic-regression-anova-chi-square-test-vs-significance-of-coefficients-ano
+#http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
 
 # load libraries----
 # devtools::install_github("ben-williams/FNGr")
@@ -147,6 +150,9 @@ fit <- glm(maturity ~ (anu_adj * scale_length_prior) , family = binomial(link=lo
 summary(fit)
 vif(fit) # car package
 anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
+Anova(fit)
+63.376-60.324
+1 - pchisq(63.376-60.324, df=3)
 RsqGLM(fit)#peudo R2 
 summary(fit)
 hoslem.test(merge_dataset_two$maturity, fitted(fit)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
@@ -268,7 +274,11 @@ lines(xscale_length_prior, yscale_length_prior, col = "red", lwd = 2)
 ## Outer Increment Measurement
 fit <- glm(maturity ~ (anu_adj * scale_length_prior) , family = binomial(link=logit), data = merge_dataset_three) 
 vif(fit) # car package
+summary(fit)
 anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
+Anova(fit)
+74.786-74.084
+1 - pchisq(74.786-74.084, df=3)
 RsqGLM(fit)#peudo R2 
 summary(fit)
 hoslem.test(merge_dataset_three$maturity, fitted(fit)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
