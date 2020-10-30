@@ -151,7 +151,6 @@ summary(fit)
 vif(fit) # car package
 anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/logistic.html
 Anova(fit)
-63.376-60.324
 1 - pchisq(63.376-60.324, df=3)
 RsqGLM(fit)#peudo R2 
 summary(fit)
@@ -279,6 +278,7 @@ anova(fit, test = "Chisq") #http://ww2.coastal.edu/kingw/statistics/R-tutorials/
 Anova(fit)
 74.786-74.084
 1 - pchisq(74.786-74.084, df=3)
+1 - pchisq(0.41+0.26+0.03, df=3)
 RsqGLM(fit)#peudo R2 
 summary(fit)
 hoslem.test(merge_dataset_three$maturity, fitted(fit)) #goodness of fit test (ResourceSelection package); https://www.theanalysisfactor.com/r-glm-model-fit/
